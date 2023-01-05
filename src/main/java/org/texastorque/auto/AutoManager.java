@@ -1,12 +1,15 @@
 package org.texastorque.auto;
 
+import org.texastorque.auto.sequences.DriveTest;
 import org.texastorque.torquelib.auto.*;
 
 public final class AutoManager extends TorqueAutoManager {
     private static volatile AutoManager instance;
 
     @Override
-    public final void init() {}
+    public final void init() {
+        addSequence("Test Drivebase", new DriveTest());
+    }
 
     /**
      * Get the AutoManager instance

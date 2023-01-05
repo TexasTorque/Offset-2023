@@ -1,5 +1,7 @@
 package org.texastorque;
 
+import org.texastorque.subsystems.*;
+
 public interface Subsystems {
-    // public final SubsystemName subsystemName = SubsystemName.getInstance();
+    public final Drivebase drivebase = Drivebase.getInstance();
 }
