@@ -1,0 +1,6 @@
+[submodule "src/main/java/org/texastorque/torquelib"]
+	path = src/main/java/org/texastorque/torquelib
+	url = https://github.com/texastorque/torquelib
+[submodule "vendordeps"]
+	path = vendordeps
+	url = https://github.com/texastorque/torquevendordeps
