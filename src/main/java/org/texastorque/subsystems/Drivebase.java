@@ -104,6 +104,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     // It also encorporates other measures like April tag positions
     private final SwerveDrivePoseEstimator poseEstimator;
 
+    @Log.Field2d(name = "Robot Field")
     private final Field2d fieldMap = new Field2d();
 
     // Matrix constants for the pose estimator.
@@ -230,12 +231,16 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         });
     }
 
+    public static SwerveModulePosition invertSwerveModuleDistance(final SwerveModulePosition pose) {
+        return new SwerveModulePosition(-pose.distanceMeters, pose.angle);
+    }
+
     public SwerveModulePosition[] getModulePositions() {
         return new SwerveModulePosition[] { 
-            fl.getPosition(), 
-            fr.getPosition(), 
-            bl.getPosition(), 
-            br.getPosition() 
+            invertSwerveModuleDistance(fl.getPosition()), 
+            invertSwerveModuleDistance(fr.getPosition()), 
+            invertSwerveModuleDistance(bl.getPosition()), 
+            invertSwerveModuleDistance(br.getPosition()) 
         };
     }
 
