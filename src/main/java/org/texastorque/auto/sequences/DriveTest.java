@@ -14,6 +14,6 @@ import org.texastorque.torquelib.auto.commands.TorqueExecute;
 
 public final class DriveTest extends TorqueSequence {
     public DriveTest() { 
-        addBlock(new FollowPath("cool-path-a", true, 1, .5));
+        addBlock(new FollowPath("auto-test-1", true, 1, .5));
     }
 }
