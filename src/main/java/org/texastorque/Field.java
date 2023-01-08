@@ -1,8 +1,12 @@
 package org.texastorque;
 
 import java.util.Map;
+
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 
@@ -14,8 +18,8 @@ public final class Field {
     Map.of(
         1,
         new Pose3d(
-            Units.inchesToMeters(610.77),
-            Units.inchesToMeters(42.19),
+            Units.inchesToMeters(610.77), // 15.589758
+            Units.inchesToMeters(42.19), // 1.071626
             Units.inchesToMeters(18.22),
             new Rotation3d(0.0, 0.0, Math.PI)),
         2,
@@ -79,4 +83,26 @@ public final class Field {
         DriverStation.getAlliance() == DriverStation.Alliance.Blue
         ? APRIL_TAG_ORIGINALS
         : reflectAprilTags(); 
+
+
+    public static double ALIGN_GRID_X_OFFSET = -(15.589758 - 14.72);
+
+    public static enum AlignState {
+        NONE(0, 0),
+        GRID_CENTER(ALIGN_GRID_X_OFFSET, 0), 
+        GRID_RIGHT(ALIGN_GRID_X_OFFSET, 1.07 - 0.42), 
+        GRID_LFET(ALIGN_GRID_X_OFFSET, 1.62 - 1.07);
+
+        public Translation3d transl;
+
+        private AlignState(final double x, final double y) {
+            transl = new Translation3d(x, y, 0);
+        }
+
+        public Pose2d calculate(final Pose3d pose) {
+            return (new Pose3d(pose.getTranslation().plus(transl), pose.getRotation())).toPose2d();
+        }
+    }
+
+    
 }
