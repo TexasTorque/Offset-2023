@@ -28,9 +28,6 @@ public final class FollowPath extends TorqueCommand implements Subsystems {
     private final PIDController xController = TorquePID.create(3).build();
     private final PIDController yController = TorquePID.create(3).build();
 
-    // private final PIDController xController = TorquePID.create(16).build();
-    // private final PIDController yController = TorquePID.create(16).build();
-
     private final ProfiledPIDController thetaController;
     private final HolonomicDriveController controller;
 

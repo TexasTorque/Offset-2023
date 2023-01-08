@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.opencv.features2d.KAZE;
+import org.texastorque.Field;
 import org.texastorque.Subsystems;
 import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueRobotBase;
@@ -76,6 +77,10 @@ import io.github.oblarg.oblog.annotations.Log;
  */
 public final class Drivebase extends TorqueSubsystem implements Subsystems {
     private static volatile Drivebase instance;
+
+    public enum State {
+        FIELD_RELATIVE, ROBOT_RELATIVE, ZERO
+    }
 
     public static final double WIDTH = Units.inchesToMeters(21.745), // m (swerve to swerve)
             LENGTH = Units.inchesToMeters(21.745), // m (swerve to swerve)
@@ -157,14 +162,12 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     public static final Transform3d CAMERA_TO_CENTER = new Transform3d(
             new Translation3d(-Units.inchesToMeters(29 * .5), Units.inchesToMeters(19.75), 0),
             new Rotation3d());
-    public final TorqueAprilTagMap aprilTags;
 
     /**
      * Constructor called on initialization.
      */
     private Drivebase() {
         camera = new TorqueLight2(CAMERA_NAME, CAMERA_TO_CENTER);
-        aprilTags = TorqueAprilTagMap.fromJSON();
 
         // Configure the rotational lock PID.
         rotationalPID = TorquePID.create(0.025).addDerivative(.001).build();
@@ -261,7 +264,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         final double timestamp = camera.getTimestamp();
 
         if (timestamp != lastTimestamp && camera.hasTargets()) {
-            Optional<Pose3d> estimatedPose = camera.getRobotPoseAprilTag3d(aprilTags, .2);
+            final Optional<Pose3d> estimatedPose = camera.getRobotPoseAprilTag3d(Field.APRIL_TAGS, .2);
             if (estimatedPose.isPresent()) {
                 final Pose2d pose = estimatedPose.get().toPose2d();            
                 poseEstimator.addVisionMeasurement(pose, camera.getTimestamp());
