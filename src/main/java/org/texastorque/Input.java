@@ -39,15 +39,12 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
     }
 
     private void updateDrivebaseAlign() {
-        if (driver.isDPADUpDown()) {
-            //drivebase.setAlign()
-        } else if (driver.isDPADLeftDown()) {
-          
-        } else if (driver.isDPADRightDown()) {
-            
-        }      
-
-
+        if (driver.isDPADUpDown()) 
+            drivebase.setAlign(Field.AlignState.CENTER);
+         else if (driver.isDPADLeftDown()) 
+          drivebase.setAlign(Field.AlignState.LEFT);
+         else if (driver.isDPADRightDown()) 
+            drivebase.setAlign(Field.AlignState.RIGHT);
     }
 
     private boolean slowMode = false;

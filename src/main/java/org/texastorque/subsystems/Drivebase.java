@@ -13,6 +13,8 @@ import org.opencv.features2d.KAZE;
 import org.texastorque.Field;
 import org.texastorque.Subsystems;
 import org.texastorque.Field.AlignState;
+import org.texastorque.Field.AprilTagType;
+import org.texastorque.Field.TranslationState;
 import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueRobotBase;
 import org.texastorque.torquelib.base.TorqueSubsystem;
@@ -330,7 +332,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     private AlignState alignment = AlignState.NONE;
 
     public void setAlign(final AlignState alignment) {
-        state = State.ALIGN;
+        state = alignment == AlignState.NONE ? state.parent : State.ALIGN;
         this.alignment = alignment;
     }
 
@@ -344,16 +346,27 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     private final ProfiledPIDController yController = new ProfiledPIDController(3, 0, 0, Y_CONSTRAINTS);
     private final ProfiledPIDController omegaController = new ProfiledPIDController(2, 0, 0, OMEGA_CONSTRAINTS);
 
-    private void calculateAlignment() {
-        final Pose2d robotPose = poseEstimator.getEstimatedPosition();
+    private Optional<TranslationState> getTranslationState() {
+        final int lastGoodAprilTagID = camera.getLastGoodAprilTagID();
+        final AprilTagType tagType = Field.getAprilTagType(lastGoodAprilTagID);
 
-        final Optional<Pose3d> aprilPose = camera.getPositionOfBestAprilTag(Field.APRIL_TAGS, TARGET_AMBIGUITY);
-        if (aprilPose.isEmpty()) {
+        if (!tagType.isValid()) {
             state = state.parent;
-            return;
+            return Optional.empty();
         }
 
-        final Pose2d goalPose = alignment.calculate(aprilPose.get());
+        if (alignment == AlignState.CENTER)
+            return Optional.of(TranslationState.GRID_CENTER);
+        else if (alignment == AlignState.LEFT)
+            return Optional.of(tagType.isGrid() ? TranslationState.GRID_LEFT : TranslationState.LOAD_ZONE_LEFT); 
+        else if (alignment == AlignState.RIGHT)
+            return  Optional.of(tagType.isGrid() ? TranslationState.GRID_RIGHT : TranslationState.LOAD_ZONE_RIGHT); 
+        else
+            return Optional.empty();
+    }
+
+    private void calculateChassisSpeedsAlignment(final Pose2d goalPose) {
+        final Pose2d robotPose = poseEstimator.getEstimatedPosition();
 
         xController.setGoal(goalPose.getX());
         yController.setGoal(goalPose.getY());
@@ -366,7 +379,29 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         final double omegaSpeed = omegaController.atGoal() ? 0: omegaController.calculate(robotPose.getRotation().getRadians());
       
         inputSpeeds = new ChassisSpeeds(xSpeed, ySpeed, omegaSpeed);
+    }
+
+    private void calculateAlignment() {
+        if (alignment == AlignState.NONE) {
+            state = state.parent;
+            return;
+        }
+
+        final Optional<Pose3d> aprilPose = camera.getPositionOfBestAprilTag(Field.APRIL_TAGS, TARGET_AMBIGUITY);
+        if (aprilPose.isEmpty()) {
+            state = state.parent;
+            return;
+        }
         
+        final Optional<TranslationState> translationState = getTranslationState();
+        if (translationState.isEmpty()) {
+            state = state.parent;
+            return;
+        }
+
+        final Pose2d goalPose = translationState.get().calculate(aprilPose.get());
+        calculateChassisSpeedsAlignment(goalPose);        
+
         convertToFieldRelative();
     }
 

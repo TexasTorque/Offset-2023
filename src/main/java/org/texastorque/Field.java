@@ -85,17 +85,46 @@ public final class Field {
         : reflectAprilTags(); 
 
 
-    public static double ALIGN_GRID_X_OFFSET = -(15.589758 - 14.72);
+    public static double ALIGN_X_OFFSET_GRID = -(15.589758 - 14.72);
+    public static double ALIGN_X_OFFSET_LOAD_ZONE = -1;
 
     public static enum AlignState {
+        NONE, CENTER, RIGHT, LEFT;
+    }
+
+    public static enum AprilTagType {
+        GRID, LOAD_ZONE, INVALID;
+
+        public boolean isGrid() {
+            return this == GRID;
+        }
+
+        public boolean isLoadZone() {
+            return this == LOAD_ZONE;
+        }
+
+        public boolean isValid() {
+            return this != INVALID;
+        }
+    }
+
+    public static AprilTagType getAprilTagType(final int id) {
+        if (id <= 0 || id > 8) return AprilTagType.INVALID;
+        if (id == 4 || id == 5) return AprilTagType.LOAD_ZONE;
+        return AprilTagType.GRID;
+    }
+
+    public static enum TranslationState {
         NONE(0, 0),
-        GRID_CENTER(ALIGN_GRID_X_OFFSET, 0), 
-        GRID_RIGHT(ALIGN_GRID_X_OFFSET, 1.07 - 0.42), 
-        GRID_LFET(ALIGN_GRID_X_OFFSET, 1.62 - 1.07);
+        GRID_CENTER(ALIGN_X_OFFSET_GRID, 0), 
+        GRID_RIGHT(ALIGN_X_OFFSET_GRID, Units.inchesToMeters(22)), 
+        GRID_LEFT(ALIGN_X_OFFSET_GRID, -Units.inchesToMeters(22)),
+        LOAD_ZONE_RIGHT(ALIGN_X_OFFSET_LOAD_ZONE, -Units.inchesToMeters(30)),
+        LOAD_ZONE_LEFT(ALIGN_X_OFFSET_LOAD_ZONE, Units.inchesToMeters(30));
 
         public Translation3d transl;
 
-        private AlignState(final double x, final double y) {
+        private TranslationState(final double x, final double y) {
             transl = new Translation3d(x, y, 0);
         }
 
