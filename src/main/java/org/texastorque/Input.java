@@ -29,21 +29,22 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         updateDrivebase();
     }
 
-    private final TorqueTraversableSelection<Double> speedSettings = new TorqueTraversableSelection<Double>(0, 1.0,
-            0.75, 0.5, 0.25);
 
-    private final TorqueClick toggleRotationLock = new TorqueClick();
-    private final TorqueClick toggleSmartDrive = new TorqueClick();
-    private boolean usingSmartDrive = false;
-    private final TorqueClick toggleIsDirectRotation = new TorqueClick();
-    private final TorqueClick resetGyro = new TorqueClick();
-    private final TorqueClick resetPose = new TorqueClick();
+    private void updateDrivebase() {
+        drivebase.state = driver.isXButtonDown() ? Drivebase.State.ZERO : Drivebase.State.FIELD_RELATIVE;
+        updateDrivebaseSpeeds();
+        updateDrivebasePositions();
+    }
+
+    private boolean slowMode = false;
+    private final TorqueClick slowModeClick = new TorqueClick();
 
     private final static double DEADBAND = 0.05;
 
-    private void updateDrivebase() {
-        final double speedSetting = speedSettings.calculate(driver.isRightBumperDown(), driver.isLeftBumperDown());
-
+    private void updateDrivebaseSpeeds() {
+        if (slowModeClick.calculate(driver.isLeftBumperPressed())) slowMode = !slowMode;
+        final double speedSetting = slowMode ? 0.2 : 1;
+        
         final double xVelocity = TorqueMath
                 .scaledDeadband(driver.getLeftYAxis() * Drivebase.MAX_VELOCITY * speedSetting, DEADBAND);
         final double yVelocity = TorqueMath
@@ -56,9 +57,26 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         drivebase.requestedRotation = Math.PI + Math.atan2(driver.getRightXAxis(), driver.getRightYAxis());
         if (drivebase.requestedRotation == Math.PI)
             drivebase.requestedRotation = 0;
+    }
 
-        drivebase.state = driver.isXButtonDown() ? Drivebase.State.ZERO : Drivebase.State.FIELD_RELATIVE;
+    private final TorqueClick resetGyro = new TorqueClick();
+    private final TorqueClick resetPose = new TorqueClick();
 
+    private void updateDrivebasePositions() {
+        if (resetGyro.calculate(driver.isRightCenterButtonPressed()))
+            drivebase.resetGyro();
+
+        if (resetPose.calculate(driver.isLeftCenterButtonPressed()))
+            drivebase.resetPose(new Translation2d(0, 0));
+    }
+
+
+    private final TorqueClick toggleRotationLock = new TorqueClick();
+    private final TorqueClick toggleSmartDrive = new TorqueClick();
+    private boolean usingSmartDrive = false;
+    private final TorqueClick toggleIsDirectRotation = new TorqueClick();
+
+    private void updateDrivebaseSettings() {
         if (toggleSmartDrive.calculate(driver.isBButtonDown()))
             drivebase.setSmartDrive(usingSmartDrive = !usingSmartDrive);
 
@@ -67,12 +85,6 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
         if (toggleIsDirectRotation.calculate(driver.isYButtonDown()))
             drivebase.isDirectRotation = !drivebase.isDirectRotation;
-
-        if (resetGyro.calculate(driver.isRightCenterButtonPressed()))
-            drivebase.resetGyro();
-
-        if (resetPose.calculate(driver.isLeftCenterButtonPressed()))
-            drivebase.resetPose(new Translation2d(0, 0));
 
     }
 
