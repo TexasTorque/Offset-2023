@@ -79,8 +79,10 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     private static volatile Drivebase instance;
 
     public enum State {
-        FIELD_RELATIVE, ROBOT_RELATIVE, ZERO
+        FIELD_RELATIVE, ROBOT_RELATIVE, ALIGN, ZERO
     }
+
+    public State state;
 
     public static final double WIDTH = Units.inchesToMeters(21.745), // m (swerve to swerve)
             LENGTH = Units.inchesToMeters(21.745), // m (swerve to swerve)
@@ -145,9 +147,8 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     public ChassisSpeeds inputSpeeds = new ChassisSpeeds(0, 0, 0);
 
     public double requestedRotation = 0;
-    public boolean isZeroingModules = false,
+    public boolean
             isRotationLocked = false,
-            isFieldOriented = false,
             isDirectRotation = false;
 
     public void setSmartDrive(final boolean useSmartDrive) {
@@ -167,9 +168,8 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
      * Constructor called on initialization.
      */
     private Drivebase() {
-        camera = new TorqueLight2(CAMERA_NAME, CAMERA_TO_CENTER);
-
-        // Configure the rotational lock PID.
+       
+        camera = new TorqueLight2(CAMERA_NAME, CAMERA_TO_CENTER); // Configure the rotational lock PID.
         rotationalPID = TorquePID.create(0.025).addDerivative(.001).build();
         rotationalPID.enableContinuousInput(-Math.PI, Math.PI);
 
@@ -220,17 +220,15 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     @Override
     public final void initialize(final TorqueMode mode) {
         mode.onAuto(() -> {
-            isZeroingModules = false;
             isRotationLocked = false;
-            isFieldOriented = false;
             isDirectRotation = false;
+            state = State.ROBOT_RELATIVE;
         });
 
         mode.onTeleop(() -> {
-            isZeroingModules = false;
             isRotationLocked = true;
-            isFieldOriented = true;
             isDirectRotation = false;
+            state = State.FIELD_RELATIVE;
         });
     }
 
@@ -278,6 +276,43 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         fieldMap.setRobotPose(poseEstimator.getEstimatedPosition());
     }
 
+    private void zeroModules() {
+        fl.zero();
+        fr.zero();
+        bl.zero();
+        br.zero();
+    }
+
+    private void preseveModulePositions() {
+        fl.setDesiredState(new SwerveModuleState(0, swerveStates[0].angle));
+        fr.setDesiredState(new SwerveModuleState(0, swerveStates[1].angle));
+        bl.setDesiredState(new SwerveModuleState(0, swerveStates[2].angle));
+        br.setDesiredState(new SwerveModuleState(0, swerveStates[3].angle));
+    }
+
+    private void calculateTeleop() {
+        // Calculate the locked rotation with the PID.
+        final double realRotationRadians = gyro.getHeadingCCW().getRadians();
+
+        if (isDirectRotation) {
+            inputSpeeds.omegaRadiansPerSecond = directRotPID.calculate(
+                    realRotationRadians, requestedRotation);
+        } else {
+            if (isRotationLocked && inputSpeeds.omegaRadiansPerSecond == 0) {
+                final double omega = rotationalPID.calculate(
+                        realRotationRadians, lastRotationRadians);
+                inputSpeeds.omegaRadiansPerSecond = omega;
+            } else
+                lastRotationRadians = realRotationRadians;
+        }
+
+        inputSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+                inputSpeeds.vxMetersPerSecond,
+                inputSpeeds.vyMetersPerSecond,
+                inputSpeeds.omegaRadiansPerSecond,
+                gyro.getHeadingCCW());
+    }
+
     /**
      * Called every loop.
      * 
@@ -289,58 +324,29 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     public final void update(final TorqueMode mode) {
         updateFeedback();
 
-        if (isZeroingModules) {
-            fl.zero();
-            fr.zero();
-            bl.zero();
-            br.zero();
-            return;
-        }
+        if (state == State.ZERO) {
+            zeroModules();
+            state = State.FIELD_RELATIVE;
+        } else if (inputSpeeds.vxMetersPerSecond == 0 && inputSpeeds.vyMetersPerSecond == 0 && inputSpeeds.omegaRadiansPerSecond == 0) {
+            preseveModulePositions();
+        } else {
 
-        if (inputSpeeds.vxMetersPerSecond == 0 && inputSpeeds.vyMetersPerSecond == 0 
-                && inputSpeeds.omegaRadiansPerSecond == 0) {
-            fl.setDesiredState(new SwerveModuleState(0, swerveStates[0].angle));
-            fr.setDesiredState(new SwerveModuleState(0, swerveStates[1].angle));
-            bl.setDesiredState(new SwerveModuleState(0, swerveStates[2].angle));
-            br.setDesiredState(new SwerveModuleState(0, swerveStates[3].angle));
-            return;
-        }
+            if (state == State.ROBOT_RELATIVE) {
 
-        // Calculate the locked rotation with the PID.
-        final double realRotationRadians = gyro.getHeadingCCW().getRadians();
-
-        if (mode != TorqueMode.AUTO) {
-            if (isDirectRotation) {
-                inputSpeeds.omegaRadiansPerSecond = directRotPID.calculate(
-                        realRotationRadians, requestedRotation);
-            } else {
-                if (isRotationLocked && inputSpeeds.omegaRadiansPerSecond == 0) {
-                    final double omega = rotationalPID.calculate(
-                            realRotationRadians, lastRotationRadians);
-                    inputSpeeds.omegaRadiansPerSecond = omega;
-                } else
-                    lastRotationRadians = realRotationRadians;
+            } else if (state == State.FIELD_RELATIVE) {
+                calculateTeleop();
             }
+
+            swerveStates = kinematics.toSwerveModuleStates(inputSpeeds);
+
+            SwerveDriveKinematics.desaturateWheelSpeeds(swerveStates, MAX_VELOCITY);
+
+            fl.setDesiredState(swerveStates[0]);
+            fr.setDesiredState(swerveStates[1]);
+            bl.setDesiredState(swerveStates[2]);
+            br.setDesiredState(swerveStates[3]);
         }
-
-        // Calculate field relative vectors.
-        if (isFieldOriented)
-            inputSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
-                    inputSpeeds.vxMetersPerSecond,
-                    inputSpeeds.vyMetersPerSecond,
-                    inputSpeeds.omegaRadiansPerSecond,
-                    gyro.getHeadingCCW());
-        // Or just get counter clockwise LMAO
-
-        // Convert robot vectors to module vectors.
-        swerveStates = kinematics.toSwerveModuleStates(inputSpeeds);
-
-        SwerveDriveKinematics.desaturateWheelSpeeds(swerveStates, MAX_VELOCITY);
-
-        fl.setDesiredState(swerveStates[0]);
-        fr.setDesiredState(swerveStates[1]);
-        bl.setDesiredState(swerveStates[2]);
-        br.setDesiredState(swerveStates[3]);
+        
     }
 
     // Interfacing with the robot position estimator.
@@ -361,6 +367,10 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     public void resetGyro() {
         gyro.setOffsetCW(new Rotation2d(0));
 
+    }
+
+    public void setState(final State state) {
+        this.state = state;
     }
 
     @Log.ToString(name = "Robot Pose")

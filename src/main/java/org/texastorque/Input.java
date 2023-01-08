@@ -57,7 +57,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         if (drivebase.requestedRotation == Math.PI)
             drivebase.requestedRotation = 0;
 
-        drivebase.isZeroingModules = driver.isXButtonDown();
+        drivebase.state = driver.isXButtonDown() ? Drivebase.State.ZERO : Drivebase.State.FIELD_RELATIVE;
 
         if (toggleSmartDrive.calculate(driver.isBButtonDown()))
             drivebase.setSmartDrive(usingSmartDrive = !usingSmartDrive);
