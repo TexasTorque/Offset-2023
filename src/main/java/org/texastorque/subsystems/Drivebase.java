@@ -18,7 +18,7 @@ import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.control.TorquePID;
 import org.texastorque.torquelib.modules.TorqueSwerveModule2022;
 import org.texastorque.torquelib.modules.TorqueSwerveModule2022.TorqueSwerveModuleConfiguration;
-import org.texastorque.torquelib.sensors.TorqueLight2;
+import org.texastorque.torquelib.sensors.TorqueVision;
 import org.texastorque.torquelib.sensors.TorqueNavXGyro;
 import org.texastorque.torquelib.sensors.util.TorqueAprilTagMap;
 import org.texastorque.torquelib.util.TorqueUtil;
@@ -157,7 +157,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         bl.useSmartDrive = useSmartDrive;
     }
 
-    public final TorqueLight2 camera;
+    public final TorqueVision camera;
     public static final String CAMERA_NAME = "unicam";
     public static final Transform3d CAMERA_TO_CENTER = new Transform3d(
             new Translation3d(-Units.inchesToMeters(29 * .5), Units.inchesToMeters(19.75), 0),
@@ -167,7 +167,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
      * Constructor called on initialization.
      */
     private Drivebase() {
-        camera = new TorqueLight2(CAMERA_NAME, CAMERA_TO_CENTER);
+        camera = new TorqueVision(CAMERA_NAME, CAMERA_TO_CENTER);
 
         // Configure the rotational lock PID.
         rotationalPID = TorquePID.create(0.025).addDerivative(.001).build();
