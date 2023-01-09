@@ -346,9 +346,22 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     private final ProfiledPIDController yController = new ProfiledPIDController(3, 0, 0, Y_CONSTRAINTS);
     private final ProfiledPIDController omegaController = new ProfiledPIDController(2, 0, 0, OMEGA_CONSTRAINTS);
 
+    private int findClosestAprilTagID() {
+        final Pose2d robotPose = poseEstimator.getEstimatedPosition();
+        double currentClosestDistance = Double.MAX_VALUE; 
+        int closestID = -1;
+        for (final Map.Entry<Integer, Pose3d> aprilPose : Field.APRIL_TAGS.entrySet()) {
+            final double distance = robotPose.getTranslation().getDistance(aprilPose.getValue().toPose2d().getTranslation());
+            if (distance < currentClosestDistance) {
+                currentClosestDistance = distance;
+                closestID = aprilPose.getKey();
+            }
+        }
+        return closestID;
+    } 
+
     private Optional<TranslationState> getTranslationState() {
-        final int lastGoodAprilTagID = camera.getLastGoodAprilTagID();
-        final AprilTagType tagType = Field.getAprilTagType(lastGoodAprilTagID);
+        final AprilTagType tagType = Field.getAprilTagType(findClosestAprilTagID());
 
         if (!tagType.isValid()) {
             state = state.parent;
@@ -373,9 +386,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         omegaController.setGoal(goalPose.getRotation().getRadians());
 
         final double xSpeed = xController.atGoal() ? 0 : xController.calculate(robotPose.getX());
-
         final double ySpeed = yController.atGoal() ? 0 : yController.calculate(robotPose.getY());
-
         final double omegaSpeed = omegaController.atGoal() ? 0: omegaController.calculate(robotPose.getRotation().getRadians());
       
         inputSpeeds = new ChassisSpeeds(xSpeed, ySpeed, omegaSpeed);
