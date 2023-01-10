@@ -1,5 +1,6 @@
 package org.texastorque;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -73,10 +74,15 @@ public final class Field {
             pose.getRotation().plus(new Rotation3d(0, 0, Math.PI)));
     }
 
+    public static int[] ENEMY_TAG_IDS = DriverStation.getAlliance() == DriverStation.Alliance.Red ? 
+            new int[] { 8, 7, 6, 4 } : new int[] { 1, 2, 3, 5 };
+
     private static final Map<Integer, Pose3d> reflectAprilTags() {
-        final Map<Integer, Pose3d> map = Map.copyOf(APRIL_TAG_ORIGINALS);
-        map.replaceAll((k, v) -> reflectPositions(v));
-        return map;
+        final Map<Integer, Pose3d> newMap = new HashMap<>();
+        for (final Map.Entry<Integer, Pose3d> aprilTag : APRIL_TAG_ORIGINALS.entrySet()) {
+            newMap.put(aprilTag.getKey(), reflectPositions(aprilTag.getValue()));
+        }
+        return newMap;
     }
 
     public static final Map<Integer, Pose3d> APRIL_TAGS = 
@@ -85,8 +91,8 @@ public final class Field {
         : reflectAprilTags(); 
 
 
-    public static double ALIGN_X_OFFSET_GRID = -(15.589758 - 14.72);
-    public static double ALIGN_X_OFFSET_LOAD_ZONE = -1;
+    public static double ALIGN_X_OFFSET_GRID = (15.589758 - 14.72);
+    public static double ALIGN_X_OFFSET_LOAD_ZONE = 1;
 
     public static enum AlignState {
         NONE, CENTER, RIGHT, LEFT;
@@ -117,18 +123,21 @@ public final class Field {
     public static enum TranslationState {
         NONE(0, 0),
         GRID_CENTER(ALIGN_X_OFFSET_GRID, 0), 
-        GRID_RIGHT(ALIGN_X_OFFSET_GRID, Units.inchesToMeters(22)), 
-        GRID_LEFT(ALIGN_X_OFFSET_GRID, -Units.inchesToMeters(22)),
+        GRID_RIGHT(ALIGN_X_OFFSET_GRID, -Units.inchesToMeters(22)), 
+        GRID_LEFT(ALIGN_X_OFFSET_GRID, Units.inchesToMeters(22)),
         LOAD_ZONE_RIGHT(ALIGN_X_OFFSET_LOAD_ZONE, -Units.inchesToMeters(30)),
         LOAD_ZONE_LEFT(ALIGN_X_OFFSET_LOAD_ZONE, Units.inchesToMeters(30));
 
         public Translation3d transl;
+        private double x, y;
 
         private TranslationState(final double x, final double y) {
-            transl = new Translation3d(x, y, 0);
+            this.x = x;
+            this.y = y;
         }
 
         public Pose2d calculate(final Pose3d pose) {
+            final Translation3d transl = new Translation3d(x * (pose.getX() > FIELD_LENGTH / 2 ? -1 : 1), y, 0);
             return (new Pose3d(pose.getTranslation().plus(transl), pose.getRotation())).toPose2d();
         }
     }

@@ -20,7 +20,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
     private static volatile Input instance;
 
     private Input() {
-        driver = new TorqueController(0, .1);
+        driver = new TorqueController(0, .2);
         operator = new TorqueController(1);
     }
 
@@ -33,8 +33,8 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
     private void updateDrivebase() {
         drivebase.state = driver.isXButtonDown() ? Drivebase.State.ZERO : Drivebase.State.FIELD_RELATIVE;
 
-        updateDrivebaseAlign();
         updateDrivebaseSpeeds();
+        updateDrivebaseAlign();
         updateDrivebasePositions();
     }
 
@@ -78,7 +78,8 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
             drivebase.resetGyro();
 
         if (resetPose.calculate(driver.isLeftCenterButtonPressed()))
-            drivebase.resetPose(new Translation2d(0, 0));
+            // drivebase.resetPose(new Translation2d(0, 0));
+            drivebase.resetPose(Drivebase.INITIAL_POS);
     }
 
 
