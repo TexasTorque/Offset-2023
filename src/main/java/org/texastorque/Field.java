@@ -1,8 +1,16 @@
 package org.texastorque;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 
@@ -14,8 +22,8 @@ public final class Field {
     Map.of(
         1,
         new Pose3d(
-            Units.inchesToMeters(610.77),
-            Units.inchesToMeters(42.19),
+            Units.inchesToMeters(610.77), // 15.589758
+            Units.inchesToMeters(42.19), // 1.071626
             Units.inchesToMeters(18.22),
             new Rotation3d(0.0, 0.0, Math.PI)),
         2,
@@ -69,14 +77,76 @@ public final class Field {
             pose.getRotation().plus(new Rotation3d(0, 0, Math.PI)));
     }
 
+    // public static int[] ENEMY_TAG_IDS = DriverStation.getAlliance() == DriverStation.Alliance.Red ? 
+            // new int[] { 8, 7, 6, 4 } : new int[] { 1, 2, 3, 5 };
+
+    public static Map<Integer, Boolean> ENEMY_TAG_IDS = DriverStation.getAlliance() == DriverStation.Alliance.Red ? 
+           Map.of(8, true, 7, true, 6, true, 4, true) : Map.of(1, true, 2, true, 3, true, 5, true);
+
     private static final Map<Integer, Pose3d> reflectAprilTags() {
-        final Map<Integer, Pose3d> map = Map.copyOf(APRIL_TAG_ORIGINALS);
-        map.replaceAll((k, v) -> reflectPositions(v));
-        return map;
+        final Map<Integer, Pose3d> newMap = new HashMap<>();
+        for (final Map.Entry<Integer, Pose3d> aprilTag : APRIL_TAG_ORIGINALS.entrySet()) {
+            newMap.put(aprilTag.getKey(), reflectPositions(aprilTag.getValue()));
+        }
+        return newMap;
     }
 
     public static final Map<Integer, Pose3d> APRIL_TAGS = 
         DriverStation.getAlliance() == DriverStation.Alliance.Blue
         ? APRIL_TAG_ORIGINALS
         : reflectAprilTags(); 
+
+
+    public static double ALIGN_X_OFFSET_GRID = (15.589758 - 14.72);
+    public static double ALIGN_X_OFFSET_LOAD_ZONE = 1;
+
+    public static enum AlignState {
+        NONE, CENTER, RIGHT, LEFT;
+    }
+
+    public static enum AprilTagType {
+        GRID, LOAD_ZONE, INVALID;
+
+        public boolean isGrid() {
+            return this == GRID;
+        }
+
+        public boolean isLoadZone() {
+            return this == LOAD_ZONE;
+        }
+
+        public boolean isValid() {
+            return this != INVALID;
+        }
+    }
+
+    public static AprilTagType getAprilTagType(final int id) {
+        if (id <= 0 || id > 8) return AprilTagType.INVALID;
+        if (id == 4 || id == 5) return AprilTagType.LOAD_ZONE;
+        return AprilTagType.GRID;
+    }
+
+    public static enum TranslationState {
+        NONE(0, 0),
+        GRID_CENTER(ALIGN_X_OFFSET_GRID, 0), 
+        GRID_RIGHT(ALIGN_X_OFFSET_GRID, -Units.inchesToMeters(22)), 
+        GRID_LEFT(ALIGN_X_OFFSET_GRID, Units.inchesToMeters(22)),
+        LOAD_ZONE_RIGHT(ALIGN_X_OFFSET_LOAD_ZONE, -Units.inchesToMeters(30)),
+        LOAD_ZONE_LEFT(ALIGN_X_OFFSET_LOAD_ZONE, Units.inchesToMeters(30));
+
+        public Translation3d transl;
+        private double x, y;
+
+        private TranslationState(final double x, final double y) {
+            this.x = x;
+            this.y = y;
+        }
+
+        public Pose2d calculate(final Pose3d pose) {
+            final Translation3d transl = new Translation3d(x * (pose.getX() > FIELD_LENGTH / 2 ? -1 : 1), y, 0);
+            return (new Pose3d(pose.getTranslation().plus(transl), pose.getRotation())).toPose2d();
+        }
+    }
+
+    
 }

@@ -18,7 +18,6 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-
 import org.texastorque.Subsystems;
 import org.texastorque.subsystems.Drivebase;
 import org.texastorque.torquelib.auto.TorqueCommand;
@@ -61,7 +60,7 @@ public final class FollowPath extends TorqueCommand implements Subsystems {
     protected final void init() {
         timer.reset();
         timer.start();
-        drivebase.isFieldOriented = false;
+        drivebase.setState(Drivebase.State.ROBOT_RELATIVE);
         if (!resetOdometry) return;
         drivebase.resetPose(extractInitialPose(trajectory));
     }
