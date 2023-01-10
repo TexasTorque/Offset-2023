@@ -368,18 +368,19 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     private int findClosestAprilTagID() {
         final Pose2d robotPose = poseEstimator.getEstimatedPosition();
         double currentClosestDistance = Double.MAX_VALUE; 
+        int closestID = -1;
        
         for (final Map.Entry<Integer, Pose3d> aprilPose : Field.APRIL_TAGS.entrySet()) {
+
             final double distance = robotPose.getTranslation().getDistance(aprilPose.getValue().toPose2d().getTranslation());
             final int id = aprilPose.getKey();
-            for (final int enemyID : Field.ENEMY_TAG_IDS)
-                if (enemyID == id)
-                    continue;
-            if (distance < currentClosestDistance) {
+
+            if (distance < currentClosestDistance && !Field.ENEMY_TAG_IDS.containsKey(id)) {
                 currentClosestDistance = distance;
                 closestID = id;
             }
         }
+
         return closestID;
     } 
 

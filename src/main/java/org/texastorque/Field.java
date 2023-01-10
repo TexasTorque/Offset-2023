@@ -1,6 +1,9 @@
 package org.texastorque;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -74,8 +77,11 @@ public final class Field {
             pose.getRotation().plus(new Rotation3d(0, 0, Math.PI)));
     }
 
-    public static int[] ENEMY_TAG_IDS = DriverStation.getAlliance() == DriverStation.Alliance.Red ? 
-            new int[] { 8, 7, 6, 4 } : new int[] { 1, 2, 3, 5 };
+    // public static int[] ENEMY_TAG_IDS = DriverStation.getAlliance() == DriverStation.Alliance.Red ? 
+            // new int[] { 8, 7, 6, 4 } : new int[] { 1, 2, 3, 5 };
+
+    public static Map<Integer, Boolean> ENEMY_TAG_IDS = DriverStation.getAlliance() == DriverStation.Alliance.Red ? 
+           Map.of(8, true, 7, true, 6, true, 4, true) : Map.of(1, true, 2, true, 3, true, 5, true);
 
     private static final Map<Integer, Pose3d> reflectAprilTags() {
         final Map<Integer, Pose3d> newMap = new HashMap<>();
