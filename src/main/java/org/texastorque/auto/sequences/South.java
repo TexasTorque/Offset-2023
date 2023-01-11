@@ -6,6 +6,7 @@
  */
 package org.texastorque.auto.sequences;
 
+import org.texastorque.Subsystems;
 import org.texastorque.auto.commands.*;
 import org.texastorque.subsystems.Drivebase;
 import org.texastorque.torquelib.auto.TorqueBlock;
@@ -13,10 +14,16 @@ import org.texastorque.torquelib.auto.TorqueCommand;
 import org.texastorque.torquelib.auto.TorqueSequence;
 import org.texastorque.torquelib.auto.commands.TorqueExecute;
 
-public final class DriveTest extends TorqueSequence {
-    public DriveTest() { 
-        // addBlock(new FollowPath("test-drive", true, 1, .5));
-        for (int i = 0; i < 4; i++)
-            addBlock(new FollowPath("test-alliance", true, 3, 1.5));
+import edu.wpi.first.wpilibj.util.Color;
+
+public final class South extends TorqueSequence implements Subsystems {
+    public South() { 
+        addBlock(new TorqueExecute(() -> lights.set(Color.kBlue)));
+        final var path1 = new FollowEventPath("South", true, 3, 1.5);
+        path1.addEvent("switch-lights", new TorqueExecute(() -> {
+            lights.set(Color.kRed);
+        }));
+
+        addBlock(path1);
     }
 }
