@@ -8,8 +8,7 @@ public final class AutoManager extends TorqueAutoManager {
 
     @Override
     public final void init() {
-        addSequence("Test Drivebase", new DriveTest());
-        addSequence("South", new South());
+        addSequence("Bottom", new Bottom());
     }
 
     /**

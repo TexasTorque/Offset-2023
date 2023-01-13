@@ -6,6 +6,7 @@
  */
 package org.texastorque.auto.sequences;
 
+import org.texastorque.Subsystems;
 import org.texastorque.auto.commands.*;
 import org.texastorque.subsystems.Drivebase;
 import org.texastorque.torquelib.auto.TorqueBlock;
@@ -13,10 +14,17 @@ import org.texastorque.torquelib.auto.TorqueCommand;
 import org.texastorque.torquelib.auto.TorqueSequence;
 import org.texastorque.torquelib.auto.commands.TorqueExecute;
 
-public final class DriveTest extends TorqueSequence {
-    public DriveTest() { 
-        // addBlock(new FollowPath("test-drive", true, 1, .5));
-        for (int i = 0; i < 4; i++)
-            addBlock(new FollowPath("test-alliance", true, 3, 1.5));
+
+public final class Bottom extends TorqueSequence implements Subsystems {
+    public Bottom() { 
+        addBlock(new SetIntakeMode(false));
+
+        final var bottom1 = new FollowEventPath("bottom-1", true, 1, 1.5);
+
+        bottom1.addEvent("intake-on", new SetIntakeMode(true)); 
+
+        bottom1.addEvent("intake-off", new SetIntakeMode(false)); 
+    
+        addBlock(bottom1);
     }
 }
