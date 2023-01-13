@@ -132,7 +132,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     private final SwerveDrivePoseEstimator poseEstimator;
 
     @Log.Field2d(name = "Robot Field")
-    private final Field2d fieldMap = new Field2d();
+    public final Field2d fieldMap = new Field2d();
 
     // Matrix constants for the pose estimator.
     // private static final Matrix<N3, N1> STATE_STDS = new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.05, 0.05, Units.degreesToRadians(5));

@@ -4,6 +4,8 @@ import com.pathplanner.lib.PathPlanner;
 import com.pathplanner.lib.PathPlannerTrajectory;
 import com.pathplanner.lib.PathPlannerTrajectory.EventMarker;
 import com.pathplanner.lib.PathPlannerTrajectory.PathPlannerState;
+import com.pathplanner.lib.server.PathPlannerServer;
+
 import edu.wpi.first.math.controller.HolonomicDriveController;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
@@ -70,6 +72,7 @@ public final class FollowEventPath extends TorqueCommand implements Subsystems {
         this.commands = commands;
         this.resetOdometry = reset;
         running = new ArrayList<TorqueCommand>();
+
     }
 
     private final PathPlannerState reflect(final Trajectory.State state) {
@@ -80,22 +83,28 @@ public final class FollowEventPath extends TorqueCommand implements Subsystems {
     protected final void init() {
         timer.reset();
         timer.start();
-        if (!resetOdometry) return;
 
-        drivebase.resetPose(reflect(trajectory.getInitialState()).poseMeters);
+        drivebase.fieldMap.getObject("traj").setTrajectory(this.trajectory);
+
+        PathPlannerServer.sendActivePath(this.trajectory.getStates());
+
+        if (resetOdometry)
+            drivebase.resetPose(reflect(trajectory.getInitialState()).poseMeters);
 
         unpassed.clear();
         unpassed.addAll(events);
         running.clear();
+
+
     }
 
     @Override
     protected final void continuous() {
         final double elapsed = timer.get();
        
-        final PathPlannerState current = reflect(trajectory.sample(elapsed));
+        final PathPlannerState desired = reflect(trajectory.sample(elapsed));
 
-        ChassisSpeeds speeds = controller.calculate(drivebase.getPose(), current, current.holonomicRotation);
+        ChassisSpeeds speeds = controller.calculate(drivebase.getPose(), desired, desired.holonomicRotation);
         speeds = new ChassisSpeeds(-speeds.vxMetersPerSecond, -speeds.vyMetersPerSecond, speeds.omegaRadiansPerSecond);
 
         drivebase.inputSpeeds = speeds; 
@@ -112,6 +121,8 @@ public final class FollowEventPath extends TorqueCommand implements Subsystems {
         for (int i = running.size() - 1; i >= 0; i--)
             if (running.get(i).run())
                 running.remove(i);
+
+        PathPlannerServer.sendPathFollowingData(new Pose2d(desired.poseMeters.getTranslation(), desired.holonomicRotation), drivebase.getPose());
     }
 
     @Override
@@ -125,6 +136,8 @@ public final class FollowEventPath extends TorqueCommand implements Subsystems {
         for (final TorqueCommand command : running)
             command.reset();
         drivebase.inputSpeeds = new ChassisSpeeds();
+
+        drivebase.fieldMap.getObject("traj").close();
     }
 
     public void addEvent(final String name, final TorqueCommand command) {
