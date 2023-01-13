@@ -4,6 +4,7 @@ import com.pathplanner.lib.PathPlanner;
 import com.pathplanner.lib.PathPlannerTrajectory;
 import com.pathplanner.lib.PathPlannerTrajectory.EventMarker;
 import com.pathplanner.lib.PathPlannerTrajectory.PathPlannerState;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.server.PathPlannerServer;
 
 import edu.wpi.first.math.controller.HolonomicDriveController;
@@ -37,8 +38,8 @@ public final class FollowEventPath extends TorqueCommand implements Subsystems {
     private final PIDController xController = TorquePID.create(1).build();
     private final PIDController yController = TorquePID.create(1).build();
 
-    private final ProfiledPIDController thetaController;
-    private final HolonomicDriveController controller;
+    private final PIDController thetaController;
+    private final PPHolonomicDriveController controller;
 
     private final PathPlannerTrajectory trajectory;
     private final Timer timer = new Timer();
@@ -57,14 +58,14 @@ public final class FollowEventPath extends TorqueCommand implements Subsystems {
     }
 
     public FollowEventPath(final String name, final Map<String, TorqueCommand> commands, final boolean reset, final double maxSpeed, final double maxAcceleration) {
-        thetaController = new ProfiledPIDController(Math.PI * 2, 0, 0, new TrapezoidProfile.Constraints(6 * Math.PI, 6 * Math.PI));
+        thetaController = new PIDController(Math.PI * 2, 0, 0);
 
         xController.setTolerance(0.01);
         yController.setTolerance(0.01);
         thetaController.setTolerance(Units.degreesToRadians(2));
         thetaController.enableContinuousInput(-Math.PI, Math.PI);
 
-        controller = new HolonomicDriveController(xController, yController, thetaController);
+        controller = new PPHolonomicDriveController(xController, yController, thetaController);
 
         trajectory = PathPlanner.loadPath(name, maxSpeed, maxAcceleration);
         events = trajectory.getMarkers();
@@ -104,7 +105,8 @@ public final class FollowEventPath extends TorqueCommand implements Subsystems {
        
         final PathPlannerState desired = reflect(trajectory.sample(elapsed));
 
-        ChassisSpeeds speeds = controller.calculate(drivebase.getPose(), desired, desired.holonomicRotation);
+        ChassisSpeeds speeds = controller.calculate(drivebase.getPose(), desired);
+        
         speeds = new ChassisSpeeds(-speeds.vxMetersPerSecond, -speeds.vyMetersPerSecond, speeds.omegaRadiansPerSecond);
 
         drivebase.inputSpeeds = speeds; 
