@@ -11,6 +11,8 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.math.trajectory.Trajectory;
+// import edu.wpi.first.math.trajectory.Trajectory.State;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
@@ -70,13 +72,18 @@ public final class FollowEventPath extends TorqueCommand implements Subsystems {
         running = new ArrayList<TorqueCommand>();
     }
 
+    private final PathPlannerState reflect(final Trajectory.State state) {
+        return PathPlannerTrajectory.transformStateForAlliance((PathPlannerState)state, DriverStation.getAlliance()); 
+    }
+
     @Override
     protected final void init() {
         timer.reset();
         timer.start();
         if (!resetOdometry) return;
-        SmartDashboard.putBoolean("MArker 1", true);
-        drivebase.resetPose(trajectory.getInitialPose());
+
+        drivebase.resetPose(reflect(trajectory.getInitialState()).poseMeters);
+
         unpassed.clear();
         unpassed.addAll(events);
         running.clear();
@@ -86,11 +93,7 @@ public final class FollowEventPath extends TorqueCommand implements Subsystems {
     protected final void continuous() {
         final double elapsed = timer.get();
        
-        final PathPlannerState original = (PathPlannerState)trajectory.sample(elapsed);
-        SmartDashboard.putString("PPL_Og.", original.toString());
-        // final PathPlannerState current = PathPlannerTrajectory.transformStateForAlliance(original, DriverStation.getAlliance());
-        final PathPlannerState current = original;
-        SmartDashboard.putString("PPL_Cur.", current.toString());
+        final PathPlannerState current = reflect(trajectory.sample(elapsed));
 
         ChassisSpeeds speeds = controller.calculate(drivebase.getPose(), current, current.holonomicRotation);
         speeds = new ChassisSpeeds(-speeds.vxMetersPerSecond, -speeds.vyMetersPerSecond, speeds.omegaRadiansPerSecond);

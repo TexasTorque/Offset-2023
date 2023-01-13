@@ -357,7 +357,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         this.alignment = alignment;
     }
 
-    public double TARGET_AMBIGUITY = 0.2;
+    public static final double TARGET_AMBIGUITY = 0.2;
     
     private static final TrapezoidProfile.Constraints X_CONSTRAINTS = new TrapezoidProfile.Constraints(12, 12);
     private static final TrapezoidProfile.Constraints Y_CONSTRAINTS = new TrapezoidProfile.Constraints(12, 12);
