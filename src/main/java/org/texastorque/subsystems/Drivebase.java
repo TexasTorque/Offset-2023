@@ -109,11 +109,19 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
     public static final Pose2d INITIAL_POS = new Pose2d(13, 7, new Rotation2d(0));
 
-    private final Translation2d 
-            LOC_FL = new Translation2d(Units.inchesToMeters(11.815), Units.inchesToMeters(-12.059)), // (+, +)
-            LOC_FR = new Translation2d(Units.inchesToMeters(11.765), Units.inchesToMeters(12.057)), // (+, -)
-            LOC_BL = new Translation2d(Units.inchesToMeters(-11.734),  Units.inchesToMeters(-12.025)), // (-, +)
-            LOC_BR = new Translation2d(Units.inchesToMeters(-11.784),  Units.inchesToMeters(12.027)); // (-, -)
+    private static final double SIZE = Units.inchesToMeters(12);
+
+    // private final Translation2d 
+    //         LOC_FL = new Translation2d(Units.inchesToMeters(11.815), Units.inchesToMeters(-12.059)), // (+, +)
+    //         LOC_FR = new Translation2d(Units.inchesToMeters(11.765), Units.inchesToMeters(12.057)), // (+, -)
+    //         LOC_BL = new Translation2d(Units.inchesToMeters(-11.734),  Units.inchesToMeters(-12.025)), // (-, +)
+    //         LOC_BR = new Translation2d(Units.inchesToMeters(-11.784),  Units.inchesToMeters(12.027)); // (-, -)
+
+    private final Translation2d
+            LOC_FL = new Translation2d(SIZE, -SIZE),
+            LOC_FR = new Translation2d(SIZE, SIZE),
+            LOC_BL = new Translation2d(-SIZE, -SIZE),
+            LOC_BR = new Translation2d(-SIZE, SIZE);
 
     // This is the kinematics object that calculates the desired wheel speeds
     private final SwerveDriveKinematics kinematics;
@@ -151,7 +159,9 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
     // Internal state variables.
     private double lastRotationRadians;
-    private final PIDController rotationalPID, directRotPID;
+    private final ProfiledPIDController rotationalPID = new ProfiledPIDController(1, 0, 0, OMEGA_CONSTRAINTS), 
+        directRotPID = new ProfiledPIDController(1, 0, 0, OMEGA_CONSTRAINTS);
+
     private SwerveModuleState[] swerveStates;
 
     @Log.ToString(name = "Closest ID")
@@ -186,10 +196,8 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         camera = new TorqueVision(CAMERA_NAME, CAMERA_TO_CENTER);
 
         // Configure the rotational lock PID.
-        rotationalPID = TorquePID.create(0.025).addDerivative(.001).build();
         rotationalPID.enableContinuousInput(-Math.PI, Math.PI);
 
-        directRotPID = TorquePID.create(0.07).addDerivative(.002).build();
         directRotPID.enableContinuousInput(0, 2 * Math.PI);
         lastRotationRadians = gyro.getRotation2d().getRadians();
 
@@ -246,7 +254,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         });
 
         mode.onTeleop(() -> {
-            isRotationLocked = true;
+            isRotationLocked = false;
             isDirectRotation = false;
             state = State.FIELD_RELATIVE;
         });
@@ -507,6 +515,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     // Interfacing with the robot position estimator.
 
     public void resetPose(final Pose2d pose) {
+        SmartDashboard.putBoolean("MArker 2", true);
         gyro.setOffsetCW(pose.getRotation());
         poseEstimator.resetPosition(gyro.getHeadingCCW(), getModulePositions(), pose);
     }
