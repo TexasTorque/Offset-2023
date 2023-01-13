@@ -91,10 +91,12 @@ public final class Field {
         return newMap;
     }
 
-    public static final Map<Integer, Pose3d> APRIL_TAGS = 
-        DriverStation.getAlliance() == DriverStation.Alliance.Blue
-        ? APRIL_TAG_ORIGINALS
-        : reflectAprilTags(); 
+    // public static final Map<Integer, Pose3d> APRIL_TAGS = 
+    //     DriverStation.getAlliance() == DriverStation.Alliance.Blue
+    //     ? APRIL_TAG_ORIGINALS
+    //     : reflectAprilTags(); 
+
+    public static final Map<Integer, Pose3d> APRIL_TAGS = APRIL_TAG_ORIGINALS;
 
 
     public static double ALIGN_X_OFFSET_GRID = (15.589758 - 14.72);
