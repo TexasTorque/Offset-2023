@@ -73,7 +73,7 @@ public final class Field {
     public static final Pose3d reflectPosition(final Pose3d pose) {
         return new Pose3d(
             FIELD_LENGTH - pose.getTranslation().getX(),
-            pose.getTranslation().getY(),
+            FIELD_WIDTH - pose.getTranslation().getY(),
             pose.getTranslation().getZ(),
             pose.getRotation().plus(new Rotation3d(0, 0, Math.PI)));
     }
@@ -85,11 +85,8 @@ public final class Field {
             pose.getRotation().plus(new Rotation2d(Math.PI)));
     }
 
-    // public static int[] ENEMY_TAG_IDS = DriverStation.getAlliance() == DriverStation.Alliance.Red ? 
-            // new int[] { 8, 7, 6, 4 } : new int[] { 1, 2, 3, 5 };
-
-    public static Map<Integer, Boolean> ENEMY_TAG_IDS = DriverStation.getAlliance() == DriverStation.Alliance.Red ? 
-           Map.of(8, true, 7, true, 6, true, 4, true) : Map.of(1, true, 2, true, 3, true, 5, true);
+    public static Map<Integer, Boolean> OUR_TAG_IDS = DriverStation.getAlliance() == DriverStation.Alliance.Blue ? 
+           Map.of(8, true, 7, true, 6, true, 4, false) : Map.of(1, true, 2, true, 3, true, 5, false);
 
     private static final Map<Integer, Pose3d> reflectAprilTags() {
         final Map<Integer, Pose3d> newMap = new HashMap<>();
@@ -109,6 +106,21 @@ public final class Field {
 
     public static enum AlignState {
         NONE, CENTER, RIGHT, LEFT;
+    }
+
+    public static enum GridState {
+        NONE(-1, -1), LEFT(1, 6), CENTER(2, 7), RIGHT(3, 8);
+
+        private final int blueID, redID;
+
+        private GridState(final int blueID, final int redID) {
+            this.redID = redID;
+            this.blueID = blueID;
+        }
+
+        public int get() {
+            return 1;
+        }
     }
 
     public static enum AprilTagType {
