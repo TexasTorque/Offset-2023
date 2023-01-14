@@ -43,15 +43,15 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
     public final void update(final TorqueMode mode) {
         setColor();
 
-        if (!blink) return;
+        // if (!blink) return;
 
-        final double timestamp = TorqueUtil.time();
-        on = Math.floor(timestamp) % 2 == 0;
-        if (lastOn != on) {
-            if (on) leds.start();
-            else leds.stop();
-            lastOn = on;
-        }
+        // final double timestamp = TorqueUtil.time();
+        // on = Math.floor(timestamp) % 2 == 0;
+        // if (lastOn != on) {
+        //     if (on) leds.start();
+        //     else leds.stop();
+        //     lastOn = on;
+        // }
     }
 
     private final void setColor() {

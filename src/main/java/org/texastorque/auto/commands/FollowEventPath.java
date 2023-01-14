@@ -4,6 +4,9 @@ import com.pathplanner.lib.PathPlanner;
 import com.pathplanner.lib.PathPlannerTrajectory;
 import com.pathplanner.lib.PathPlannerTrajectory.EventMarker;
 import com.pathplanner.lib.PathPlannerTrajectory.PathPlannerState;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.server.PathPlannerServer;
+
 import edu.wpi.first.math.controller.HolonomicDriveController;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
@@ -11,6 +14,8 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.math.trajectory.Trajectory;
+// import edu.wpi.first.math.trajectory.Trajectory.State;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
@@ -22,6 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.texastorque.Field;
 import org.texastorque.Subsystems;
 import org.texastorque.subsystems.Drivebase;
 import org.texastorque.torquelib.auto.TorqueCommand;
@@ -33,8 +39,8 @@ public final class FollowEventPath extends TorqueCommand implements Subsystems {
     private final PIDController xController = TorquePID.create(1).build();
     private final PIDController yController = TorquePID.create(1).build();
 
-    private final ProfiledPIDController thetaController;
-    private final HolonomicDriveController controller;
+    private final PIDController thetaController;
+    private final PPHolonomicDriveController controller;
 
     private final PathPlannerTrajectory trajectory;
     private final Timer timer = new Timer();
@@ -53,14 +59,14 @@ public final class FollowEventPath extends TorqueCommand implements Subsystems {
     }
 
     public FollowEventPath(final String name, final Map<String, TorqueCommand> commands, final boolean reset, final double maxSpeed, final double maxAcceleration) {
-        thetaController = new ProfiledPIDController(Math.PI * 2, 0, 0, new TrapezoidProfile.Constraints(6 * Math.PI, 6 * Math.PI));
+        thetaController = new PIDController(Math.PI * 2, 0, 0);
 
         xController.setTolerance(0.01);
         yController.setTolerance(0.01);
         thetaController.setTolerance(Units.degreesToRadians(2));
         thetaController.enableContinuousInput(-Math.PI, Math.PI);
 
-        controller = new HolonomicDriveController(xController, yController, thetaController);
+        controller = new PPHolonomicDriveController(xController, yController, thetaController);
 
         trajectory = PathPlanner.loadPath(name, maxSpeed, maxAcceleration);
         events = trajectory.getMarkers();
@@ -68,34 +74,47 @@ public final class FollowEventPath extends TorqueCommand implements Subsystems {
         this.commands = commands;
         this.resetOdometry = reset;
         running = new ArrayList<TorqueCommand>();
+
+    }
+
+    private final PathPlannerState reflect(final Trajectory.State state) {
+        return PathPlannerTrajectory.transformStateForAlliance((PathPlannerState)state, DriverStation.getAlliance()); 
     }
 
     @Override
     protected final void init() {
         timer.reset();
         timer.start();
-        if (!resetOdometry) return;
-        SmartDashboard.putBoolean("MArker 1", true);
-        drivebase.resetPose(trajectory.getInitialPose());
+
+        drivebase.fieldMap.getObject("traj").setTrajectory(this.trajectory);
+
+        PathPlannerServer.sendActivePath(this.trajectory.getStates());
+
+        if (resetOdometry) {
+            // Possible fix to bug:
+            Pose2d pose = reflect(trajectory.getInitialState()).poseMeters;
+            if (DriverStation.getAlliance() == DriverStation.Alliance.Red)
+                pose = new Pose2d(pose.getTranslation(), pose.getRotation().plus(Rotation2d.fromRadians(Math.PI)));
+            drivebase.resetPose(pose);
+            // drivebase.resetPose(reflect(trajectory.getInitialState()).poseMeters);
+        }
+        
         unpassed.clear();
         unpassed.addAll(events);
         running.clear();
+
+
     }
 
     @Override
     protected final void continuous() {
         final double elapsed = timer.get();
        
-        final PathPlannerState original = (PathPlannerState)trajectory.sample(elapsed);
-        SmartDashboard.putString("PPL_Og.", original.toString());
-        // final PathPlannerState current = PathPlannerTrajectory.transformStateForAlliance(original, DriverStation.getAlliance());
-        final PathPlannerState current = original;
-        SmartDashboard.putString("PPL_Cur.", current.toString());
+        final PathPlannerState desired = reflect(trajectory.sample(elapsed));
 
-        ChassisSpeeds speeds = controller.calculate(drivebase.getPose(), current, current.holonomicRotation);
-        speeds = new ChassisSpeeds(-speeds.vxMetersPerSecond, -speeds.vyMetersPerSecond, speeds.omegaRadiansPerSecond);
-
-        drivebase.inputSpeeds = speeds; 
+        final ChassisSpeeds speeds = controller.calculate(drivebase.getPose(), desired);
+        
+        drivebase.inputSpeeds = new ChassisSpeeds(-speeds.vxMetersPerSecond, -speeds.vyMetersPerSecond, speeds.omegaRadiansPerSecond);
 
         if (unpassed.size() > 0 && elapsed >= unpassed.get(0).timeSeconds) {
             final EventMarker marker = unpassed.remove(0);
@@ -109,6 +128,8 @@ public final class FollowEventPath extends TorqueCommand implements Subsystems {
         for (int i = running.size() - 1; i >= 0; i--)
             if (running.get(i).run())
                 running.remove(i);
+
+        PathPlannerServer.sendPathFollowingData(new Pose2d(desired.poseMeters.getTranslation(), desired.holonomicRotation), drivebase.getPose());
     }
 
     @Override
@@ -122,6 +143,8 @@ public final class FollowEventPath extends TorqueCommand implements Subsystems {
         for (final TorqueCommand command : running)
             command.reset();
         drivebase.inputSpeeds = new ChassisSpeeds();
+
+        drivebase.fieldMap.getObject("traj").close();
     }
 
     public void addEvent(final String name, final TorqueCommand command) {

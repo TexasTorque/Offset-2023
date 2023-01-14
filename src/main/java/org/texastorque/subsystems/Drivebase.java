@@ -107,15 +107,9 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
             MAGIC_NUMBER = 34;
 
-    public static final Pose2d INITIAL_POS = new Pose2d(13, 7, new Rotation2d(0));
+    public static final Pose2d INITIAL_POS = new Pose2d(0, 0, new Rotation2d(0));
 
     private static final double SIZE = Units.inchesToMeters(12);
-
-    // private final Translation2d 
-    //         LOC_FL = new Translation2d(Units.inchesToMeters(11.815), Units.inchesToMeters(-12.059)), // (+, +)
-    //         LOC_FR = new Translation2d(Units.inchesToMeters(11.765), Units.inchesToMeters(12.057)), // (+, -)
-    //         LOC_BL = new Translation2d(Units.inchesToMeters(-11.734),  Units.inchesToMeters(-12.025)), // (-, +)
-    //         LOC_BR = new Translation2d(Units.inchesToMeters(-11.784),  Units.inchesToMeters(12.027)); // (-, -)
 
     private final Translation2d
             LOC_FL = new Translation2d(SIZE, -SIZE),
@@ -132,7 +126,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     private final SwerveDrivePoseEstimator poseEstimator;
 
     @Log.Field2d(name = "Robot Field")
-    private final Field2d fieldMap = new Field2d();
+    public final Field2d fieldMap = new Field2d();
 
     // Matrix constants for the pose estimator.
     // private static final Matrix<N3, N1> STATE_STDS = new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.05, 0.05, Units.degreesToRadians(5));
@@ -214,6 +208,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         fr = new TorqueSwerveModule2022("Front Right", 5, 6, 11, 4.312011279165745, config);
         bl = new TorqueSwerveModule2022("Back Left", 1, 2, 9, 1.135143488645554, config);
         br = new TorqueSwerveModule2022("Back Right", 7, 8, 12, 5.186378560960293, config);
+
         // The offsets need to be found experimentally.
         // With no power being set to the module position the wheel 100% straight ahead
         // and the offset is the reading of the cancoder.
@@ -227,7 +222,6 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
                     kinematics,
                     gyro.getHeadingCCW(),
                     getModulePositions(),
-                    // new Pose2d(),
                     INITIAL_POS,
                     STATE_STDS,
                     VISION_STDS);
@@ -357,7 +351,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         this.alignment = alignment;
     }
 
-    public double TARGET_AMBIGUITY = 0.2;
+    public static final double TARGET_AMBIGUITY = 0.2;
     
     private static final TrapezoidProfile.Constraints X_CONSTRAINTS = new TrapezoidProfile.Constraints(12, 12);
     private static final TrapezoidProfile.Constraints Y_CONSTRAINTS = new TrapezoidProfile.Constraints(12, 12);
@@ -515,7 +509,6 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     // Interfacing with the robot position estimator.
 
     public void resetPose(final Pose2d pose) {
-        SmartDashboard.putBoolean("MArker 2", true);
         gyro.setOffsetCW(pose.getRotation());
         poseEstimator.resetPosition(gyro.getHeadingCCW(), getModulePositions(), pose);
     }
@@ -524,13 +517,16 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         resetPose(new Pose2d(getPose().getTranslation(), rotation));
     }
 
+    public void setAngle(final Rotation2d rotation) {
+        gyro.setOffsetCW(rotation);
+    }
+
     public void resetPose(final Translation2d translation) {
         resetPose(new Pose2d(translation, gyro.getHeadingCCW()));
     }
 
     public void resetGyro() {
         gyro.setOffsetCW(new Rotation2d(0));
-
     }
 
     public void setState(final State state) {
