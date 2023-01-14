@@ -8,6 +8,7 @@ import java.util.Map;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
@@ -69,12 +70,19 @@ public final class Field {
             Units.inchesToMeters(18.22),
             new Rotation3d()));  
 
-    public static final Pose3d reflectPositions(final Pose3d pose) {
+    public static final Pose3d reflectPosition(final Pose3d pose) {
         return new Pose3d(
             FIELD_LENGTH - pose.getTranslation().getX(),
             pose.getTranslation().getY(),
             pose.getTranslation().getZ(),
             pose.getRotation().plus(new Rotation3d(0, 0, Math.PI)));
+    }
+
+   public static final Pose2d reflectPosition(final Pose2d pose) {
+        return new Pose2d(
+            FIELD_LENGTH - pose.getTranslation().getX(),
+            pose.getTranslation().getY(),
+            pose.getRotation().plus(new Rotation2d(Math.PI)));
     }
 
     // public static int[] ENEMY_TAG_IDS = DriverStation.getAlliance() == DriverStation.Alliance.Red ? 
@@ -86,18 +94,15 @@ public final class Field {
     private static final Map<Integer, Pose3d> reflectAprilTags() {
         final Map<Integer, Pose3d> newMap = new HashMap<>();
         for (final Map.Entry<Integer, Pose3d> aprilTag : APRIL_TAG_ORIGINALS.entrySet()) {
-            newMap.put(aprilTag.getKey(), reflectPositions(aprilTag.getValue()));
+            newMap.put(aprilTag.getKey(), reflectPosition(aprilTag.getValue()));
         }
         return newMap;
     }
 
-    // public static final Map<Integer, Pose3d> APRIL_TAGS = 
-    //     DriverStation.getAlliance() == DriverStation.Alliance.Blue
-    //     ? APRIL_TAG_ORIGINALS
-    //     : reflectAprilTags(); 
-
-    public static final Map<Integer, Pose3d> APRIL_TAGS = APRIL_TAG_ORIGINALS;
-
+    public static final Map<Integer, Pose3d> APRIL_TAGS = 
+        DriverStation.getAlliance() == DriverStation.Alliance.Blue
+        ? APRIL_TAG_ORIGINALS
+        : reflectAprilTags(); 
 
     public static double ALIGN_X_OFFSET_GRID = (15.589758 - 14.72);
     public static double ALIGN_X_OFFSET_LOAD_ZONE = 1;

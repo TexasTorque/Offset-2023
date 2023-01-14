@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.texastorque.Field;
 import org.texastorque.Subsystems;
 import org.texastorque.subsystems.Drivebase;
 import org.texastorque.torquelib.auto.TorqueCommand;
@@ -89,9 +90,15 @@ public final class FollowEventPath extends TorqueCommand implements Subsystems {
 
         PathPlannerServer.sendActivePath(this.trajectory.getStates());
 
-        if (resetOdometry)
-            drivebase.resetPose(reflect(trajectory.getInitialState()).poseMeters);
-
+        if (resetOdometry) {
+            // Possible fix to bug:
+            Pose2d pose = reflect(trajectory.getInitialState()).poseMeters;
+            if (DriverStation.getAlliance() == DriverStation.Alliance.Red)
+                pose = new Pose2d(pose.getTranslation(), pose.getRotation().plus(Rotation2d.fromRadians(Math.PI)));
+            drivebase.resetPose(pose);
+            // drivebase.resetPose(reflect(trajectory.getInitialState()).poseMeters);
+        }
+        
         unpassed.clear();
         unpassed.addAll(events);
         running.clear();
@@ -105,11 +112,9 @@ public final class FollowEventPath extends TorqueCommand implements Subsystems {
        
         final PathPlannerState desired = reflect(trajectory.sample(elapsed));
 
-        ChassisSpeeds speeds = controller.calculate(drivebase.getPose(), desired);
+        final ChassisSpeeds speeds = controller.calculate(drivebase.getPose(), desired);
         
-        speeds = new ChassisSpeeds(-speeds.vxMetersPerSecond, -speeds.vyMetersPerSecond, speeds.omegaRadiansPerSecond);
-
-        drivebase.inputSpeeds = speeds; 
+        drivebase.inputSpeeds = new ChassisSpeeds(-speeds.vxMetersPerSecond, -speeds.vyMetersPerSecond, speeds.omegaRadiansPerSecond);
 
         if (unpassed.size() > 0 && elapsed >= unpassed.get(0).timeSeconds) {
             final EventMarker marker = unpassed.remove(0);
