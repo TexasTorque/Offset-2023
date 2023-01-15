@@ -45,6 +45,13 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
           drivebase.setAlign(Field.AlignState.LEFT);
          else if (driver.isDPADRightDown()) 
             drivebase.setAlign(Field.AlignState.RIGHT);
+
+        if (operator.isDPADUpDown()) 
+            drivebase.gridOverride = Field.GridState.CENTER;
+         else if (operator.isDPADLeftDown()) 
+            drivebase.gridOverride = Field.GridState.LEFT;
+         else if (operator.isDPADRightDown()) 
+            drivebase.gridOverride = Field.GridState.RIGHT;
     }
 
     private boolean slowMode = false;
@@ -78,7 +85,6 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
             drivebase.resetGyro();
 
         if (resetPose.calculate(driver.isLeftCenterButtonPressed()))
-            // drivebase.resetPose(new Translation2d(0, 0));
             drivebase.resetPose(Drivebase.INITIAL_POS);
     }
 

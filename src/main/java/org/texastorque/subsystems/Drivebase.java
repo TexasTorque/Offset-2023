@@ -15,6 +15,7 @@ import org.texastorque.Field;
 import org.texastorque.Subsystems;
 import org.texastorque.Field.AlignState;
 import org.texastorque.Field.AprilTagType;
+import org.texastorque.Field.GridState;
 import org.texastorque.Field.TranslationState;
 import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueRobotBase;
@@ -158,7 +159,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
     // Internal state variables.
     private double lastRotationRadians;
-    private final ProfiledPIDController rotationalPID = new ProfiledPIDController(1, 0, 0, OMEGA_CONSTRAINTS), 
+    private final ProfiledPIDController rotationalPID = new ProfiledPIDController(.025, .001, 0, OMEGA_CONSTRAINTS), 
         directRotPID = new ProfiledPIDController(1, 0, 0, OMEGA_CONSTRAINTS);
 
     private SwerveModuleState[] swerveStates;
@@ -316,7 +317,6 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     }
 
     private void calculateTeleop() {
-        // Calculate the locked rotation with the PID.
         final double realRotationRadians = gyro.getHeadingCCW().getRadians();
 
         if (isDirectRotation) {
@@ -344,10 +344,9 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     }
 
     private AlignState alignment = AlignState.NONE;
-    private AlignState gridOverride = AlignState.NONE;
+    public GridState gridOverride = GridState.NONE;
 
-    public void setAlign(final AlignState alignment, final AlignState gridOverride) {
-        this.gridOverride = gridOverride;
+    public void setAlign(final AlignState alignment) {
         state = alignment == AlignState.NONE ? state.parent : State.ALIGN;
         this.alignment = alignment;
     }
@@ -407,11 +406,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     }
 
     private void calculateChassisSpeedsAlignment(final Pose2d goalPose) {
-        SmartDashboard.putString("CCSA::goalPose", goalPose.toString());
-
         final Pose2d robotPose = poseEstimator.getEstimatedPosition();
-
-        SmartDashboard.putString("CCSA::robotPose", robotPose.toString());
 
         xController.setGoal(goalPose.getX());
         yController.setGoal(goalPose.getY());
@@ -449,11 +444,11 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
             return;
         }
 
-        if (closestID == -1) 
-            closestID = findClosestAprilTagID();
+        closestID = (closestID == -1 && gridOverride == GridState.NONE)
+                ? findClosestAprilTagID()
+                : gridOverride.getID();
 
         final Pose3d aprilPose = Field.APRIL_TAGS.get(closestID);
-        SmartDashboard.putNumber("Closest April ID", closestID); 
 
         final Optional<TranslationState> translationState = getTranslationState(closestID);
         if (translationState.isEmpty()) {
@@ -463,8 +458,6 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
         final Pose2d goalPose = translationState.get().calculate(aprilPose);
         calculateChassisSpeedsAlignment(goalPose);        
-
-        SmartDashboard.putString("CA_CS", inputSpeeds.toString());
 
         convertToFieldRelative();
     }
@@ -514,6 +507,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
        
         state = state.parent;
         alignment = AlignState.NONE;
+        gridOverride = GridState.NONE;
     }
 
     // Interfacing with the robot position estimator.

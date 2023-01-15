@@ -118,8 +118,8 @@ public final class Field {
             this.blueID = blueID;
         }
 
-        public int get() {
-            return 1;
+        public int getID() {
+            return DriverStation.getAlliance() == DriverStation.Alliance.Blue ? blueID : redID;
         }
     }
 
