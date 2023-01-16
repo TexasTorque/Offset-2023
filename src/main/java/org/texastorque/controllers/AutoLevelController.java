@@ -1,11 +1,14 @@
 package org.texastorque.controllers;
 
 import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
 
 import org.texastorque.torquelib.control.TorqueClick;
 import org.texastorque.torquelib.sensors.TorqueNavXGyro;
 
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
@@ -34,6 +37,10 @@ public final class AutoLevelController {
             return lower <= angle.getDegrees() && angle.getDegrees() <= upper;
         }
 
+        public Rotation2d getCenterHeading() {
+            return Rotation2d.fromDegrees((lower + upper) / 2.0);
+        }
+
         public double getAngle() {
             return angleSupplier.getAsDouble();
         }        
@@ -41,10 +48,21 @@ public final class AutoLevelController {
 
     private BalanceDirection balanceDirection = BalanceDirection.POS_X;
 
-    private static final TrapezoidProfile.Constraints BALANCE_CONSTRAINTS = new TrapezoidProfile.Constraints(0.25, 0.25);
-    private final ProfiledPIDController balancePID = new ProfiledPIDController(0.05, 0.00, 0.01, BALANCE_CONSTRAINTS);
+    private static final TrapezoidProfile.Constraints X_CONSTRAINTS = new TrapezoidProfile.Constraints(.5, .5);
+    private static final TrapezoidProfile.Constraints Y_CONSTRAINTS = new TrapezoidProfile.Constraints(.25, .25);
+    public static final TrapezoidProfile.Constraints OMEGA_CONSTRAINTS =   new TrapezoidProfile.Constraints(4 * Math.PI, 4 * Math.PI);
 
-    public AutoLevelController() {
+    private final ProfiledPIDController xController = new ProfiledPIDController(3, 0, 0, X_CONSTRAINTS);
+    private final ProfiledPIDController yController = new ProfiledPIDController(3, 0, 0, Y_CONSTRAINTS);
+    private final ProfiledPIDController omegaController = new ProfiledPIDController(4 * Math.PI, 0, 0, OMEGA_CONSTRAINTS);
+
+
+    private final PIDController rotationPID = new PIDController(.05, 0, 0);
+
+    private final Supplier<Pose2d> poseSupplier;
+
+    public AutoLevelController(final Supplier<Pose2d> poseSupplier) {
+        this.poseSupplier = poseSupplier;
     }
 
     public ChassisSpeeds calculate() {
@@ -60,17 +78,39 @@ public final class AutoLevelController {
 
         final double gyroMeasurement = balanceDirection.getAngle();
 
-        SmartDashboard.putNumber("Balance Angle", gyroMeasurement);
+        final double xOffset = -rotationPID.calculate(gyroMeasurement);
 
-        final boolean balanced = -3 <= gyroMeasurement && gyroMeasurement <= 3;
+        SmartDashboard.putNumber("x offset", xOffset);
 
-        final double output = balanced ? 0 : balancePID.calculate(gyroMeasurement, 0);
+        final Pose2d robotPose = poseSupplier.get();
 
-        SmartDashboard.putNumber("PID Out", output);
+        final Pose2d goalPose = new Pose2d(robotPose.getX() + xOffset, staticYPos, balanceDirection.getCenterHeading());
 
-        return new ChassisSpeeds(output, 0, 0);
+        xController.setGoal(goalPose.getX());
+        yController.setGoal(goalPose.getY());
+        omegaController.setGoal(goalPose.getRotation().plus(new Rotation2d(Math.PI)).getRadians());
+
+        final boolean xAtGoal = xController.atGoal();
+        final boolean yAtGoal = yController.atGoal();
+        final boolean omegaAtGoal = omegaController.atGoal();
+
+        final double xSpeed = xAtGoal ? 0 : -xController.calculate(robotPose.getX());
+        final double ySpeed = yAtGoal ? 0 : -yController.calculate(robotPose.getY());
+        final double omegaSpeed = omegaController.calculate(robotPose.getRotation().getRadians());
+
+        return new ChassisSpeeds(xSpeed, ySpeed, 0);
     }
 
-    public void resetIf(final boolean condition) {
+    private double staticYPos = 0;
+
+    public void resetIf(final boolean notInLoop) {
+        if (!notInLoop) return;
+
+        staticYPos = poseSupplier.get().getY();
+
+        final Pose2d robotPose = poseSupplier.get();
+        xController.reset(robotPose.getX());
+        yController.reset(robotPose.getY());
+        omegaController.reset(robotPose.getRotation().getRadians());
     }
 }

@@ -114,7 +114,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     public boolean isRotationLocked = true;
 
     private final SwerveAlignmentController alignmentController = new SwerveAlignmentController(
-        () -> getPose(), () -> state = state.parent);
+        this::getPose, () -> state = state.parent);
 
     public void setAlignState(final AlignState alignment) {
         state = alignment == AlignState.NONE ? state.parent : State.ALIGN;
@@ -127,7 +127,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
     private final CameraController cameraController = new CameraController();
 
-    private final AutoLevelController autoLevelController = new AutoLevelController();
+    private final AutoLevelController autoLevelController = new AutoLevelController(this::getPose);
 
     private Drivebase() {
         rotationalPID.enableContinuousInput(-Math.PI, Math.PI);
