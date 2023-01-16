@@ -6,95 +6,36 @@
  */
 package org.texastorque.subsystems;
 
-import java.sql.Driver;
-import java.util.Map;
 import java.util.Optional;
 
-import org.opencv.features2d.KAZE;
-import org.texastorque.Field;
 import org.texastorque.Subsystems;
-import org.texastorque.Field.AprilTagType;
-
-import org.texastorque.torquelib.base.TorqueMode;
-import org.texastorque.torquelib.base.TorqueRobotBase;
-import org.texastorque.torquelib.base.TorqueSubsystem;
-import org.texastorque.torquelib.control.TorquePID;
-import org.texastorque.torquelib.modules.TorqueSwerveModule2022;
-import org.texastorque.torquelib.modules.TorqueSwerveModule2022.TorqueSwerveModuleConfiguration;
-import org.texastorque.torquelib.sensors.TorqueVision;
-import org.texastorque.torquelib.sensors.TorqueNavXGyro;
-import org.texastorque.torquelib.sensors.util.TorqueAprilTagMap;
-import org.texastorque.torquelib.util.TorqueUtil;
-
-import edu.wpi.first.apriltag.AprilTag;
-import edu.wpi.first.math.MatBuilder;
-import edu.wpi.first.math.Matrix;
-import edu.wpi.first.math.Nat;
-import edu.wpi.first.math.VecBuilder;
-import edu.wpi.first.math.Vector;
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
-import edu.wpi.first.math.kinematics.SwerveModulePosition;
-import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.numbers.N1;
-import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.math.numbers.N5;
-import edu.wpi.first.math.numbers.N7;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.networktables.GenericEntry;
-import edu.wpi.first.networktables.NetworkTableEntry;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
-import edu.wpi.first.wpilibj.shuffleboard.ComplexWidget;
-import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
-import edu.wpi.first.wpilibj.shuffleboard.WidgetType;
-import edu.wpi.first.wpilibj.smartdashboard.Field2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.util.Color;
-import io.github.oblarg.oblog.annotations.Log;
-
 import org.texastorque.controllers.CameraController;
 import org.texastorque.controllers.SwerveAlignmentController;
 import org.texastorque.controllers.SwerveAlignmentController.AlignState;
 import org.texastorque.controllers.SwerveAlignmentController.GridState;
+import org.texastorque.torquelib.base.TorqueMode;
+import org.texastorque.torquelib.base.TorqueSubsystem;
+import org.texastorque.torquelib.modules.TorqueSwerveModule2022;
+import org.texastorque.torquelib.modules.TorqueSwerveModule2022.TorqueSwerveModuleConfiguration;
+import org.texastorque.torquelib.sensors.TorqueNavXGyro;
 
-/**
- * The swerve drivebase subsystem.
- * 
- * The rotation of the drivebase is [0, 2π) radians counterclockwise,
- * with 0 being straight ahead.
- * 
- * 0 or 2π
- * ↑
- * π/2 ← * → 3π/2
- * ↓
- * π
- *
- * -- States --
- * FIELD_RELATIVE Field relative mode, where the robot's heading is relative to
- * the field.
- * ROBOT_RELATIVE Robot relative mode, where the robot's heading is relative to
- * itself.
- * ZERO Sets all encoders back to zero position.
- * 
- * -- Fields --
- * ChassisSpeeds inputSpeeds The requested speeds (x, y, r).
- * boolean isRotationLocked Whether or not the robot's rotation is locked.
- * 
- */
+import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.Vector;
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.util.Color;
+import io.github.oblarg.oblog.annotations.Log;
+
 public final class Drivebase extends TorqueSubsystem implements Subsystems {
     private static volatile Drivebase instance;
 
@@ -177,6 +118,15 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     private final SwerveAlignmentController alignmentController = new SwerveAlignmentController(
         () -> getPose(), () -> state = state.parent);
 
+    public void setAlignState(final AlignState alignment) {
+        state = alignment == AlignState.NONE ? state.parent : State.ALIGN;
+        alignmentController.setAlignment(alignment);
+    }
+
+    public void setGridOverride(final GridState override) {
+        alignmentController.setGridOverride(override);
+    }
+
     private final CameraController cameraController = new CameraController();
 
     /**
@@ -226,9 +176,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
             swerveStates[i] = new SwerveModuleState();
     }
 
-    /**
-     * On change from auto to teleop and back.
-     */
+  
     @Override
     public final void initialize(final TorqueMode mode) {
         mode.onAuto(() -> {
@@ -255,11 +203,6 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         };
     }
 
-
-    /**
-     * Updates the feedback systems like poseEstimator
-     * and stuff and logs to SmartDashboard and Shuffleboard.
-     */
     private void updateFeedback() {
         cameraController.update(poseEstimator::addVisionMeasurement);
 
@@ -285,20 +228,12 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     private void calculateTeleop() {
         final double realRotationRadians = gyro.getHeadingCCW().getRadians();
 
-        // if (false) { // direct rotation - not used
-        //     inputSpeeds.omegaRadiansPerSecond = directRotPID.calculate(
-        //             realRotationRadians, requestedRotation);
-        // } else 
-        {
-            if (isRotationLocked && inputSpeeds.omegaRadiansPerSecond == 0) {
-                final double omega = rotationalPID.calculate(
-                        realRotationRadians, lastRotationRadians);
-                inputSpeeds.omegaRadiansPerSecond = omega;
-            } else
-                lastRotationRadians = realRotationRadians;
-        }
-        
-        convertToFieldRelative();
+        if (isRotationLocked && inputSpeeds.omegaRadiansPerSecond == 0) {
+            final double omega = rotationalPID.calculate(
+                    realRotationRadians, lastRotationRadians);
+            inputSpeeds.omegaRadiansPerSecond = omega;
+        } else
+            lastRotationRadians = realRotationRadians;
     
     }
 
@@ -309,16 +244,6 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
                 inputSpeeds.omegaRadiansPerSecond,
                 gyro.getHeadingCCW());
     }
-
-    public void setAlignment(final AlignState alignment) {
-        state = alignment == AlignState.NONE ? state.parent : State.ALIGN;
-        alignmentController.setAlignment(alignment);
-    }
-
-    public void setGridOverride(final GridState override) {
-        alignmentController.setGridOverride(override);
-    }
-
 
     @Override
     public final void update(final TorqueMode mode) {
@@ -331,14 +256,17 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
                 final Optional<ChassisSpeeds> speedsWrapper = alignmentController.calculateAlignment();
                 if (speedsWrapper.isPresent())
                     inputSpeeds = speedsWrapper.get();
+
                 lights.set(Color.kGreen, Lights.OFF);
             }
 
-            if (state == State.ROBOT_RELATIVE) {
-                
-            } else if (state == State.FIELD_RELATIVE) {
+            if (state == State.FIELD_RELATIVE) {
                 calculateTeleop();
                 lights.set(Lights.ALLIANCE, Lights.SOLID);
+            }
+
+            if (state != State.ROBOT_RELATIVE) {
+                convertToFieldRelative();
             }
 
             swerveStates = kinematics.toSwerveModuleStates(inputSpeeds);
