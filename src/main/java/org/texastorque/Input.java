@@ -5,6 +5,8 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
+import org.texastorque.controllers.SwerveAlignmentController.AlignState;
+import org.texastorque.controllers.SwerveAlignmentController.GridState;
 import org.texastorque.subsystems.Drivebase;
 import org.texastorque.torquelib.base.TorqueDirection;
 import org.texastorque.torquelib.base.TorqueInput;
@@ -40,18 +42,18 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
     private void updateDrivebaseAlign() {
         if (driver.isDPADUpDown()) 
-            drivebase.setAlign(Field.AlignState.CENTER);
+            drivebase.setAlignState(AlignState.CENTER);
          else if (driver.isDPADLeftDown()) 
-          drivebase.setAlign(Field.AlignState.LEFT);
+          drivebase.setAlignState(AlignState.LEFT);
          else if (driver.isDPADRightDown()) 
-            drivebase.setAlign(Field.AlignState.RIGHT);
+            drivebase.setAlignState(AlignState.RIGHT);
 
         if (operator.isDPADUpDown()) 
-            drivebase.gridOverride = Field.GridState.CENTER;
+            drivebase.setGridOverride(GridState.CENTER);
          else if (operator.isDPADLeftDown()) 
-            drivebase.gridOverride = Field.GridState.LEFT;
+            drivebase.setGridOverride(GridState.LEFT);
          else if (operator.isDPADRightDown()) 
-            drivebase.gridOverride = Field.GridState.RIGHT;
+            drivebase.setGridOverride(GridState.RIGHT);
     }
 
     private boolean slowMode = false;
@@ -90,20 +92,10 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
 
     private final TorqueClick toggleRotationLock = new TorqueClick();
-    private final TorqueClick toggleSmartDrive = new TorqueClick();
-    private boolean usingSmartDrive = false;
-    private final TorqueClick toggleIsDirectRotation = new TorqueClick();
 
     private void updateDrivebaseSettings() {
-        if (toggleSmartDrive.calculate(driver.isBButtonDown()))
-            drivebase.setSmartDrive(usingSmartDrive = !usingSmartDrive);
-
         if (toggleRotationLock.calculate(driver.isAButtonDown()))
             drivebase.isRotationLocked = !drivebase.isRotationLocked;
-
-        if (toggleIsDirectRotation.calculate(driver.isYButtonDown()))
-            drivebase.isDirectRotation = !drivebase.isDirectRotation;
-
     }
 
     public static final synchronized Input getInstance() {
