@@ -66,6 +66,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import io.github.oblarg.oblog.annotations.Log;
 
+import org.texastorque.controllers.CameraController;
 import org.texastorque.controllers.SwerveAlignmentController;
 import org.texastorque.controllers.SwerveAlignmentController.AlignState;
 import org.texastorque.controllers.SwerveAlignmentController.GridState;
@@ -166,39 +167,22 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
     private SwerveModuleState[] swerveStates;
 
-    @Log.ToString(name = "Closest ID")
-    private int closestID = -1;
-
     // Fields that store the state of the subsystem
     @Log.ToString(name = "Chassis Speeds")
     public ChassisSpeeds inputSpeeds = new ChassisSpeeds(0, 0, 0);
 
     public double requestedRotation = 0;
-    public boolean
-            isRotationLocked = false,
-            isDirectRotation = false;
-
-    public void setSmartDrive(final boolean useSmartDrive) {
-        fr.useSmartDrive = useSmartDrive;
-        fl.useSmartDrive = useSmartDrive;
-        br.useSmartDrive = useSmartDrive;
-        bl.useSmartDrive = useSmartDrive;
-    }
+    public boolean isRotationLocked = false;
 
     private final SwerveAlignmentController alignmentController = new SwerveAlignmentController(
         () -> getPose(), () -> state = state.parent);
 
-    public final TorqueVision camera;
-    public static final String CAMERA_NAME = "torquevision";
-    public static final Transform3d CAMERA_TO_CENTER = new Transform3d(
-            new Translation3d(-Units.inchesToMeters(29 * .5), Units.inchesToMeters(19.75), 0),
-            new Rotation3d());
+    private final CameraController cameraController = new CameraController();
 
     /**
      * Constructor called on initialization.
      */
     private Drivebase() {
-        camera = new TorqueVision(CAMERA_NAME, CAMERA_TO_CENTER);
 
         // Configure the rotational lock PID.
         rotationalPID.enableContinuousInput(-Math.PI, Math.PI);
@@ -249,17 +233,14 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     public final void initialize(final TorqueMode mode) {
         mode.onAuto(() -> {
             isRotationLocked = false;
-            isDirectRotation = false;
             state = State.ROBOT_RELATIVE;
         });
 
         mode.onTeleop(() -> {
             isRotationLocked = false;
-            isDirectRotation = false;
             state = State.FIELD_RELATIVE;
         });
     }
-    
 
     public static SwerveModulePosition invertSwerveModuleDistance(final SwerveModulePosition pose) {
         return new SwerveModulePosition(-pose.distanceMeters, pose.angle);
@@ -274,26 +255,13 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         };
     }
 
-    private double lastTimestamp = 0;
 
     /**
      * Updates the feedback systems like poseEstimator
      * and stuff and logs to SmartDashboard and Shuffleboard.
      */
     private void updateFeedback() {
-        camera.update();
-    
-        final double timestamp = camera.getTimestamp();
-
-        if (timestamp != lastTimestamp && camera.hasTargets()) {
-            final Optional<Pose3d> estimatedPose = camera.getRobotPoseAprilTag3d(Field.APRIL_TAGS, TARGET_AMBIGUITY);
-            if (estimatedPose.isPresent()) {
-                final Pose2d pose = estimatedPose.get().toPose2d();            
-                poseEstimator.addVisionMeasurement(pose, camera.getTimestamp());
-            }
-        }
-
-        lastTimestamp = timestamp;
+        cameraController.update(poseEstimator::addVisionMeasurement);
 
         poseEstimator.update(gyro.getHeadingCCW(), getModulePositions());
 
@@ -317,10 +285,11 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     private void calculateTeleop() {
         final double realRotationRadians = gyro.getHeadingCCW().getRadians();
 
-        if (isDirectRotation) {
-            inputSpeeds.omegaRadiansPerSecond = directRotPID.calculate(
-                    realRotationRadians, requestedRotation);
-        } else {
+        // if (false) { // direct rotation - not used
+        //     inputSpeeds.omegaRadiansPerSecond = directRotPID.calculate(
+        //             realRotationRadians, requestedRotation);
+        // } else 
+        {
             if (isRotationLocked && inputSpeeds.omegaRadiansPerSecond == 0) {
                 final double omega = rotationalPID.calculate(
                         realRotationRadians, lastRotationRadians);
@@ -341,8 +310,6 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
                 gyro.getHeadingCCW());
     }
 
-  
-
     public void setAlignment(final AlignState alignment) {
         state = alignment == AlignState.NONE ? state.parent : State.ALIGN;
         alignmentController.setAlignment(alignment);
@@ -352,17 +319,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         alignmentController.setGridOverride(override);
     }
 
-    public static final double TARGET_AMBIGUITY = 0.2;
-    
-  
 
-       /**
-     * Called every loop.
-     * 
-     * 1. Update feedback.
-     * 2. Check state.
-     * 3. Execute state base on input parameters.
-     */
     @Override
     public final void update(final TorqueMode mode) {
         updateFeedback();
@@ -402,8 +359,6 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
        
         state = state.parent;
     }
-
-    // Interfacing with the robot position estimator.
 
     public void resetPose(final Pose2d pose) {
         gyro.setOffsetCW(pose.getRotation());
