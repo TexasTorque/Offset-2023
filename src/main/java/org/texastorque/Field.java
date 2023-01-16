@@ -85,6 +85,8 @@ public final class Field {
             pose.getRotation().plus(new Rotation2d(Math.PI)));
     }
 
+    // Key (int): ID of the AprilTag
+    // Value (boolean): True if the AprilTag is marks a grid, false if it marks a load zone
     public static Map<Integer, Boolean> OUR_TAG_IDS = DriverStation.getAlliance() == DriverStation.Alliance.Blue ? 
            Map.of(8, true, 7, true, 6, true, 4, false) : Map.of(1, true, 2, true, 3, true, 5, false);
 

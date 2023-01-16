@@ -7,6 +7,7 @@
 package org.texastorque.auto.commands;
 
 import org.texastorque.Subsystems;
+import org.texastorque.subsystems.Lights;
 import org.texastorque.torquelib.auto.TorqueCommand;
 import org.texastorque.torquelib.util.TorqueUtil;
 
@@ -21,7 +22,7 @@ public final class SetIntakeMode extends TorqueCommand implements Subsystems {
 
     @Override
     protected final void init() {
-        lights.set(on ? Color.kGreen : Color.kRed, null);
+        lights.set(on ? Color.kGreen : Color.kRed, Lights.SOLID);
     }
 
     @Override
