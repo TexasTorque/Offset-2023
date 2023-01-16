@@ -9,6 +9,7 @@ package org.texastorque.subsystems;
 import java.util.Optional;
 
 import org.texastorque.Subsystems;
+import org.texastorque.controllers.AutoLevelController;
 import org.texastorque.controllers.CameraController;
 import org.texastorque.controllers.SwerveAlignmentController;
 import org.texastorque.controllers.SwerveAlignmentController.AlignState;
@@ -40,7 +41,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     private static volatile Drivebase instance;
 
     public static enum State {
-        FIELD_RELATIVE(null), ROBOT_RELATIVE(null), ALIGN(FIELD_RELATIVE), ZERO(FIELD_RELATIVE);
+        FIELD_RELATIVE(null), ROBOT_RELATIVE(null), ALIGN(FIELD_RELATIVE), ZERO(FIELD_RELATIVE), BALANCE(FIELD_RELATIVE);
 
         public final State parent;
         private State(final State parent) {
@@ -128,6 +129,8 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     }
 
     private final CameraController cameraController = new CameraController();
+
+    private final AutoLevelController autoLevelController = new AutoLevelController();
 
     /**
      * Constructor called on initialization.
@@ -258,8 +261,11 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
                     inputSpeeds = speedsWrapper.get();
 
                 lights.set(Color.kGreen, Lights.OFF);
+            } else if (state == State.BALANCE) {
+                inputSpeeds = autoLevelController.calculate();
+                // autoLevelController.calculate();
             }
-
+            
             if (state == State.FIELD_RELATIVE) {
                 calculateTeleop();
                 lights.set(Lights.ALLIANCE, Lights.SOLID);
@@ -283,7 +289,8 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
             }
         }
 
-        alignmentController.resetIf(state == State.ALIGN);
+        alignmentController.resetIf(state != State.ALIGN);
+        autoLevelController.resetIf(state != State.BALANCE);
        
         state = state.parent;
     }

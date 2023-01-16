@@ -33,7 +33,8 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
 
     private void updateDrivebase() {
-        drivebase.state = driver.isXButtonDown() ? Drivebase.State.ZERO : Drivebase.State.FIELD_RELATIVE;
+        drivebase.state = driver.isXButtonDown() ? Drivebase.State.ZERO :   
+                (driver.isYButtonDown() ? Drivebase.State.BALANCE : Drivebase.State.FIELD_RELATIVE );
 
         updateDrivebaseSpeeds();
         updateDrivebaseAlign();
