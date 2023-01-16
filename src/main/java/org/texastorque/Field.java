@@ -101,29 +101,8 @@ public final class Field {
         ? APRIL_TAG_ORIGINALS
         : reflectAprilTags(); 
 
-    public static double ALIGN_X_OFFSET_GRID = (15.589758 - 14.72);
-    public static double ALIGN_X_OFFSET_LOAD_ZONE = 1;
 
-    public static enum AlignState {
-        NONE, CENTER, RIGHT, LEFT;
-    }
-
-    public static enum GridState {
-        NONE(-1, -1), LEFT(1, 6), CENTER(2, 7), RIGHT(3, 8);
-
-        private final int blueID, redID;
-
-        private GridState(final int blueID, final int redID) {
-            this.redID = redID;
-            this.blueID = blueID;
-        }
-
-        public int getID() {
-            return DriverStation.getAlliance() == DriverStation.Alliance.Blue ? blueID : redID;
-        }
-    }
-
-    public static enum AprilTagType {
+      public static enum AprilTagType {
         GRID, LOAD_ZONE, INVALID;
 
         public boolean isGrid() {
@@ -144,28 +123,4 @@ public final class Field {
         if (id == 4 || id == 5) return AprilTagType.LOAD_ZONE;
         return AprilTagType.GRID;
     }
-
-    public static enum TranslationState {
-        NONE(0, 0),
-        GRID_CENTER(ALIGN_X_OFFSET_GRID, 0), 
-        GRID_RIGHT(ALIGN_X_OFFSET_GRID, -Units.inchesToMeters(22)), 
-        GRID_LEFT(ALIGN_X_OFFSET_GRID, Units.inchesToMeters(22)),
-        LOAD_ZONE_RIGHT(ALIGN_X_OFFSET_LOAD_ZONE, -Units.inchesToMeters(30)),
-        LOAD_ZONE_LEFT(ALIGN_X_OFFSET_LOAD_ZONE, Units.inchesToMeters(30));
-
-        public Translation3d transl;
-        private double x, y;
-
-        private TranslationState(final double x, final double y) {
-            this.x = x;
-            this.y = y;
-        }
-
-        public Pose2d calculate(final Pose3d pose) {
-            final Translation3d transl = new Translation3d(x * (pose.getX() > FIELD_LENGTH / 2 ? -1 : 1), y, 0);
-            return (new Pose3d(pose.getTranslation().plus(transl), pose.getRotation())).toPose2d();
-        }
-    }
-
-    
 }

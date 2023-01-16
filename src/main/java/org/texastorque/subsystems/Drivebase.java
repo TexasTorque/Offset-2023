@@ -13,10 +13,8 @@ import java.util.Optional;
 import org.opencv.features2d.KAZE;
 import org.texastorque.Field;
 import org.texastorque.Subsystems;
-import org.texastorque.Field.AlignState;
 import org.texastorque.Field.AprilTagType;
-import org.texastorque.Field.GridState;
-import org.texastorque.Field.TranslationState;
+
 import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueRobotBase;
 import org.texastorque.torquelib.base.TorqueSubsystem;
@@ -67,6 +65,10 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import io.github.oblarg.oblog.annotations.Log;
+
+import org.texastorque.controllers.SwerveAlignmentController;
+import org.texastorque.controllers.SwerveAlignmentController.AlignState;
+import org.texastorque.controllers.SwerveAlignmentController.GridState;
 
 /**
  * The swerve drivebase subsystem.
@@ -183,6 +185,9 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         bl.useSmartDrive = useSmartDrive;
     }
 
+    private final SwerveAlignmentController alignmentController = new SwerveAlignmentController(
+        () -> getPose(), () -> state = state.parent);
+
     public final TorqueVision camera;
     public static final String CAMERA_NAME = "torquevision";
     public static final Transform3d CAMERA_TO_CENTER = new Transform3d(
@@ -235,8 +240,6 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         swerveStates = new SwerveModuleState[4];
         for (int i = 0; i < swerveStates.length; i++)
             swerveStates[i] = new SwerveModuleState();
-
-        configurePIDControllerTolerance();
     }
 
     /**
@@ -280,11 +283,6 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     private void updateFeedback() {
         camera.update();
     
-        // Optional<Transform3d> tranfs = camera.getTransformToAprilTag3d();
-        // if (tranfs.isPresent()) {
-        //     SmartDashboard.putString("Transf", tranfs.get().toString());
-        // }
-
         final double timestamp = camera.getTimestamp();
 
         if (timestamp != lastTimestamp && camera.hasTargets()) {
@@ -343,126 +341,22 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
                 gyro.getHeadingCCW());
     }
 
-    private AlignState alignment = AlignState.NONE;
-    public GridState gridOverride = GridState.NONE;
+  
 
-    public void setAlign(final AlignState alignment) {
+    public void setAlignment(final AlignState alignment) {
         state = alignment == AlignState.NONE ? state.parent : State.ALIGN;
-        this.alignment = alignment;
+        alignmentController.setAlignment(alignment);
+    }
+
+    public void setGridOverride(final GridState override) {
+        alignmentController.setGridOverride(override);
     }
 
     public static final double TARGET_AMBIGUITY = 0.2;
     
-    private static final TrapezoidProfile.Constraints X_CONSTRAINTS = new TrapezoidProfile.Constraints(3.5, 3.5);
-    private static final TrapezoidProfile.Constraints Y_CONSTRAINTS = new TrapezoidProfile.Constraints(3.5, 3.5);
-    private static final TrapezoidProfile.Constraints OMEGA_CONSTRAINTS =   new TrapezoidProfile.Constraints(4 * Math.PI, 4 * Math.PI);    
+  
 
-    private final ProfiledPIDController xController = new ProfiledPIDController(3, 0, 0, X_CONSTRAINTS);
-    private final ProfiledPIDController yController = new ProfiledPIDController(3, 0, 0, Y_CONSTRAINTS);
-    private final ProfiledPIDController omegaController = new ProfiledPIDController(4 * Math.PI, 0, 0, OMEGA_CONSTRAINTS);
-
-    public void configurePIDControllerTolerance() {
-        xController.setTolerance(0.02);
-        yController.setTolerance(0.02);
-        omegaController.setTolerance(Units.degreesToRadians(1));
-        omegaController.enableContinuousInput(-Math.PI, Math.PI);
-    }
-
-    private int findClosestAprilTagID() {
-        final Pose2d robotPose = poseEstimator.getEstimatedPosition();
-        double currentClosestDistance = Double.MAX_VALUE; 
-        int closestID = -1;
-       
-        for (final Map.Entry<Integer, Pose3d> aprilPose : Field.APRIL_TAGS.entrySet()) {
-
-            final double distance = robotPose.getTranslation().getDistance(aprilPose.getValue().toPose2d().getTranslation());
-            final int id = aprilPose.getKey();
-
-            if (distance < currentClosestDistance && Field.OUR_TAG_IDS.containsKey(id)) {
-                currentClosestDistance = distance;
-                closestID = id;
-            }
-        }
-
-        return closestID;
-    } 
-
-    private Optional<TranslationState> getTranslationState(final int closestID) {
-        final AprilTagType tagType = Field.getAprilTagType(closestID);
-
-        if (!tagType.isValid()) {
-            state = state.parent;
-            return Optional.empty();
-        }
-
-        if (alignment == AlignState.CENTER)
-            return Optional.of(TranslationState.GRID_CENTER);
-        else if (alignment == AlignState.LEFT)
-            return Optional.of(tagType.isGrid() ? TranslationState.GRID_LEFT : TranslationState.LOAD_ZONE_LEFT); 
-        else if (alignment == AlignState.RIGHT)
-            return  Optional.of(tagType.isGrid() ? TranslationState.GRID_RIGHT : TranslationState.LOAD_ZONE_RIGHT); 
-        else
-            return Optional.empty();
-    }
-
-    private void calculateChassisSpeedsAlignment(final Pose2d goalPose) {
-        final Pose2d robotPose = poseEstimator.getEstimatedPosition();
-
-        xController.setGoal(goalPose.getX());
-        yController.setGoal(goalPose.getY());
-        omegaController.setGoal(goalPose.getRotation().plus(new Rotation2d(Math.PI)).getRadians());
-
-        final boolean xAtGoal = xController.atGoal();
-        final boolean yAtGoal = yController.atGoal();
-        final boolean omegaAtGoal = omegaController.atGoal();
-
-        final double xSpeed = xAtGoal ? 0 : -xController.calculate(robotPose.getX());
-        final double ySpeed = yAtGoal ? 0 : -yController.calculate(robotPose.getY());
-        final double omegaSpeed = omegaController.calculate(robotPose.getRotation().getRadians());
-
-        // final double xSpeed =  -xController.calculate(robotPose.getX());
-        // final double ySpeed =  -yController.calculate(robotPose.getY());
-        // final double omegaSpeed =  omegaController.calculate(robotPose.getRotation().getRadians());
-        
-        inputSpeeds = new ChassisSpeeds(xSpeed, ySpeed, omegaSpeed);
-    }
-
-    private void resetClosestID() {
-        if (state == State.ALIGN) return;
-
-        closestID = -1;
-        final Pose2d robotPose = poseEstimator.getEstimatedPosition();
-        xController.reset(robotPose.getX());
-        yController.reset(robotPose.getY());
-        omegaController.reset(robotPose.getRotation().getRadians());
-    }
-
-    private void calculateAlignment() {
-
-        if (alignment == AlignState.NONE) {
-            state = state.parent;
-            return;
-        }
-
-        closestID = (closestID == -1 && gridOverride == GridState.NONE)
-                ? findClosestAprilTagID()
-                : gridOverride.getID();
-
-        final Pose3d aprilPose = Field.APRIL_TAGS.get(closestID);
-
-        final Optional<TranslationState> translationState = getTranslationState(closestID);
-        if (translationState.isEmpty()) {
-            state = state.parent;
-            return;
-        }
-
-        final Pose2d goalPose = translationState.get().calculate(aprilPose);
-        calculateChassisSpeedsAlignment(goalPose);        
-
-        convertToFieldRelative();
-    }
-
-    /**
+       /**
      * Called every loop.
      * 
      * 1. Update feedback.
@@ -476,9 +370,12 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         if (state == State.ZERO) {
             zeroModules();
         } else {
-            if (state == State.ALIGN) 
-                calculateAlignment();
+            if (state == State.ALIGN) {
+                final Optional<ChassisSpeeds> speedsWrapper = alignmentController.calculateAlignment();
+                if (speedsWrapper.isPresent())
+                    inputSpeeds = speedsWrapper.get();
                 lights.set(Color.kGreen, Lights.OFF);
+            }
 
             if (state == State.ROBOT_RELATIVE) {
                 
@@ -501,13 +398,9 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
             }
         }
 
-        resetClosestID();
-
-        SmartDashboard.putString("DriveBaseState", state.toString());
+        alignmentController.resetIf(state == State.ALIGN);
        
         state = state.parent;
-        alignment = AlignState.NONE;
-        gridOverride = GridState.NONE;
     }
 
     // Interfacing with the robot position estimator.
