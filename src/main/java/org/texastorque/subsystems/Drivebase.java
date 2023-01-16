@@ -161,8 +161,8 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
     // Internal state variables.
     private double lastRotationRadians;
-    private final ProfiledPIDController rotationalPID = new ProfiledPIDController(.025, .001, 0, OMEGA_CONSTRAINTS), 
-        directRotPID = new ProfiledPIDController(1, 0, 0, OMEGA_CONSTRAINTS);
+    private final ProfiledPIDController rotationalPID = new ProfiledPIDController(.025, .001, 0, SwerveAlignmentController.OMEGA_CONSTRAINTS), 
+        directRotPID = new ProfiledPIDController(1, 0, 0, SwerveAlignmentController.OMEGA_CONSTRAINTS);
 
     private SwerveModuleState[] swerveStates;
 
