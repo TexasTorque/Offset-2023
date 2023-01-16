@@ -34,6 +34,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import io.github.oblarg.oblog.annotations.Log;
 
@@ -96,25 +97,21 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     private static final Vector<N3> VISION_STDS = VecBuilder.fill(0.5, 0.5, Units.degreesToRadians(10));
 
 
-    // The instances of the swerve modules.
     private final TorqueSwerveModule2022 fl, fr, bl, br;
 
-    // The instance of the NavX gyro.
     private final TorqueNavXGyro gyro = TorqueNavXGyro.getInstance();
 
-    // Internal state variables.
     private double lastRotationRadians;
     private final ProfiledPIDController rotationalPID = new ProfiledPIDController(.025, .001, 0, SwerveAlignmentController.OMEGA_CONSTRAINTS), 
         directRotPID = new ProfiledPIDController(1, 0, 0, SwerveAlignmentController.OMEGA_CONSTRAINTS);
 
     private SwerveModuleState[] swerveStates;
 
-    // Fields that store the state of the subsystem
     @Log.ToString(name = "Chassis Speeds")
     public ChassisSpeeds inputSpeeds = new ChassisSpeeds(0, 0, 0);
 
     public double requestedRotation = 0;
-    public boolean isRotationLocked = false;
+    public boolean isRotationLocked = true;
 
     private final SwerveAlignmentController alignmentController = new SwerveAlignmentController(
         () -> getPose(), () -> state = state.parent);
@@ -132,20 +129,13 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
     private final AutoLevelController autoLevelController = new AutoLevelController();
 
-    /**
-     * Constructor called on initialization.
-     */
     private Drivebase() {
-
-        // Configure the rotational lock PID.
         rotationalPID.enableContinuousInput(-Math.PI, Math.PI);
-
-        directRotPID.enableContinuousInput(0, 2 * Math.PI);
         lastRotationRadians = gyro.getRotation2d().getRadians();
+        directRotPID.enableContinuousInput(0, 2 * Math.PI);
 
         final TorqueSwerveModuleConfiguration config = TorqueSwerveModuleConfiguration.defaultConfig;
 
-        // Configure the swerve modules based on the drivebase constants.
         config.maxVelocity = MAX_VELOCITY;
         config.maxAcceleration = MAX_ACCELERATION;
         config.maxAngularVelocity = MAX_ANGULAR_VELOCITY;
@@ -157,13 +147,6 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         bl = new TorqueSwerveModule2022("Back Left", 1, 2, 9, 1.135143488645554, config);
         br = new TorqueSwerveModule2022("Back Right", 7, 8, 12, 5.186378560960293, config);
 
-        // The offsets need to be found experimentally.
-        // With no power being set to the module position the wheel 100% straight ahead
-        // and the offset is the reading of the cancoder.
-        // This is used when the module is in absolute mode so we dont ever have to line
-        // it up.
-
-        // Configure the kinematics and poseEstimator objects.
         kinematics = new SwerveDriveKinematics(LOC_BL, LOC_BR, LOC_FL, LOC_FR);
 
         poseEstimator =  new SwerveDrivePoseEstimator(
@@ -188,7 +171,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         });
 
         mode.onTeleop(() -> {
-            isRotationLocked = false;
+            isRotationLocked = true;
             state = State.FIELD_RELATIVE;
         });
     }
@@ -229,6 +212,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     }
 
     private void calculateTeleop() {
+        SmartDashboard.putBoolean("isRotLocked", isRotationLocked);
         final double realRotationRadians = gyro.getHeadingCCW().getRadians();
 
         if (isRotationLocked && inputSpeeds.omegaRadiansPerSecond == 0) {
@@ -257,22 +241,28 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         } else {
             if (state == State.ALIGN) {
                 final Optional<ChassisSpeeds> speedsWrapper = alignmentController.calculateAlignment();
-                if (speedsWrapper.isPresent())
+                if (speedsWrapper.isPresent()) {
                     inputSpeeds = speedsWrapper.get();
+                    convertToFieldRelative();
+                }
+
 
                 lights.set(Color.kGreen, Lights.OFF);
             } else if (state == State.BALANCE) {
                 inputSpeeds = autoLevelController.calculate();
+                convertToFieldRelative();
                 // autoLevelController.calculate();
             }
+
+
             
             if (state == State.FIELD_RELATIVE) {
                 calculateTeleop();
                 lights.set(Lights.ALLIANCE, Lights.SOLID);
+                convertToFieldRelative();
             }
 
             if (state != State.ROBOT_RELATIVE) {
-                convertToFieldRelative();
             }
 
             swerveStates = kinematics.toSwerveModuleStates(inputSpeeds);

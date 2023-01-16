@@ -39,6 +39,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         updateDrivebaseSpeeds();
         updateDrivebaseAlign();
         updateDrivebasePositions();
+        updateDrivebaseSettings();
     }
 
     private void updateDrivebaseAlign() {
