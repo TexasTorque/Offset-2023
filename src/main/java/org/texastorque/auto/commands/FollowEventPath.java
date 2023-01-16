@@ -34,7 +34,7 @@ import org.texastorque.torquelib.auto.TorqueCommand;
 import org.texastorque.torquelib.control.TorquePID;
 
 public final class FollowEventPath extends TorqueCommand implements Subsystems {
-    public static final double MAX_VELOCITY_PATH = 3.5, MAX_ACCELERATION_PATH = 3.5;
+    public static final double MAX_VELOCITY_PATH = 3, MAX_ACCELERATION_PATH = 1.5;
     
     private final PIDController xController = TorquePID.create(1).build();
     private final PIDController yController = TorquePID.create(1).build();
@@ -44,20 +44,21 @@ public final class FollowEventPath extends TorqueCommand implements Subsystems {
 
     private final PathPlannerTrajectory trajectory;
     private final Timer timer = new Timer();
+    private final boolean resetOdometry;
 
     private final List<EventMarker> unpassed, events;
     private final Map<String, TorqueCommand> commands;
     private final List<TorqueCommand> running;
 
-    public FollowEventPath(final String name) {
-        this(name, MAX_VELOCITY_PATH, MAX_ACCELERATION_PATH);
+    public FollowEventPath(final String name, final boolean reset) {
+        this(name, reset, MAX_VELOCITY_PATH, MAX_ACCELERATION_PATH);
     }
 
-    public FollowEventPath(final String name, final double maxSpeed, final double maxAcceleration) {
-        this(name, new HashMap<String, TorqueCommand>(), maxSpeed, maxAcceleration);
+    public FollowEventPath(final String name, final boolean reset, final double maxSpeed, final double maxAcceleration) {
+        this(name, new HashMap<String, TorqueCommand>(), reset, maxSpeed, maxAcceleration);
     }
 
-    public FollowEventPath(final String name, final Map<String, TorqueCommand> commands, final double maxSpeed, final double maxAcceleration) {
+    public FollowEventPath(final String name, final Map<String, TorqueCommand> commands, final boolean reset, final double maxSpeed, final double maxAcceleration) {
         thetaController = new PIDController(Math.PI * 2, 0, 0);
 
         xController.setTolerance(0.01);
@@ -71,6 +72,7 @@ public final class FollowEventPath extends TorqueCommand implements Subsystems {
         events = trajectory.getMarkers();
         unpassed = new ArrayList<EventMarker>();
         this.commands = commands;
+        this.resetOdometry = reset;
         running = new ArrayList<TorqueCommand>();
 
     }
@@ -88,9 +90,19 @@ public final class FollowEventPath extends TorqueCommand implements Subsystems {
 
         PathPlannerServer.sendActivePath(this.trajectory.getStates());
 
+        if (resetOdometry) {
+            // Possible fix to bug:
+            Pose2d pose = reflect(trajectory.getInitialState()).poseMeters;
+            if (DriverStation.getAlliance() == DriverStation.Alliance.Red)
+                pose = new Pose2d(pose.getTranslation(), pose.getRotation().plus(Rotation2d.fromRadians(Math.PI)));
+            drivebase.resetPose(pose);
+            // drivebase.resetPose(reflect(trajectory.getInitialState()).poseMeters);
+        }
+        
         unpassed.clear();
         unpassed.addAll(events);
         running.clear();
+
 
     }
 

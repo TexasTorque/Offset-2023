@@ -19,14 +19,11 @@ public final class Bottom extends TorqueSequence implements Subsystems {
     public Bottom() { 
         addBlock(new SetIntakeMode(false));
 
-        // final var bottom1 = new FollowEventPath("bottom-1");
+        final var bottom1 = new FollowEventPath("bottom-1", true, 3.5, 3.5);
 
-        // bottom1.addEvent("intake-on", new SetIntakeMode(true)); 
+        bottom1.addEvent("intake-on", new SetIntakeMode(true)); 
 
-        // bottom1.addEvent("intake-off", new SetIntakeMode(false)); 
-
-
-        final var bottom1 = new FollowEventPath("jacob");
+        bottom1.addEvent("intake-off", new SetIntakeMode(false)); 
 
         addBlock(bottom1);
     }

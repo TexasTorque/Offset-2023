@@ -8,29 +8,27 @@ import org.texastorque.torquelib.util.TorqueUtil;
 
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
-import edu.wpi.first.wpilibj.util.Color8Bit;
 
 public final class Lights extends TorqueSubsystem implements Subsystems {
     private static volatile Lights instance;
 
     private final AddressableLED leds;
     private final AddressableLEDBuffer buff;
-    private Color mainColor = Color.kRed, alternateColor = Color.kGreen;
+    private Color lastColor, color;
+    private boolean blink = false, on = true, lastOn = false;
 
-    private static final int LENGTH = 6;
+    private static int LENGTH = 6;
 
-    private static final double BLINK_HZ = 3; 
-
-    public void set(final Color main, final Color alternate) {
-        this.mainColor = main;
-        this.alternateColor = alternate;
+    public void set(final Color color, final boolean blink) {
+        this.color = color;
+        this.blink = blink;
     }
 
     private Lights() {
+        color = Color.kGreen;
+        lastColor = Color.kRed;
+
         leds = new AddressableLED(0);
         leds.setLength(LENGTH);
         buff = new AddressableLEDBuffer(LENGTH);
@@ -43,33 +41,27 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
 
     @Override
     public final void update(final TorqueMode mode) {
+        setColor();
 
-        if (alternateColor.equals(SOLID)) {
-            setColor(mainColor);
-        } else {
-            final double timestamp = TorqueUtil.time();
-            final boolean on = (Math.floor(timestamp * BLINK_HZ) % 2 == 1);
-            setColor(on ? alternateColor : mainColor);
-        }
+        // if (!blink) return;
+
+        // final double timestamp = TorqueUtil.time();
+        // on = Math.floor(timestamp) % 2 == 0;
+        // if (lastOn != on) {
+        //     if (on) leds.start();
+        //     else leds.stop();
+        //     lastOn = on;
+        // }
     }
 
-    public static final Color OFF = Color.kBlanchedAlmond;
-    public static final Color SOLID = Color.kBurlywood;
-    public static final Color ALLIANCE = DriverStation.getAlliance() == Alliance.Blue ? Color.kBlue : Color.kRed;
+    private final void setColor() {
+        if (color.equals(lastColor)) return;
 
-    private final void setColor(final Color color) {
+        for (int i = 0; i < LENGTH; i++)
+            buff.setLED(i, color);
+        leds.setData(buff);
 
-            if (color.equals(OFF)) {
-                leds.stop();
-                return;
-            }
-
-            for (int i = 0; i < LENGTH; i++)
-                buff.setLED(i, color);
-            leds.setData(buff);
-
-            leds.start();
-
+        lastColor = color;
     }
 
 

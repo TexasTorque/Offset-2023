@@ -1,4 +1,5 @@
-# Torque-2023 
+# TorqueTemplate
 
-* Bravo: Practice robot
-* Charlie: Competition robot (official name not yet decided)
+Robot code template. Updated for 2023.
+
+TorqueVendordeps and TorqueLib are submodules.
