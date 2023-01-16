@@ -6,6 +6,7 @@
  */
 package org.texastorque.subsystems;
 
+import java.io.IOException;
 import java.util.Optional;
 
 import org.texastorque.Subsystems;
@@ -32,6 +33,7 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.util.Color;
 import io.github.oblarg.oblog.annotations.Log;
@@ -127,7 +129,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         alignmentController.setGridOverride(override);
     }
 
-    private final CameraController cameraController = new CameraController();
+    private final CameraController cameraController;
 
     /**
      * Constructor called on initialization.
@@ -174,6 +176,19 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         swerveStates = new SwerveModuleState[4];
         for (int i = 0; i < swerveStates.length; i++)
             swerveStates[i] = new SwerveModuleState();
+
+        /**
+         * To allow this field to be final with the possibility of an IO exception, a temporary variable has to be used
+         */
+        CameraController tmp;
+        try {
+            tmp = new CameraController();
+        } catch (IOException e) {
+            // This IOException will only happen if something is seriously wrong  (files corrupted, etc.). In this case, a re-deploy is neccessary as other things are broken and the robot is not ready to run. 
+            tmp = null;
+            DriverStation.reportError("Failed to load AprilTagFieldLayout! Robot will now crash...", true);
+        }
+        cameraController = tmp;
     }
 
   
