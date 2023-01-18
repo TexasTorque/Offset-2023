@@ -232,6 +232,13 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
                 gyro.getHeadingCCW());
     }
 
+    public void setSmartDrive(final boolean isSmart) {
+        fl.useSmartDrive = isSmart;
+        fr.useSmartDrive = isSmart;
+        bl.useSmartDrive = isSmart;
+        br.useSmartDrive = isSmart;
+    }
+
     @Override
     public final void update(final TorqueMode mode) {
         updateFeedback();
@@ -240,6 +247,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
             zeroModules();
         } else {
             if (state == State.ALIGN) {
+                // setSmartDrive(true);
                 final Optional<ChassisSpeeds> speedsWrapper = alignmentController.calculateAlignment();
                 if (speedsWrapper.isPresent()) {
                     inputSpeeds = speedsWrapper.get();
@@ -249,6 +257,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
                 lights.set(Color.kGreen, Lights.OFF);
             } else if (state == State.BALANCE) {
+                // setSmartDrive(true);
                 inputSpeeds = autoLevelController.calculate();
                 convertToFieldRelative();
                 // autoLevelController.calculate();
@@ -257,6 +266,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
             
             if (state == State.FIELD_RELATIVE) {
+                // setSmartDrive(false);
                 calculateTeleop();
                 lights.set(Lights.ALLIANCE, Lights.SOLID);
                 convertToFieldRelative();

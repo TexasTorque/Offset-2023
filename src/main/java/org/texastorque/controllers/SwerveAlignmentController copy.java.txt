@@ -6,7 +6,9 @@ import java.util.function.Supplier;
 
 import org.texastorque.Field;
 import org.texastorque.Field.AprilTagType;
+import org.texastorque.torquelib.control.TorqueLogisticRegression;
 
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -19,16 +21,20 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public final class SwerveAlignmentController {
+    // private static final TrapezoidProfile.Constraints X_CONSTRAINTS = new TrapezoidProfile.Constraints(3.5, 2);
+    // private static final TrapezoidProfile.Constraints Y_CONSTRAINTS = new TrapezoidProfile.Constraints(3.5, 2);
+    public static final TrapezoidProfile.Constraints OMEGA_CONSTRAINTS =   new TrapezoidProfile.Constraints(1 * Math.PI, 1 * Math.PI);    
 
-    private static final TrapezoidProfile.Constraints X_CONSTRAINTS = new TrapezoidProfile.Constraints(3.5, 3.5);
-    private static final TrapezoidProfile.Constraints Y_CONSTRAINTS = new TrapezoidProfile.Constraints(3.5, 3.5);
-    public static final TrapezoidProfile.Constraints OMEGA_CONSTRAINTS =   new TrapezoidProfile.Constraints(4 * Math.PI, 4 * Math.PI);    
+    // private final ProfiledPIDController xController = new ProfiledPIDController(2, 0, 0, X_CONSTRAINTS);
+    // private final ProfiledPIDController yController = new ProfiledPIDController(2, 0, 0, Y_CONSTRAINTS);
+    private final ProfiledPIDController omegaController = new ProfiledPIDController(1 * Math.PI, 0, 0, OMEGA_CONSTRAINTS);
 
-    // private final ProfiledPIDController xController = new ProfiledPIDController(2.5, 0.25, 0.01, X_CONSTRAINTS);
-    private final ProfiledPIDController xController = new ProfiledPIDController(3, 1.5, 0, X_CONSTRAINTS);
-    // private final ProfiledPIDController yController = new ProfiledPIDController(2.5, 0.25, 0.01, Y_CONSTRAINTS);
-    private final ProfiledPIDController yController = new ProfiledPIDController(3, 0.5, 0, Y_CONSTRAINTS);
-    private final ProfiledPIDController omegaController = new ProfiledPIDController(.5 * Math.PI, 0, 0, OMEGA_CONSTRAINTS);
+    // private final PIDController xController = new PIDController(3, 0, 0);
+    // private final PIDController yController = new PIDController(3, 0, 0);
+    // private final PIDController omegaController = new PIDController(1 * Math.PI, 0, 0);
+
+    private final TorqueLogisticRegression xController = new TorqueLogisticRegression(4, 1, 1.5);
+    private final TorqueLogisticRegression yController = new TorqueLogisticRegression(3, .5, 1.5);
 
     private int closestID = -1;
 
@@ -59,7 +65,7 @@ public final class SwerveAlignmentController {
     private void configurePIDControllerTolerance() {
         // xController.setTolerance(0.02);
         // yController.setTolerance(0.02);
-        // omegaController.setTolerance(Units.degreesToRadians(1));
+        omegaController.setTolerance(Units.degreesToRadians(1));
         omegaController.enableContinuousInput(-Math.PI, Math.PI);
     }
 
@@ -108,21 +114,33 @@ public final class SwerveAlignmentController {
 
         final Pose2d robotPose = poseSupplier.get();
 
-        xController.setGoal(goalPose.getX());
-        yController.setGoal(goalPose.getY());
-        omegaController.setGoal(goalPose.getRotation().plus(new Rotation2d(Math.PI)).getRadians());
+        // xController.setGoal(goalPose.getX());
+        // yController.setGoal(goalPose.getY());
+        // omegaController.setGoal(goalPose.getRotation().plus(new Rotation2d(Math.PI)).getRadians());
 
-        final boolean xAtGoal = xController.atGoal();
-        final boolean yAtGoal = yController.atGoal();
-        final boolean omegaAtGoal = omegaController.atGoal();
+        // xController.setSetpoint(goalPose.getX());
+        // yController.setSetpoint(goalPose.getY());
+        // omegaController.setSetpoint(goalPose.getRotation().plus(new Rotation2d(Math.PI)).getRadians());
 
-        // final double xSpeed = xAtGoal ? 0 : -xController.calculate(robotPose.getX());
-        // final double ySpeed = yAtGoal ? 0 : -yController.calculate(robotPose.getY());
-        // final double omegaSpeed = omegaController.calculate(robotPose.getRotation().getRadians());
+        // final boolean xAtGoal = xController.atGoal();
+        // final boolean yAtGoal = yController.atGoal();
+        // final boolean omegaAtGoal = omegaController.atGoal();
 
-        final double xSpeed =  -xController.calculate(robotPose.getX());
-        final double ySpeed =  -yController.calculate(robotPose.getY());
-        final double omegaSpeed =  omegaController.calculate(robotPose.getRotation().getRadians());
+        // final boolean xAtGoal = xController.atSetpoint();
+        // final boolean yAtGoal = yController.atSetpoint();
+        // final boolean omegaAtGoal = omegaController.atSetpoint();
+
+        // final boolean xAtGoal = xController.atSetpoint();
+        // final boolean yAtGoal = yController.atSetpoint();
+        // final boolean omegaAtGoal = omegaController.atSetpoint();
+
+
+        final double xSpeed = xController.calculate(robotPose.getX(), goalPose.getX());
+        final double ySpeed = yController.calculate(robotPose.getY(), goalPose.getY());
+
+        // final double xSpeed =  -xController.calculate(robotPose.getX());
+        // final double ySpeed =  -yController.calculate(robotPose.getY());
+        final double omegaSpeed =  omegaController.calculate(robotPose.getRotation().getRadians(),goalPose.getRotation().plus(new Rotation2d(Math.PI)).getRadians() );
         
         return new ChassisSpeeds(xSpeed, ySpeed, omegaSpeed);
     }
@@ -134,10 +152,6 @@ public final class SwerveAlignmentController {
         if (!notInLoop) return;
 
         closestID = -1;
-        final Pose2d robotPose = poseSupplier.get();
-        xController.reset(robotPose.getX());
-        yController.reset(robotPose.getY());
-        omegaController.reset(robotPose.getRotation().getRadians());
     }
 
     public Optional<ChassisSpeeds> calculateAlignment() {
