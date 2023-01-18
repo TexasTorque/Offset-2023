@@ -9,8 +9,8 @@ package org.texastorque.subsystems;
 import java.io.IOException;
 import java.util.Optional;
 
+import org.texastorque.Field;
 import org.texastorque.Subsystems;
-import org.texastorque.controllers.CameraController;
 import org.texastorque.controllers.SwerveAlignmentController;
 import org.texastorque.controllers.SwerveAlignmentController.AlignState;
 import org.texastorque.controllers.SwerveAlignmentController.GridState;
@@ -19,6 +19,7 @@ import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.modules.TorqueSwerveModule2022;
 import org.texastorque.torquelib.modules.TorqueSwerveModule2022.TorqueSwerveModuleConfiguration;
 import org.texastorque.torquelib.sensors.TorqueNavXGyro;
+import org.texastorque.torquelib.sensors.TorqueVision;
 
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
@@ -26,14 +27,16 @@ import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.util.Color;
 import io.github.oblarg.oblog.annotations.Log;
@@ -129,12 +132,17 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         alignmentController.setGridOverride(override);
     }
 
-    private final CameraController cameraController;
+    public final TorqueVision camera; // Right now is just one camera. One day will be cameraLeft and cameraRight.
 
     /**
      * Constructor called on initialization.
      */
     private Drivebase() {
+        // Do this for each camera
+        final Transform3d cameraToCenter = new Transform3d(
+            new Translation3d(-Units.inchesToMeters(29 * .5), Units.inchesToMeters(19.75), -Units.inchesToMeters(2)),
+            new Rotation3d());
+        camera = new TorqueVision("torquevision", Field.getCurrentFieldLayout(), cameraToCenter);
 
         // Configure the rotational lock PID.
         rotationalPID.enableContinuousInput(-Math.PI, Math.PI);
@@ -177,18 +185,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         for (int i = 0; i < swerveStates.length; i++)
             swerveStates[i] = new SwerveModuleState();
 
-        /**
-         * To allow this field to be final with the possibility of an IO exception, a temporary variable has to be used
-         */
-        CameraController tmp;
-        try {
-            tmp = new CameraController();
-        } catch (IOException e) {
-            // This IOException will only happen if something is seriously wrong  (files corrupted, etc.). In this case, a re-deploy is neccessary as other things are broken and the robot is not ready to run. 
-            tmp = null;
-            DriverStation.reportError("Failed to load AprilTagFieldLayout! Robot will now crash...", true);
-        }
-        cameraController = tmp;
+      
     }
 
   
@@ -219,7 +216,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     }
 
     private void updateFeedback() {
-        cameraController.update(poseEstimator::addVisionMeasurement);
+        camera.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
 
         poseEstimator.update(gyro.getHeadingCCW(), getModulePositions());
 

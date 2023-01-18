@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import edu.wpi.first.apriltag.AprilTag;
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -70,6 +72,8 @@ public final class Field {
             Units.inchesToMeters(18.22),
             new Rotation3d()));  
 
+
+
     public static final Pose3d reflectPosition(final Pose3d pose) {
         return new Pose3d(
             FIELD_LENGTH - pose.getTranslation().getX(),
@@ -102,6 +106,17 @@ public final class Field {
         DriverStation.getAlliance() == DriverStation.Alliance.Blue
         ? APRIL_TAG_ORIGINALS
         : reflectAprilTags(); 
+
+    public static List<AprilTag> getAprilTagsList() {
+        return APRIL_TAGS.entrySet().stream().map(entry -> new AprilTag(entry.getKey(), entry.getValue())).toList();
+    }
+
+    public static AprilTagFieldLayout getCurrentFieldLayout() {
+        // final boolean isRedAlliance = DriverStation.getAlliance() == DriverStation.Alliance.Red;
+        // final AprilTagFieldLayout layout = AprilTagFieldLayout.loadFromResource(AprilTagFields.k2023ChargedUp.m_resourceFile);
+        // layout.setOrigin(isRedAlliance ? OriginPosition.kRedAllianceWallRightSide : OriginPosition.kRedAllianceWallRightSide);
+        return new AprilTagFieldLayout(getAprilTagsList(), FIELD_LENGTH, FIELD_WIDTH);
+    }
 
 
       public static enum AprilTagType {
