@@ -16,6 +16,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public final class SwerveAlignmentController {
 
@@ -99,7 +100,11 @@ public final class SwerveAlignmentController {
     }
 
     private ChassisSpeeds calculateChassisSpeedsAlignment(final Pose2d goalPose) {
-        final Pose2d robotPose = poseSupplier.get(); 
+
+  SmartDashboard.putString("ALIGN", alignment.toString());
+        SmartDashboard.putString("GRID", gridOverride.toString());
+
+        final Pose2d robotPose = poseSupplier.get();
 
         xController.setGoal(goalPose.getX());
         yController.setGoal(goalPose.getY());
@@ -109,13 +114,13 @@ public final class SwerveAlignmentController {
         final boolean yAtGoal = yController.atGoal();
         final boolean omegaAtGoal = omegaController.atGoal();
 
-        final double xSpeed = xAtGoal ? 0 : -xController.calculate(robotPose.getX());
-        final double ySpeed = yAtGoal ? 0 : -yController.calculate(robotPose.getY());
-        final double omegaSpeed = omegaController.calculate(robotPose.getRotation().getRadians());
+        // final double xSpeed = xAtGoal ? 0 : -xController.calculate(robotPose.getX());
+        // final double ySpeed = yAtGoal ? 0 : -yController.calculate(robotPose.getY());
+        // final double omegaSpeed = omegaController.calculate(robotPose.getRotation().getRadians());
 
-        // final double xSpeed =  -xController.calculate(robotPose.getX());
-        // final double ySpeed =  -yController.calculate(robotPose.getY());
-        // final double omegaSpeed =  omegaController.calculate(robotPose.getRotation().getRadians());
+        final double xSpeed =  -xController.calculate(robotPose.getX());
+        final double ySpeed =  -yController.calculate(robotPose.getY());
+        final double omegaSpeed =  omegaController.calculate(robotPose.getRotation().getRadians());
         
         return new ChassisSpeeds(xSpeed, ySpeed, omegaSpeed);
     }
@@ -139,9 +144,11 @@ public final class SwerveAlignmentController {
             return Optional.empty();
         }
 
-        closestID = (closestID == -1 && gridOverride == GridState.NONE)
+        if (closestID == -1) {
+            closestID = (gridOverride == GridState.NONE)
                 ? findClosestAprilTagID()
                 : gridOverride.getID();
+        }
 
         final Pose3d aprilPose = Field.APRIL_TAGS.get(closestID);
 
@@ -152,6 +159,7 @@ public final class SwerveAlignmentController {
         }
 
         final Pose2d goalPose = translationState.get().calculate(aprilPose);
+
         return Optional.of(calculateChassisSpeedsAlignment(goalPose));        
     }
 
@@ -190,7 +198,7 @@ public final class SwerveAlignmentController {
 
         private final int blueID, redID;
 
-        private GridState(final int blueID, final int redID) {
+        private GridState(final int redID, final int blueID) {
             this.redID = redID;
             this.blueID = blueID;
         }
