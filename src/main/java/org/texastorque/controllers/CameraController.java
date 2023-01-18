@@ -40,8 +40,7 @@ public final class CameraController {
     public CameraController() throws IOException {
         camera = new TorqueVision(CAMERA_NAME, CAMERA_TO_CENTER);
 
-        final boolean isRedAlliance = DriverStation.getAlliance() == DriverStation.Alliance.Red;
-
+        // final boolean isRedAlliance = DriverStation.getAlliance() == DriverStation.Alliance.Red;
         // final AprilTagFieldLayout layout = AprilTagFieldLayout.loadFromResource(AprilTagFields.k2023ChargedUp.m_resourceFile);
         // layout.setOrigin(isRedAlliance ? OriginPosition.kRedAllianceWallRightSide : OriginPosition.kRedAllianceWallRightSide);
 
