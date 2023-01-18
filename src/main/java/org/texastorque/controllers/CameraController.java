@@ -11,25 +11,29 @@ import org.texastorque.torquelib.sensors.TorqueVision;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.apriltag.AprilTagFieldLayout.OriginPosition;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
 
 public final class CameraController {
-
     public final PhotonPoseEstimator photonPoseEstimator;
     public final TorqueVision camera;
     public static final String CAMERA_NAME = "torquevision";
     public static final Transform3d CAMERA_TO_CENTER = new Transform3d(
-            new Translation3d(-Units.inchesToMeters(29 * .5), Units.inchesToMeters(19.75), 0),
+            new Translation3d(-Units.inchesToMeters(29 * .5), Units.inchesToMeters(19.75), -Units.inchesToMeters(2)),
             new Rotation3d());
 
     public CameraController() throws IOException {
         camera = new TorqueVision(CAMERA_NAME, CAMERA_TO_CENTER);
-        AprilTagFieldLayout layout = AprilTagFieldLayout.loadFromResource(AprilTagFields.k2023ChargedUp.m_resourceFile);
+        final AprilTagFieldLayout layout = AprilTagFieldLayout.loadFromResource(AprilTagFields.k2023ChargedUp.m_resourceFile);
+        final boolean isRedAlliance = DriverStation.getAlliance() == DriverStation.Alliance.Red;
+        layout.setOrigin(isRedAlliance ? OriginPosition.kRedAllianceWallRightSide : OriginPosition.kRedAllianceWallRightSide);
         photonPoseEstimator = new PhotonPoseEstimator(layout, PoseStrategy.LOWEST_AMBIGUITY, camera.getPhotonCamera(), CAMERA_TO_CENTER);
+
     }
 
     public void update(final BiConsumer<Pose2d, Double> addVisionMeasurement) {    
