@@ -179,7 +179,6 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
       
     }
-
   
     @Override
     public final void initialize(final TorqueMode mode) {
