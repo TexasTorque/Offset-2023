@@ -99,7 +99,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
      * Standard deviations of the vision measurements. Increase these numbers to trust global measurements from vision
      * less. This matrix is in the form [x, y, theta]ᵀ, with units in meters and radians.
      */
-    private static final Vector<N3> VISION_STDS = VecBuilder.fill(0.5, 0.5, Units.degreesToRadians(10));
+    private static final Vector<N3> VISION_STDS = VecBuilder.fill(0.1, 0.1, Units.degreesToRadians(5));
 
 
     private final TorqueSwerveModule2022 fl, fr, bl, br;
@@ -140,7 +140,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     private Drivebase() {
         // Do this for each camera
         final Transform3d cameraToCenter = new Transform3d(
-            new Translation3d(-Units.inchesToMeters(29 * .5), Units.inchesToMeters(19.75), -Units.inchesToMeters(2)),
+            new Translation3d(Units.inchesToMeters(29 * .5), Units.inchesToMeters(19.75), Units.inchesToMeters(2)),
             new Rotation3d());
         camera = new TorqueVision("torquevision", Field.getCurrentFieldLayout(), cameraToCenter);
 
