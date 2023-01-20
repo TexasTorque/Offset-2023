@@ -134,16 +134,18 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
     private final AutoLevelController autoLevelController = new AutoLevelController(this::getPose);
 
+    private static final double CAMERA_FORWARD_FROM_CENTER = Units.inchesToMeters(29 * .5);
+    private static final double CAMERA_RIGHT_FROM_CENTER = Units.inchesToMeters(2);
+    private static final double CAMERA_UP_FROM_CENTER = Units.inchesToMeters(19.75);
+    private static final Transform3d CAMERA_TO_CENTER = new Transform3d(new Translation3d(CAMERA_FORWARD_FROM_CENTER, CAMERA_RIGHT_FROM_CENTER, CAMERA_UP_FROM_CENTER), new Rotation3d());
+
     /**
      * Constructor called on initialization.
      */
     private Drivebase() {
         // Do this for each camera
-        final Transform3d cameraToCenter = new Transform3d(
-            new Translation3d(Units.inchesToMeters(29 * .5), Units.inchesToMeters(19.75), Units.inchesToMeters(2)),
-            new Rotation3d());
-        camera = new TorqueVision("torquevision", Field.getCurrentFieldLayout(), cameraToCenter);
-
+        camera = new TorqueVision("torquevision", Field.getCurrentFieldLayout(), CAMERA_TO_CENTER);
+        
         rotationalPID.enableContinuousInput(-Math.PI, Math.PI);
         lastRotationRadians = gyro.getRotation2d().getRadians();
         directRotPID.enableContinuousInput(0, 2 * Math.PI);
