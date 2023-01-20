@@ -91,7 +91,6 @@ public final class FollowEventPath extends TorqueCommand implements Subsystems {
         unpassed.clear();
         unpassed.addAll(events);
         running.clear();
-
     }
 
     @Override
