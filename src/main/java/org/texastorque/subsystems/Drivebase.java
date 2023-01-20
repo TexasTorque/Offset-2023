@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.Optional;
 
 import org.texastorque.Field;
+import org.texastorque.Ports;
 import org.texastorque.Subsystems;
 import org.texastorque.controllers.AutoLevelController;
 import org.texastorque.controllers.SwerveAlignmentController;
@@ -18,7 +19,7 @@ import org.texastorque.controllers.SwerveAlignmentController.GridState;
 import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.modules.TorqueSwerveModule2022;
-import org.texastorque.torquelib.modules.TorqueSwerveModule2022.TorqueSwerveModuleConfiguration;
+import org.texastorque.torquelib.modules.TorqueSwerveModule2022.SwerveConfig;
 import org.texastorque.torquelib.sensors.TorqueNavXGyro;
 import org.texastorque.torquelib.sensors.TorqueVision;
 
@@ -150,18 +151,17 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         lastRotationRadians = gyro.getRotation2d().getRadians();
         directRotPID.enableContinuousInput(0, 2 * Math.PI);
 
-        final TorqueSwerveModuleConfiguration config = TorqueSwerveModuleConfiguration.defaultConfig;
+        final SwerveConfig config = SwerveConfig.defaultConfig;
 
         config.maxVelocity = MAX_VELOCITY;
         config.maxAcceleration = MAX_ACCELERATION;
         config.maxAngularVelocity = MAX_ANGULAR_VELOCITY;
         config.maxAngularAcceleration = MAX_ANGULAR_ACCELERATION;
 
-        // Configure all the swerve modules Drive|Turn|Encoder|Offset
-        fl = new TorqueSwerveModule2022("Front Left", 3, 4, 10, 5.769290082156658, config);
-        fr = new TorqueSwerveModule2022("Front Right", 5, 6, 11, 4.312011279165745, config);
-        bl = new TorqueSwerveModule2022("Back Left", 1, 2, 9, 1.135143488645554, config);
-        br = new TorqueSwerveModule2022("Back Right", 7, 8, 12, 5.186378560960293, config);
+        fl = new TorqueSwerveModule2022("Front Left", Ports.FL_MOD, 5.769290082156658, config);
+        fr = new TorqueSwerveModule2022("Front Right", Ports.FR_MOD, 4.312011279165745, config);
+        bl = new TorqueSwerveModule2022("Back Left", Ports.BL_MOD, 1.135143488645554, config);
+        br = new TorqueSwerveModule2022("Back Right", Ports.BR_MOD, 5.186378560960293, config);
 
         kinematics = new SwerveDriveKinematics(LOC_BL, LOC_BR, LOC_FL, LOC_FR);
 
@@ -176,8 +176,6 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         swerveStates = new SwerveModuleState[4];
         for (int i = 0; i < swerveStates.length; i++)
             swerveStates[i] = new SwerveModuleState();
-
-      
     }
   
     @Override
