@@ -6,11 +6,12 @@
  */
 package org.texastorque.subsystems;
 
+import java.io.IOException;
 import java.util.Optional;
 
+import org.texastorque.Field;
 import org.texastorque.Subsystems;
 import org.texastorque.controllers.AutoLevelController;
-import org.texastorque.controllers.CameraController;
 import org.texastorque.controllers.SwerveAlignmentController;
 import org.texastorque.controllers.SwerveAlignmentController.AlignState;
 import org.texastorque.controllers.SwerveAlignmentController.GridState;
@@ -19,6 +20,7 @@ import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.modules.TorqueSwerveModule2022;
 import org.texastorque.torquelib.modules.TorqueSwerveModule2022.TorqueSwerveModuleConfiguration;
 import org.texastorque.torquelib.sensors.TorqueNavXGyro;
+import org.texastorque.torquelib.sensors.TorqueVision;
 
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
@@ -26,7 +28,10 @@ import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -94,7 +99,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
      * Standard deviations of the vision measurements. Increase these numbers to trust global measurements from vision
      * less. This matrix is in the form [x, y, theta]ᵀ, with units in meters and radians.
      */
-    private static final Vector<N3> VISION_STDS = VecBuilder.fill(0.5, 0.5, Units.degreesToRadians(10));
+    private static final Vector<N3> VISION_STDS = VecBuilder.fill(0.1, 0.1, Units.degreesToRadians(5));
 
 
     private final TorqueSwerveModule2022 fl, fr, bl, br;
@@ -125,11 +130,22 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         alignmentController.setGridOverride(override);
     }
 
-    private final CameraController cameraController = new CameraController();
+    public final TorqueVision camera; // Right now is just one camera. One day will be cameraLeft and cameraRight.
 
     private final AutoLevelController autoLevelController = new AutoLevelController(this::getPose);
 
+    private static final double CAMERA_FORWARD_FROM_CENTER = Units.inchesToMeters(29 * .5);
+    private static final double CAMERA_RIGHT_FROM_CENTER = Units.inchesToMeters(2);
+    private static final double CAMERA_UP_FROM_CENTER = Units.inchesToMeters(19.75);
+    private static final Transform3d CAMERA_TO_CENTER = new Transform3d(new Translation3d(CAMERA_FORWARD_FROM_CENTER, CAMERA_RIGHT_FROM_CENTER, CAMERA_UP_FROM_CENTER), new Rotation3d());
+
+    /**
+     * Constructor called on initialization.
+     */
     private Drivebase() {
+        // Do this for each camera
+        camera = new TorqueVision("torquevision", Field.getCurrentFieldLayout(), CAMERA_TO_CENTER);
+        
         rotationalPID.enableContinuousInput(-Math.PI, Math.PI);
         lastRotationRadians = gyro.getRotation2d().getRadians();
         directRotPID.enableContinuousInput(0, 2 * Math.PI);
@@ -160,6 +176,8 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         swerveStates = new SwerveModuleState[4];
         for (int i = 0; i < swerveStates.length; i++)
             swerveStates[i] = new SwerveModuleState();
+
+      
     }
 
   
@@ -190,7 +208,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     }
 
     private void updateFeedback() {
-        cameraController.update(poseEstimator::addVisionMeasurement);
+        camera.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
 
         poseEstimator.update(gyro.getHeadingCCW(), getModulePositions());
 
