@@ -13,6 +13,7 @@ import org.texastorque.Field;
 import org.texastorque.Ports;
 import org.texastorque.Subsystems;
 import org.texastorque.controllers.AutoLevelController;
+import org.texastorque.controllers.PathAlignController;
 import org.texastorque.controllers.SwerveAlignmentController;
 import org.texastorque.controllers.SwerveAlignmentController.AlignState;
 import org.texastorque.controllers.SwerveAlignmentController.GridState;
@@ -122,13 +123,19 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     private final SwerveAlignmentController alignmentController = new SwerveAlignmentController(
         this::getPose, () -> state = state.parent);
 
+    private final PathAlignController pathAlignController = new PathAlignController(
+        this::getPose, () -> state = state.parent);
+
+
     public void setAlignState(final AlignState alignment) {
         state = alignment == AlignState.NONE ? state.parent : State.ALIGN;
         alignmentController.setAlignment(alignment);
+        pathAlignController.setAlignment(alignment);
     }
 
     public void setGridOverride(final GridState override) {
         alignmentController.setGridOverride(override);
+        pathAlignController.setGridOverride(override);
     }
 
     public final TorqueVision camera; // Right now is just one camera. One day will be cameraLeft and cameraRight.
@@ -255,13 +262,18 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
             zeroModules();
         } else {
             if (state == State.ALIGN) {
-                final Optional<ChassisSpeeds> speedsWrapper = alignmentController.calculateAlignment();
+                // Align controller:
+                // final Optional<ChassisSpeeds> speedsWrapper = alignmentController.calculateAlignment();
+                // if (speedsWrapper.isPresent()) {
+                //     inputSpeeds = speedsWrapper.get();
+                //     convertToFieldRelative();
+                // }
+
+                // Path controller:
+                final Optional<ChassisSpeeds> speedsWrapper = pathAlignController.calculateAlignment();
                 if (speedsWrapper.isPresent()) {
                     inputSpeeds = speedsWrapper.get();
-                    convertToFieldRelative();
                 }
-
-
                 lights.set(Color.kGreen, Lights.OFF);
             } else if (state == State.BALANCE) {
                 inputSpeeds = autoLevelController.calculate();
@@ -295,6 +307,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         }
 
         alignmentController.resetIf(state != State.ALIGN);
+        pathAlignController.resetIf(state != State.ALIGN);
         autoLevelController.resetIf(state != State.BALANCE);
        
         state = state.parent;
