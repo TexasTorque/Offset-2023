@@ -10,20 +10,23 @@ import java.io.IOException;
 import java.util.Optional;
 
 import org.texastorque.Field;
+import org.texastorque.Ports;
 import org.texastorque.Subsystems;
 import org.texastorque.controllers.AutoLevelController;
+import org.texastorque.controllers.PathAlignController;
 import org.texastorque.controllers.SwerveAlignmentController;
 import org.texastorque.controllers.SwerveAlignmentController.AlignState;
 import org.texastorque.controllers.SwerveAlignmentController.GridState;
 import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.modules.TorqueSwerveModule2022;
-import org.texastorque.torquelib.modules.TorqueSwerveModule2022.TorqueSwerveModuleConfiguration;
+import org.texastorque.torquelib.modules.TorqueSwerveModule2022.SwerveConfig;
 import org.texastorque.torquelib.sensors.TorqueNavXGyro;
 import org.texastorque.torquelib.sensors.TorqueVision;
 
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -107,8 +110,10 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     private final TorqueNavXGyro gyro = TorqueNavXGyro.getInstance();
 
     private double lastRotationRadians;
-    private final ProfiledPIDController rotationalPID = new ProfiledPIDController(.025, .001, 0, SwerveAlignmentController.OMEGA_CONSTRAINTS), 
-        directRotPID = new ProfiledPIDController(1, 0, 0, SwerveAlignmentController.OMEGA_CONSTRAINTS);
+    // private final ProfiledPIDController rotationalPID = new ProfiledPIDController(.5, .000, 0, SwerveAlignmentController.OMEGA_CONSTRAINTS), 
+        // directRotPID = new ProfiledPIDController(1, 0, 0, SwerveAlignmentController.OMEGA_CONSTRAINTS);
+    private final PIDController rotationalPID = new PIDController(.5, 0, 0);
+    private final PIDController directRotPID = new PIDController(.5, 0, 0);
 
     private SwerveModuleState[] swerveStates;
 
@@ -121,47 +126,55 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     private final SwerveAlignmentController alignmentController = new SwerveAlignmentController(
         this::getPose, () -> state = state.parent);
 
+    private final PathAlignController pathAlignController = new PathAlignController(
+        this::getPose, () -> state = state.parent);
+
+
     public void setAlignState(final AlignState alignment) {
         state = alignment == AlignState.NONE ? state.parent : State.ALIGN;
         alignmentController.setAlignment(alignment);
+        pathAlignController.setAlignment(alignment);
     }
 
     public void setGridOverride(final GridState override) {
         alignmentController.setGridOverride(override);
+        pathAlignController.setGridOverride(override);
     }
-
-    public final TorqueVision camera; // Right now is just one camera. One day will be cameraLeft and cameraRight.
 
     private final AutoLevelController autoLevelController = new AutoLevelController(this::getPose);
 
-    private static final double CAMERA_FORWARD_FROM_CENTER = Units.inchesToMeters(29 * .5);
-    private static final double CAMERA_RIGHT_FROM_CENTER = Units.inchesToMeters(2);
-    private static final double CAMERA_UP_FROM_CENTER = Units.inchesToMeters(19.75);
-    private static final Transform3d CAMERA_TO_CENTER = new Transform3d(new Translation3d(CAMERA_FORWARD_FROM_CENTER, CAMERA_RIGHT_FROM_CENTER, CAMERA_UP_FROM_CENTER), new Rotation3d());
+    public final TorqueVision cameraLeft, cameraRight; // Right now is just one camera. One day will be cameraLeft and cameraRight.
+
+    private static final double CAMERA_FORWARD_FROM_CENTER = Units.inchesToMeters((29 * .5) - 8.5625);
+    private static final double LEFT_CAMERA_RIGHT_FROM_CENTER = Units.inchesToMeters(29 * .5);
+    private static final double RIGHT_CAMERA_RIGHT_FROM_CENTER = -Units.inchesToMeters(29 * .5);
+    private static final double CAMERA_UP_FROM_CENTER = Units.inchesToMeters(18);
+    private static final Transform3d RIGHT_CAMERA_TO_CENTER = new Transform3d(new Translation3d(CAMERA_FORWARD_FROM_CENTER, RIGHT_CAMERA_RIGHT_FROM_CENTER, CAMERA_UP_FROM_CENTER), new Rotation3d());
+    private static final Transform3d LEFT_CAMERA_TO_CENTER = new Transform3d(new Translation3d(CAMERA_FORWARD_FROM_CENTER, LEFT_CAMERA_RIGHT_FROM_CENTER, CAMERA_UP_FROM_CENTER), new Rotation3d());
 
     /**
      * Constructor called on initialization.
      */
     private Drivebase() {
         // Do this for each camera
-        camera = new TorqueVision("torquevision", Field.getCurrentFieldLayout(), CAMERA_TO_CENTER);
+        cameraLeft = new TorqueVision("camera_left", Field.getCurrentFieldLayout(), LEFT_CAMERA_TO_CENTER);
+        cameraRight = new TorqueVision("camera_right", Field.getCurrentFieldLayout(), RIGHT_CAMERA_TO_CENTER);
         
         rotationalPID.enableContinuousInput(-Math.PI, Math.PI);
         lastRotationRadians = gyro.getRotation2d().getRadians();
         directRotPID.enableContinuousInput(0, 2 * Math.PI);
 
-        final TorqueSwerveModuleConfiguration config = TorqueSwerveModuleConfiguration.defaultConfig;
+        final SwerveConfig config = SwerveConfig.defaultConfig;
 
         config.maxVelocity = MAX_VELOCITY;
         config.maxAcceleration = MAX_ACCELERATION;
         config.maxAngularVelocity = MAX_ANGULAR_VELOCITY;
         config.maxAngularAcceleration = MAX_ANGULAR_ACCELERATION;
 
-        // Configure all the swerve modules Drive|Turn|Encoder|Offset
-        fl = new TorqueSwerveModule2022("Front Left", 3, 4, 10, 5.769290082156658, config);
-        fr = new TorqueSwerveModule2022("Front Right", 5, 6, 11, 4.312011279165745, config);
-        bl = new TorqueSwerveModule2022("Back Left", 1, 2, 9, 1.135143488645554, config);
-        br = new TorqueSwerveModule2022("Back Right", 7, 8, 12, 5.186378560960293, config);
+        fl = new TorqueSwerveModule2022("Front Left", Ports.FL_MOD, 5.769290082156658, config);
+        fr = new TorqueSwerveModule2022("Front Right", Ports.FR_MOD, 4.312011279165745, config);
+        bl = new TorqueSwerveModule2022("Back Left", Ports.BL_MOD, 1.135143488645554, config);
+        br = new TorqueSwerveModule2022("Back Right", Ports.BR_MOD, 5.186378560960293, config);
 
         kinematics = new SwerveDriveKinematics(LOC_BL, LOC_BR, LOC_FL, LOC_FR);
 
@@ -176,8 +189,6 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         swerveStates = new SwerveModuleState[4];
         for (int i = 0; i < swerveStates.length; i++)
             swerveStates[i] = new SwerveModuleState();
-
-      
     }
   
     @Override
@@ -188,7 +199,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         });
 
         mode.onTeleop(() -> {
-            isRotationLocked = true;
+            isRotationLocked = false;
             state = State.FIELD_RELATIVE;
         });
     }
@@ -207,7 +218,8 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     }
 
     private void updateFeedback() {
-        camera.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
+        cameraLeft.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
+        cameraRight.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
 
         poseEstimator.update(gyro.getHeadingCCW(), getModulePositions());
 
@@ -257,13 +269,18 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
             zeroModules();
         } else {
             if (state == State.ALIGN) {
-                final Optional<ChassisSpeeds> speedsWrapper = alignmentController.calculateAlignment();
+                // Align controller:
+                // final Optional<ChassisSpeeds> speedsWrapper = alignmentController.calculateAlignment();
+                // if (speedsWrapper.isPresent()) {
+                //     inputSpeeds = speedsWrapper.get();
+                //     convertToFieldRelative();
+                // }
+
+                // Path controller:
+                final Optional<ChassisSpeeds> speedsWrapper = pathAlignController.calculateAlignment();
                 if (speedsWrapper.isPresent()) {
                     inputSpeeds = speedsWrapper.get();
-                    convertToFieldRelative();
                 }
-
-
                 lights.set(Color.kGreen, Lights.OFF);
             } else if (state == State.BALANCE) {
                 inputSpeeds = autoLevelController.calculate();
@@ -285,18 +302,21 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
             swerveStates = kinematics.toSwerveModuleStates(inputSpeeds);
 
             SwerveDriveKinematics.desaturateWheelSpeeds(swerveStates, MAX_VELOCITY);
-
-            fl.setDesiredState(swerveStates[0]);
-            fr.setDesiredState(swerveStates[1]);
-            bl.setDesiredState(swerveStates[2]);
-            br.setDesiredState(swerveStates[3]);
-
+            
             if (inputSpeeds.vxMetersPerSecond == 0 && inputSpeeds.vyMetersPerSecond == 0 && inputSpeeds.omegaRadiansPerSecond == 0) {
                 preseveModulePositions();
+            } else {
+                fl.setDesiredState(swerveStates[0]);
+                fr.setDesiredState(swerveStates[1]);
+                bl.setDesiredState(swerveStates[2]);
+                br.setDesiredState(swerveStates[3]);
             }
+
+            
         }
 
         alignmentController.resetIf(state != State.ALIGN);
+        pathAlignController.resetIf(state != State.ALIGN);
         autoLevelController.resetIf(state != State.BALANCE);
        
         state = state.parent;

@@ -22,7 +22,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
     private static volatile Input instance;
 
     private Input() {
-        driver = new TorqueController(0, .2);
+        driver = new TorqueController(0, .001);
         operator = new TorqueController(1);
     }
 
@@ -61,18 +61,18 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
     private boolean slowMode = false;
     private final TorqueClick slowModeClick = new TorqueClick();
 
-    private final static double DEADBAND = 0.05;
+    private final static double DEADBAND = 0.075;
 
     private void updateDrivebaseSpeeds() {
         if (slowModeClick.calculate(driver.isLeftBumperPressed())) slowMode = !slowMode;
         final double speedSetting = slowMode ? 0.2 : 1;
         
         final double xVelocity = TorqueMath
-                .scaledDeadband(driver.getLeftYAxis() * Drivebase.MAX_VELOCITY * speedSetting, DEADBAND);
+                .scaledDeadband(driver.getLeftYAxis(), DEADBAND) * Drivebase.MAX_VELOCITY * speedSetting;
         final double yVelocity = TorqueMath
-                .scaledDeadband(driver.getLeftXAxis() * Drivebase.MAX_VELOCITY * speedSetting, DEADBAND);
+                .scaledDeadband(driver.getLeftXAxis(), DEADBAND) * Drivebase.MAX_VELOCITY * speedSetting;
         final double rotationVelocity = TorqueMath
-                .scaledDeadband(-driver.getRightXAxis() * Drivebase.MAX_ANGULAR_VELOCITY * speedSetting, DEADBAND);
+                .scaledDeadband(-driver.getRightXAxis(), DEADBAND) * Drivebase.MAX_ANGULAR_VELOCITY * speedSetting;
 
         drivebase.inputSpeeds = new ChassisSpeeds(xVelocity, yVelocity, rotationVelocity);
 
