@@ -34,8 +34,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 public final class PathAlignController {
     private final PIDController xController = TorquePID.create(1).build();
     private final PIDController yController = TorquePID.create(1).build();
+    private final PIDController thetaController = new PIDController(Math.PI * 2, 0, 0);
 
-    private final PIDController thetaController;
     private final PPHolonomicDriveController controller;
 
     private AlignState alignment = AlignState.NONE;
@@ -56,8 +56,6 @@ public final class PathAlignController {
     private final Timer timer = new Timer();
 
     public PathAlignController(final Supplier<Pose2d> poseSupplier, final Runnable onFail) {
-        thetaController = new PIDController(Math.PI * 2, 0, 0);
-
         xController.setTolerance(0.01);
         yController.setTolerance(0.01);
         thetaController.setTolerance(Units.degreesToRadians(2));
