@@ -27,7 +27,7 @@ public final class Bottom extends TorqueSequence implements Subsystems {
         final WaitForSeconds wait1 = new WaitForSeconds(.5);
         addBlock(wait1);
 
-        final FollowEventPath bottom2 = new FollowEventPath("bottom-2_a");
+        final FollowEventPath bottom2 = new FollowEventPath("bottom-2_b");
         addBlock(bottom2);
     }
 }
