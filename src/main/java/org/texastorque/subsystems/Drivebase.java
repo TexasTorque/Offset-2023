@@ -41,6 +41,7 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
@@ -96,7 +97,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
      * Standard deviations of model states. Increase these numbers to trust your model's state estimates less. This
      * matrix is in the form [x, y, theta]ᵀ, with units in meters and radians, then meters.
      */
-    private static final Vector<N3> STATE_STDS = VecBuilder.fill(0.05, 0.05, Units.degreesToRadians(5));
+    private static final Vector<N3> STATE_STDS = VecBuilder.fill(0.05, 0.05, Units.degreesToRadians(20));
     
     /**
      * Standard deviations of the vision measurements. Increase these numbers to trust global measurements from vision
@@ -218,8 +219,14 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     }
 
     private void updateFeedback() {
-        cameraLeft.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
-        cameraRight.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
+        final double oldX = poseEstimator.getEstimatedPosition().getX();
+        // if (DriverStation.isAutonomous() && (oldX > 3.5))
+        //  && oldX < 4.8))
+        
+        // else {
+            cameraLeft.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
+            cameraRight.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
+        // }
 
         poseEstimator.update(gyro.getHeadingCCW(), getModulePositions());
 
