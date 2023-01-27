@@ -8,8 +8,9 @@ public final class AutoManager extends TorqueAutoManager {
 
     @Override
     public final void init() {
-        addSequence("Bottom", new Bottom());
-        addSequence("Mid", new Mid());
+        addSequence(new BumpySide2Piece()); // only exists because it costs nothing
+        addSequence(new BumpySide2PieceLevel());
+        addSequence(new BumpySide3Piece());
     }
 
     /**
