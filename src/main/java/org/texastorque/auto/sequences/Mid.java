@@ -18,10 +18,10 @@ import org.texastorque.torquelib.util.TorqueUtil;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-public final class Bottom extends TorqueSequence implements Subsystems {
+public final class Mid extends TorqueSequence implements Subsystems {
     private double autoStart = 0;
 
-    public Bottom() { 
+    public Mid() { 
         SmartDashboard.putNumber("ELAPSED", 0);
 
         addBlock(new TorqueExecute(() -> autoStart = TorqueUtil.time()));
@@ -31,16 +31,8 @@ public final class Bottom extends TorqueSequence implements Subsystems {
 
         addBlock(new SetIntakeMode(false));
 
-        final FollowEventPath bottom1 = new FollowEventPath("bottom-1_a"); // ends (1.8, 1.05)
-        bottom1.addEvent("intake-on", new SetIntakeMode(true)); 
-        bottom1.addEvent("intake-off", new SetIntakeMode(false)); 
-        addBlock(bottom1);
-
-        final WaitForSeconds wait2 = new WaitForSeconds(.5);
-        addBlock(wait2);
-
-        final FollowEventPath bottom2 = new FollowEventPath("bottom-2_b");
-        addBlock(bottom2);
+        final FollowEventPath mid1 = new FollowEventPath("mid-1", 1.5, 2);
+        addBlock(mid1);
 
         addBlock(new TorqueExecute(() -> SmartDashboard.putNumber("ELAPSED", TorqueUtil.time() - autoStart)));
     }
