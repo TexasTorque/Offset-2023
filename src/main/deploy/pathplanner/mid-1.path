@@ -2,13 +2,13 @@
   "waypoints": [
     {
       "anchorPoint": {
-        "x": 2.2201044224310675,
-        "y": 0.4941879039313615
+        "x": 1.8435291649470598,
+        "y": 2.755945369237385
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.1759963875483312,
-        "y": 2.4202387604775213
+        "x": 2.8435291649470607,
+        "y": 2.755945369237385
       },
       "holonomicAngle": 180.0,
       "isReversal": false,
@@ -24,18 +24,43 @@
     },
     {
       "anchorPoint": {
-        "x": 2.264212457313804,
-        "y": 4.728559252674061
+        "x": 3.8447343085841665,
+        "y": 2.76
       },
       "prevControl": {
-        "x": 2.3083204921965406,
-        "y": 2.346725369006292
+        "x": 2.8447343085841665,
+        "y": 2.76
       },
       "nextControl": {
-        "x": 2.3083204921965406,
-        "y": 2.346725369006292
+        "x": 4.844734308584167,
+        "y": 2.76
       },
       "holonomicAngle": 180.0,
+      "isReversal": false,
+      "velOverride": null,
+      "isLocked": false,
+      "isStopPoint": false,
+      "stopEvent": {
+        "names": [],
+        "executionBehavior": "parallel",
+        "waitBehavior": "none",
+        "waitTime": 0
+      }
+    },
+    {
+      "anchorPoint": {
+        "x": 6.326228686694178,
+        "y": 2.76
+      },
+      "prevControl": {
+        "x": 5.326228686694178,
+        "y": 2.76
+      },
+      "nextControl": {
+        "x": 5.326228686694178,
+        "y": 2.76
+      },
+      "holonomicAngle": -180.0,
       "isReversal": true,
       "velOverride": null,
       "isLocked": false,
@@ -49,12 +74,12 @@
     },
     {
       "anchorPoint": {
-        "x": 2.1612937092540854,
-        "y": 0.5088905822256092
+        "x": 3.295832326329417,
+        "y": 2.755945369237385
       },
       "prevControl": {
-        "x": 2.2642124573138034,
-        "y": 2.4496441170660117
+        "x": 3.8187032422566918,
+        "y": 2.7179485817459508
       },
       "nextControl": null,
       "holonomicAngle": 180.0,
