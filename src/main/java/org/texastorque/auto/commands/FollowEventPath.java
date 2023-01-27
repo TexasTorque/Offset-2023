@@ -36,10 +36,10 @@ import org.texastorque.torquelib.control.TorquePID;
 public final class FollowEventPath extends TorqueCommand implements Subsystems {
     public static final double MAX_VELOCITY_PATH = 3.5, MAX_ACCELERATION_PATH = 3.5;
     
-    private final PIDController xController = TorquePID.create(1).build();
-    private final PIDController yController = TorquePID.create(1).build();
+    private final PIDController xController = new PIDController(3, 0, 0);
+    private final PIDController yController = new PIDController(3, 0, 0);
 
-    private final PIDController thetaController;
+    private final PIDController omegaController;
     private final PPHolonomicDriveController controller;
 
     private final PathPlannerTrajectory trajectory;
@@ -58,14 +58,14 @@ public final class FollowEventPath extends TorqueCommand implements Subsystems {
     }
 
     public FollowEventPath(final String name, final Map<String, TorqueCommand> commands, final double maxSpeed, final double maxAcceleration) {
-        thetaController = new PIDController(Math.PI * 2, 0, 0);
+        omegaController = new PIDController(Math.PI * .75, 0, 0);
 
         xController.setTolerance(0.01);
         yController.setTolerance(0.01);
-        thetaController.setTolerance(Units.degreesToRadians(2));
-        thetaController.enableContinuousInput(-Math.PI, Math.PI);
+        omegaController.setTolerance(Units.degreesToRadians(2));
+        omegaController.enableContinuousInput(-Math.PI, Math.PI);
 
-        controller = new PPHolonomicDriveController(xController, yController, thetaController);
+        controller = new PPHolonomicDriveController(xController, yController, omegaController);
 
         trajectory = PathPlanner.loadPath(name, maxSpeed, maxAcceleration);
         events = trajectory.getMarkers();

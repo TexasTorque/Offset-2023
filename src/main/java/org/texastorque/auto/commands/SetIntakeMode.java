@@ -22,7 +22,7 @@ public final class SetIntakeMode extends TorqueCommand implements Subsystems {
 
     @Override
     protected final void init() {
-        lights.set(on ? Color.kGreen : Color.kRed, Lights.SOLID);
+        lights.set(on ? Color.kGreen : Lights.ALLIANCE, Lights.SOLID);
     }
 
     @Override

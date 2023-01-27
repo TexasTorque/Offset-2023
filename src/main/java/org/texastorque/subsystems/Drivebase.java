@@ -111,10 +111,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     private final TorqueNavXGyro gyro = TorqueNavXGyro.getInstance();
 
     private double lastRotationRadians;
-    // private final ProfiledPIDController rotationalPID = new ProfiledPIDController(.5, .000, 0, SwerveAlignmentController.OMEGA_CONSTRAINTS), 
-        // directRotPID = new ProfiledPIDController(1, 0, 0, SwerveAlignmentController.OMEGA_CONSTRAINTS);
-    private final PIDController rotationalPID = new PIDController(.5, 0, 0);
-    private final PIDController directRotPID = new PIDController(.5, 0, 0);
+    private final PIDController teleopOmegaController = new PIDController(Math.PI, 0, 0);
 
     private SwerveModuleState[] swerveStates;
 
@@ -161,9 +158,8 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         cameraLeft = new TorqueVision("camera_left", Field.getCurrentFieldLayout(), LEFT_CAMERA_TO_CENTER);
         cameraRight = new TorqueVision("camera_right", Field.getCurrentFieldLayout(), RIGHT_CAMERA_TO_CENTER);
         
-        rotationalPID.enableContinuousInput(-Math.PI, Math.PI);
+        teleopOmegaController.enableContinuousInput(-Math.PI, Math.PI);
         lastRotationRadians = gyro.getRotation2d().getRadians();
-        directRotPID.enableContinuousInput(0, 2 * Math.PI);
 
         final SwerveConfig config = SwerveConfig.defaultConfig;
 
@@ -200,7 +196,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         });
 
         mode.onTeleop(() -> {
-            isRotationLocked = false;
+            isRotationLocked = true;
             state = State.FIELD_RELATIVE;
         });
     }
@@ -248,15 +244,18 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     }
 
     private void calculateTeleop() {
-        SmartDashboard.putBoolean("isRotLocked", isRotationLocked);
         final double realRotationRadians = gyro.getHeadingCCW().getRadians();
 
-        if (isRotationLocked && inputSpeeds.omegaRadiansPerSecond == 0) {
-            final double omega = rotationalPID.calculate(
+        if (isRotationLocked && inputSpeeds.omegaRadiansPerSecond == 0
+                && inputSpeeds.vxMetersPerSecond != 0 && inputSpeeds.vyMetersPerSecond != 0) {
+            final double omega = teleopOmegaController.calculate(
                     realRotationRadians, lastRotationRadians);
             inputSpeeds.omegaRadiansPerSecond = omega;
+            SmartDashboard.putNumber("CT_pidOutput", inputSpeeds.omegaRadiansPerSecond);
         } else
             lastRotationRadians = realRotationRadians;
+        
+        SmartDashboard.putNumber("CT_omega", inputSpeeds.omegaRadiansPerSecond);
     
     }
 

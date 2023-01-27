@@ -71,7 +71,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         gridOverrideRight.onTrue(() -> drivebase.setGridOverride(GridState.RIGHT));
     }
 
-    private final static double DEADBAND = 0.075;
+    private final static double DEADBAND = 0.125;
 
     private void updateDrivebaseSpeeds() {
         final double speedSetting = slowModeToggle.get() ? 0.2 : 1;
