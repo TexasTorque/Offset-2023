@@ -6,9 +6,9 @@ import java.util.function.Supplier;
 
 import org.texastorque.Field;
 import org.texastorque.Field.AprilTagType;
-import org.texastorque.controllers.SwerveAlignmentController.AlignState;
-import org.texastorque.controllers.SwerveAlignmentController.GridState;
-import org.texastorque.controllers.SwerveAlignmentController.TranslationState;
+import org.texastorque.controllers.SwerveAlignController.AlignState;
+import org.texastorque.controllers.SwerveAlignController.GridState;
+import org.texastorque.controllers.SwerveAlignController.TranslationState;
 import org.texastorque.torquelib.control.TorquePID;
 
 import com.pathplanner.lib.PathConstraints;
@@ -32,10 +32,12 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-public final class PathAlignController implements IController{
+public final class PathAlignController implements IAlignmentController{
     private final PIDController xController = TorquePID.create(1).build();
     private final PIDController yController = TorquePID.create(1).build();
     private final PIDController thetaController = new PIDController(Math.PI * 2, 0, 0);
+
+    public boolean needsFieldRelative() { return false; }
 
     private final PPHolonomicDriveController controller;
 

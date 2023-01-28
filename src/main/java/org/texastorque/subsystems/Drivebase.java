@@ -13,11 +13,11 @@ import org.texastorque.Field;
 import org.texastorque.Ports;
 import org.texastorque.Subsystems;
 import org.texastorque.controllers.AutoLevelController;
-import org.texastorque.controllers.IController;
+import org.texastorque.controllers.IAlignmentController;
 import org.texastorque.controllers.PathAlignController;
-import org.texastorque.controllers.SwerveAlignmentController;
-import org.texastorque.controllers.SwerveAlignmentController.AlignState;
-import org.texastorque.controllers.SwerveAlignmentController.GridState;
+import org.texastorque.controllers.SwerveAlignController;
+import org.texastorque.controllers.SwerveAlignController.AlignState;
+import org.texastorque.controllers.SwerveAlignController.GridState;
 import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.modules.TorqueSwerveModule2022;
@@ -124,7 +124,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
     //PathAlignController
     //SSwerveAlignmentController
-    private final IController alignmentController = new SwerveAlignmentController(
+    private final IAlignmentController alignmentController = new SwerveAlignController(
         this::getPose, () -> state = state.parent);
 
     public void setAlignState(final AlignState alignment) {
@@ -215,14 +215,8 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     }
 
     private void updateFeedback() {
-        final double oldX = poseEstimator.getEstimatedPosition().getX();
-        // if (DriverStation.isAutonomous() && (oldX > 3.5))
-        //  && oldX < 4.8))
-        
-        // else {
-            cameraLeft.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
-            cameraRight.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
-        // }
+        cameraLeft.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
+        cameraRight.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
 
         poseEstimator.update(gyro.getHeadingCCW(), getModulePositions());
 
@@ -275,11 +269,10 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
             zeroModules();
         } else {
             if (state == State.ALIGN) {
-                // Align controller:
                 final Optional<ChassisSpeeds> speedsWrapper = alignmentController.calculateAlignment();
                 if (speedsWrapper.isPresent()) {
                     inputSpeeds = speedsWrapper.get();
-                    if (alignmentController.getClass().equals(SwerveAlignmentController.class))
+                    if (alignmentController.needsFieldRelative())
                         convertToFieldRelative();
                 }
 
@@ -287,10 +280,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
             } else if (state == State.BALANCE) {
                 inputSpeeds = autoLevelController.calculate();
                 convertToFieldRelative();
-                // autoLevelController.calculate();
             }
-
-
             
             if (state == State.FIELD_RELATIVE) {
                 calculateTeleop();

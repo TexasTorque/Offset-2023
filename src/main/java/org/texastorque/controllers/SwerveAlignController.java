@@ -18,7 +18,9 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-public final class SwerveAlignmentController implements IController {
+public final class SwerveAlignController implements IAlignmentController {
+
+    public boolean needsFieldRelative() { return true; }
 
     private static final TrapezoidProfile.Constraints X_CONSTRAINTS = new TrapezoidProfile.Constraints(3.5, 3.5);
     private static final TrapezoidProfile.Constraints Y_CONSTRAINTS = new TrapezoidProfile.Constraints(3.5, 3.5);
@@ -44,7 +46,7 @@ public final class SwerveAlignmentController implements IController {
     private final Supplier<Pose2d> poseSupplier;
     private final Runnable onFail;
 
-    public SwerveAlignmentController(final Supplier<Pose2d> poseSupplier, final Runnable onFail) {
+    public SwerveAlignController(final Supplier<Pose2d> poseSupplier, final Runnable onFail) {
         this.poseSupplier = poseSupplier;
         this.onFail = onFail;
 
