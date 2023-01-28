@@ -18,10 +18,10 @@ import org.texastorque.torquelib.util.TorqueUtil;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-public final class BumpySide2Piece extends TorqueSequence implements Subsystems {
+public final class FlatSide3Piece extends TorqueSequence implements Subsystems {
     private double autoStart = 0;
 
-    public BumpySide2Piece() { 
+    public FlatSide3Piece() { 
         SmartDashboard.putNumber("ELAPSED", 0);
         addBlock(new SetIntakeMode(false));
 
@@ -30,13 +30,22 @@ public final class BumpySide2Piece extends TorqueSequence implements Subsystems 
         final WaitForSeconds dropInitialCone = new WaitForSeconds(.5);
         addBlock(dropInitialCone);
 
-        final FollowEventPath pickUpFirstCube = new FollowEventPath("bumpy-side-get-first"); // ends (1.8, 1.05)
+
+        final FollowEventPath pickUpFirstCube = new FollowEventPath("flat-side-get-first"); // ends (1.8, 1.05)
         pickUpFirstCube.addEvent("intake-on", new SetIntakeMode(true)); 
         pickUpFirstCube.addEvent("intake-off", new SetIntakeMode(false)); 
         addBlock(pickUpFirstCube);
 
         final WaitForSeconds dropFirstCone = new WaitForSeconds(.5);
         addBlock(dropFirstCone);
+
+        final FollowEventPath pickUpSecondCube = new FollowEventPath("flat-side-get-second");
+        pickUpSecondCube.addEvent("intake-on", new SetIntakeMode(true));
+        pickUpSecondCube.addEvent("intake-off", new SetIntakeMode(false)); 
+        addBlock(pickUpSecondCube);
+
+        final WaitForSeconds dropSecondCube = new WaitForSeconds(.5);
+        addBlock(dropSecondCube);
 
         addBlock(new TorqueExecute(() -> SmartDashboard.putNumber("ELAPSED", TorqueUtil.time() - autoStart)));
     }

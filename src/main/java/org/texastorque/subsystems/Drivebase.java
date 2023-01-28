@@ -155,8 +155,8 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
      */
     private Drivebase() {
         // Do this for each camera
-        cameraLeft = new TorqueVision("camera_left", Field.getCurrentFieldLayout(), LEFT_CAMERA_TO_CENTER);
-        cameraRight = new TorqueVision("camera_right", Field.getCurrentFieldLayout(), RIGHT_CAMERA_TO_CENTER);
+        cameraLeft = new TorqueVision("camera_right", Field.getCurrentFieldLayout(), LEFT_CAMERA_TO_CENTER);
+        cameraRight = new TorqueVision("camera_left", Field.getCurrentFieldLayout(), RIGHT_CAMERA_TO_CENTER);
         
         teleopOmegaController.enableContinuousInput(-Math.PI, Math.PI);
         lastRotationRadians = gyro.getRotation2d().getRadians();

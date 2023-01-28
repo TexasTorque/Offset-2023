@@ -13,26 +13,30 @@ import org.texastorque.torquelib.sensors.TorqueNavXGyro;
 import org.texastorque.torquelib.util.TorqueUtil;
 
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 
 public final class CreepUntilLeveled extends TorqueCommand implements Subsystems {
 
     public CreepUntilLeveled() {
+        SmartDashboard.putNumber("Level condition", 0);
     }
 
     @Override
     protected final void init() {
-        drivebase.setState(Drivebase.State.ROBOT_RELATIVE);
+        drivebase.setState(Drivebase.State.BALANCE);
     }
+
+    private boolean hasSpiked = false;
 
     @Override
     protected final void continuous() {
-        drivebase.inputSpeeds = new ChassisSpeeds(0, -0.75, 0);
+        drivebase.setState(Drivebase.State.BALANCE);
     }
 
     @Override
     protected final boolean endCondition() {
-        return Math.abs(TorqueNavXGyro.getInstance().getRoll()) <= 5;
+        return false;
     }
 
     @Override
