@@ -56,8 +56,6 @@ public final class AutoLevelController {
 
     private double lastGyroMeasure = 0;
 
-    private final PIDController controller = new PIDController(.02, 0, .0007);
-
     public ChassisSpeeds calculate() {
 
         final Rotation2d startingRotation = TorqueNavXGyro.getInstance().getHeadingCCW();
@@ -71,10 +69,15 @@ public final class AutoLevelController {
 
         final double gyroMeasurement = -balanceDirection.getAngle();
 
-        double drivePower = -controller.calculate(gyroMeasurement, 0);
+        final double error = 0 - gyroMeasurement;
+        final double deltaGyro = lastGyroMeasure - gyroMeasurement;
+
+        double drivePower = -Math.min(0.02 * error, 1);
+        drivePower += (Math.abs(deltaGyro) * -Math.signum(drivePower) * .4);
 
         if (Math.abs(drivePower) > 0.4)
             drivePower = Math.copySign(.4, drivePower);
+            
 
         lastGyroMeasure = gyroMeasurement;
 

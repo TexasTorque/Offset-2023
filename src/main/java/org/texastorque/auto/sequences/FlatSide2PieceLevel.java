@@ -18,29 +18,31 @@ import org.texastorque.torquelib.util.TorqueUtil;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-public final class Bottom extends TorqueSequence implements Subsystems {
+public final class FlatSide2PieceLevel extends TorqueSequence implements Subsystems {
     private double autoStart = 0;
 
-    public Bottom() { 
+    public FlatSide2PieceLevel() { 
         SmartDashboard.putNumber("ELAPSED", 0);
+        addBlock(new SetIntakeMode(false));
 
         addBlock(new TorqueExecute(() -> autoStart = TorqueUtil.time()));
 
-        final WaitForSeconds wait1 = new WaitForSeconds(.5);
-        addBlock(wait1);
+        final WaitForSeconds dropInitialCone = new WaitForSeconds(.5);
+        addBlock(dropInitialCone);
 
-        addBlock(new SetIntakeMode(false));
+        final FollowEventPath pickUpFirstCube = new FollowEventPath("flat-side-get-first"); // ends (1.8, 1.05)
+        pickUpFirstCube.addEvent("intake-on", new SetIntakeMode(true)); 
+        pickUpFirstCube.addEvent("intake-off", new SetIntakeMode(false)); 
+        addBlock(pickUpFirstCube);
 
-        final FollowEventPath bottom1 = new FollowEventPath("bottom-1_a"); // ends (1.8, 1.05)
-        bottom1.addEvent("intake-on", new SetIntakeMode(true)); 
-        bottom1.addEvent("intake-off", new SetIntakeMode(false)); 
-        addBlock(bottom1);
+        final WaitForSeconds dropFirstCone = new WaitForSeconds(.5);
+        addBlock(dropFirstCone);
 
-        final WaitForSeconds wait2 = new WaitForSeconds(.5);
-        addBlock(wait2);
+        final FollowEventPath goToLevel = new FollowEventPath("flat-side-go-level");
+        addBlock(goToLevel);
 
-        final FollowEventPath bottom2 = new FollowEventPath("bottom-2_b");
-        addBlock(bottom2);
+        final CreepUntilLeveled levelChargeStation = new CreepUntilLeveled();
+        addBlock(levelChargeStation);
 
         addBlock(new TorqueExecute(() -> SmartDashboard.putNumber("ELAPSED", TorqueUtil.time() - autoStart)));
     }
