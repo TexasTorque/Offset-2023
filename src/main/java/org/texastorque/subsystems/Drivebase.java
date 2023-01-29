@@ -275,10 +275,10 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
                     if (alignmentController.needsFieldRelative())
                         convertToFieldRelative();
                 }
-
                 lights.set(Color.kGreen, Lights.OFF);
             } else if (state == State.BALANCE) {
                 inputSpeeds = autoLevelController.calculate();
+                lights.set(Color.kGreen, Lights.OFF);
                 convertToFieldRelative();
             }
             

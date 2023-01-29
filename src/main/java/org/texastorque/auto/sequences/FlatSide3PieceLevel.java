@@ -31,7 +31,7 @@ public final class FlatSide3PieceLevel extends TorqueSequence implements Subsyst
         addBlock(dropInitialCone);
 
 
-        final FollowEventPath pickUpFirstCube = new FollowEventPath("flat-side-get-first",3.5, 3.5); // ends (1.8, 1.05)
+        final FollowEventPath pickUpFirstCube = new FollowEventPath("flat-side-get-first",4.5, 4.5); // ends (1.8, 1.05)
         pickUpFirstCube.addEvent("intake-on", new SetIntakeMode(true)); 
         pickUpFirstCube.addEvent("intake-off", new SetIntakeMode(false)); 
         addBlock(pickUpFirstCube);
@@ -39,7 +39,7 @@ public final class FlatSide3PieceLevel extends TorqueSequence implements Subsyst
         final WaitForSeconds dropFirstCone = new WaitForSeconds(.5);
         addBlock(dropFirstCone);
 
-        final FollowEventPath pickUpSecondCube = new FollowEventPath("flat-side-get-second");
+        final FollowEventPath pickUpSecondCube = new FollowEventPath("flat-side-get-second-x", 4.5, 4.5);
         pickUpSecondCube.addEvent("intake-on", new SetIntakeMode(true));
         pickUpSecondCube.addEvent("intake-off", new SetIntakeMode(false)); 
         addBlock(pickUpSecondCube);
@@ -50,8 +50,8 @@ public final class FlatSide3PieceLevel extends TorqueSequence implements Subsyst
         final FollowEventPath goToLevel = new FollowEventPath("flat-side-go-level-fast", 6, 8);
         addBlock(goToLevel);
 
-        // final CreepUntilLeveled levelChargeStation = new CreepUntilLeveled();
-        // addBlock(levelChargeStation);
+        final CreepUntilLeveled levelChargeStation = new CreepUntilLeveled();
+        addBlock(levelChargeStation);
 
         addBlock(new TorqueExecute(() -> SmartDashboard.putNumber("ELAPSED", TorqueUtil.time() - autoStart)));
     }
