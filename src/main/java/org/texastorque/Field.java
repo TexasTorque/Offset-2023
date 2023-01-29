@@ -8,6 +8,8 @@ import java.util.Map;
 
 import edu.wpi.first.apriltag.AprilTag;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.apriltag.AprilTagFieldLayout.OriginPosition;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -16,6 +18,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public final class Field {
     public static final double FIELD_LENGTH = Units.inchesToMeters(651.25);
@@ -102,19 +105,17 @@ public final class Field {
         return newMap;
     }
 
-    public static final Map<Integer, Pose3d> APRIL_TAGS = 
-        DriverStation.getAlliance() == DriverStation.Alliance.Blue
-        ? APRIL_TAG_ORIGINALS
-        : reflectAprilTags(); 
+    public static final Map<Integer, Pose3d> getAprilTagsMap() {
+        return DriverStation.getAlliance() == DriverStation.Alliance.Blue
+                ? APRIL_TAG_ORIGINALS
+                : reflectAprilTags(); 
+    }
 
     public static List<AprilTag> getAprilTagsList() {
-        return APRIL_TAGS.entrySet().stream().map(entry -> new AprilTag(entry.getKey(), entry.getValue())).toList();
+        return getAprilTagsMap().entrySet().stream().map(entry -> new AprilTag(entry.getKey(), entry.getValue())).toList();
     }
 
     public static AprilTagFieldLayout getCurrentFieldLayout() {
-        // final boolean isRedAlliance = DriverStation.getAlliance() == DriverStation.Alliance.Red;
-        // final AprilTagFieldLayout layout = AprilTagFieldLayout.loadFromResource(AprilTagFields.k2023ChargedUp.m_resourceFile);
-        // layout.setOrigin(isRedAlliance ? OriginPosition.kRedAllianceWallRightSide : OriginPosition.kRedAllianceWallRightSide);
         return new AprilTagFieldLayout(getAprilTagsList(), FIELD_LENGTH, FIELD_WIDTH);
     }
 

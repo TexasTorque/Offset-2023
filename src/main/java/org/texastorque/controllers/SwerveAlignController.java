@@ -18,7 +18,9 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-public final class SwerveAlignmentController {
+public final class SwerveAlignController implements IAlignmentController {
+
+    public boolean needsFieldRelative() { return true; }
 
     private static final TrapezoidProfile.Constraints X_CONSTRAINTS = new TrapezoidProfile.Constraints(3.5, 3.5);
     private static final TrapezoidProfile.Constraints Y_CONSTRAINTS = new TrapezoidProfile.Constraints(3.5, 3.5);
@@ -44,7 +46,7 @@ public final class SwerveAlignmentController {
     private final Supplier<Pose2d> poseSupplier;
     private final Runnable onFail;
 
-    public SwerveAlignmentController(final Supplier<Pose2d> poseSupplier, final Runnable onFail) {
+    public SwerveAlignController(final Supplier<Pose2d> poseSupplier, final Runnable onFail) {
         this.poseSupplier = poseSupplier;
         this.onFail = onFail;
 
@@ -55,8 +57,8 @@ public final class SwerveAlignmentController {
     }
 
     private void configurePIDControllerTolerance() {
-        xController.setTolerance(0.02);
-        yController.setTolerance(0.02);
+        xController.setTolerance(0.01);
+        yController.setTolerance(0.01);
         omegaController.setTolerance(Units.degreesToRadians(1));
         omegaController.enableContinuousInput(-Math.PI, Math.PI);
     }
@@ -67,7 +69,7 @@ public final class SwerveAlignmentController {
         double currentClosestDistance = Double.MAX_VALUE; 
         int closestID = -1;
        
-        for (final Map.Entry<Integer, Pose3d> aprilPose : Field.APRIL_TAGS.entrySet()) {
+        for (final Map.Entry<Integer, Pose3d> aprilPose : Field.getAprilTagsMap().entrySet()) {
 
             final double distance = robotPose.getTranslation().getDistance(aprilPose.getValue().toPose2d().getTranslation());
             final int id = aprilPose.getKey();
@@ -114,13 +116,13 @@ public final class SwerveAlignmentController {
         final boolean yAtGoal = yController.atGoal();
         final boolean omegaAtGoal = omegaController.atGoal();
 
-        // final double xSpeed = xAtGoal ? 0 : -xController.calculate(robotPose.getX());
-        // final double ySpeed = yAtGoal ? 0 : -yController.calculate(robotPose.getY());
-        // final double omegaSpeed = omegaController.calculate(robotPose.getRotation().getRadians());
+        final double xSpeed = xAtGoal ? 0 : -xController.calculate(robotPose.getX());
+        final double ySpeed = yAtGoal ? 0 : -yController.calculate(robotPose.getY());
+        final double omegaSpeed = omegaController.calculate(robotPose.getRotation().getRadians());
 
-        final double xSpeed =  -xController.calculate(robotPose.getX());
-        final double ySpeed =  -yController.calculate(robotPose.getY());
-        final double omegaSpeed =  omegaController.calculate(robotPose.getRotation().getRadians());
+        // final double xSpeed =  -xController.calculate(robotPose.getX());
+        // final double ySpeed =  -yController.calculate(robotPose.getY());
+        // final double omegaSpeed =  omegaController.calculate(robotPose.getRotation().getRadians());
         
         return new ChassisSpeeds(xSpeed, ySpeed, omegaSpeed);
     }
@@ -150,7 +152,7 @@ public final class SwerveAlignmentController {
                 : gridOverride.getID();
         }
 
-        final Pose3d aprilPose = Field.APRIL_TAGS.get(closestID);
+        final Pose3d aprilPose = Field.getAprilTagsMap().get(closestID);
 
         final Optional<TranslationState> translationState = getTranslationState(closestID);
         if (translationState.isEmpty()) {

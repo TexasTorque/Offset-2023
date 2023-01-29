@@ -13,10 +13,11 @@ import org.texastorque.Field;
 import org.texastorque.Ports;
 import org.texastorque.Subsystems;
 import org.texastorque.controllers.AutoLevelController;
+import org.texastorque.controllers.IAlignmentController;
 import org.texastorque.controllers.PathAlignController;
-import org.texastorque.controllers.SwerveAlignmentController;
-import org.texastorque.controllers.SwerveAlignmentController.AlignState;
-import org.texastorque.controllers.SwerveAlignmentController.GridState;
+import org.texastorque.controllers.SwerveAlignController;
+import org.texastorque.controllers.SwerveAlignController.AlignState;
+import org.texastorque.controllers.SwerveAlignController.GridState;
 import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.modules.TorqueSwerveModule2022;
@@ -121,27 +122,23 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     public double requestedRotation = 0;
     public boolean isRotationLocked = true;
 
-    private final SwerveAlignmentController alignmentController = new SwerveAlignmentController(
+    //PathAlignController
+    //SSwerveAlignmentController
+    private final IAlignmentController alignmentController = new SwerveAlignController(
         this::getPose, () -> state = state.parent);
-
-    private final PathAlignController pathAlignController = new PathAlignController(
-        this::getPose, () -> state = state.parent);
-
 
     public void setAlignState(final AlignState alignment) {
         state = alignment == AlignState.NONE ? state.parent : State.ALIGN;
         alignmentController.setAlignment(alignment);
-        pathAlignController.setAlignment(alignment);
     }
 
     public void setGridOverride(final GridState override) {
         alignmentController.setGridOverride(override);
-        pathAlignController.setGridOverride(override);
     }
 
     private final AutoLevelController autoLevelController = new AutoLevelController(this::getPose);
 
-    public final TorqueVision cameraLeft, cameraRight; // Right now is just one camera. One day will be cameraLeft and cameraRight.
+    public final TorqueVision cameraLeft, cameraRight; 
 
     private static final double CAMERA_FORWARD_FROM_CENTER = Units.inchesToMeters((29 * .5) - 8.5625);
     private static final double LEFT_CAMERA_RIGHT_FROM_CENTER = Units.inchesToMeters(29 * .5);
@@ -155,9 +152,9 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
      */
     private Drivebase() {
         // Do this for each camera
-        cameraLeft = new TorqueVision("camera_right", Field.getCurrentFieldLayout(), LEFT_CAMERA_TO_CENTER);
-        cameraRight = new TorqueVision("camera_left", Field.getCurrentFieldLayout(), RIGHT_CAMERA_TO_CENTER);
-        
+        cameraLeft = new TorqueVision("camera_left", Field.getCurrentFieldLayout(), LEFT_CAMERA_TO_CENTER);
+        cameraRight = new TorqueVision("camera_right", Field.getCurrentFieldLayout(), RIGHT_CAMERA_TO_CENTER);
+
         teleopOmegaController.enableContinuousInput(-Math.PI, Math.PI);
         lastRotationRadians = gyro.getRotation2d().getRadians();
 
@@ -199,6 +196,9 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
             isRotationLocked = true;
             state = State.FIELD_RELATIVE;
         });
+
+        cameraLeft.setFieldLayout(Field.getCurrentFieldLayout());
+        cameraRight.setFieldLayout(Field.getCurrentFieldLayout());
     }
 
     public static SwerveModulePosition invertSwerveModuleDistance(final SwerveModulePosition pose) {
@@ -215,14 +215,8 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     }
 
     private void updateFeedback() {
-        final double oldX = poseEstimator.getEstimatedPosition().getX();
-        // if (DriverStation.isAutonomous() && (oldX > 3.5))
-        //  && oldX < 4.8))
-        
-        // else {
-            cameraLeft.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
-            cameraRight.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
-        // }
+        cameraLeft.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
+        cameraRight.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
 
         poseEstimator.update(gyro.getHeadingCCW(), getModulePositions());
 
@@ -275,26 +269,18 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
             zeroModules();
         } else {
             if (state == State.ALIGN) {
-                // Align controller:
-                // final Optional<ChassisSpeeds> speedsWrapper = alignmentController.calculateAlignment();
-                // if (speedsWrapper.isPresent()) {
-                //     inputSpeeds = speedsWrapper.get();
-                //     convertToFieldRelative();
-                // }
-
-                // Path controller:
-                final Optional<ChassisSpeeds> speedsWrapper = pathAlignController.calculateAlignment();
+                final Optional<ChassisSpeeds> speedsWrapper = alignmentController.calculateAlignment();
                 if (speedsWrapper.isPresent()) {
                     inputSpeeds = speedsWrapper.get();
+                    if (alignmentController.needsFieldRelative())
+                        convertToFieldRelative();
                 }
                 lights.set(Color.kGreen, Lights.OFF);
             } else if (state == State.BALANCE) {
                 inputSpeeds = autoLevelController.calculate();
+                lights.set(Color.kGreen, Lights.OFF);
                 convertToFieldRelative();
-                // autoLevelController.calculate();
             }
-
-
             
             if (state == State.FIELD_RELATIVE) {
                 calculateTeleop();
@@ -322,7 +308,6 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         }
 
         alignmentController.resetIf(state != State.ALIGN);
-        pathAlignController.resetIf(state != State.ALIGN);
         autoLevelController.resetIf(state != State.BALANCE);
        
         state = state.parent;

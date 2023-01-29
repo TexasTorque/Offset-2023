@@ -6,9 +6,9 @@ import java.util.function.Supplier;
 
 import org.texastorque.Field;
 import org.texastorque.Field.AprilTagType;
-import org.texastorque.controllers.SwerveAlignmentController.AlignState;
-import org.texastorque.controllers.SwerveAlignmentController.GridState;
-import org.texastorque.controllers.SwerveAlignmentController.TranslationState;
+import org.texastorque.controllers.SwerveAlignController.AlignState;
+import org.texastorque.controllers.SwerveAlignController.GridState;
+import org.texastorque.controllers.SwerveAlignController.TranslationState;
 import org.texastorque.torquelib.control.TorquePID;
 
 import com.pathplanner.lib.PathConstraints;
@@ -23,6 +23,7 @@ import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
@@ -31,10 +32,12 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-public final class PathAlignController {
+public final class PathAlignController implements IAlignmentController{
     private final PIDController xController = TorquePID.create(1).build();
     private final PIDController yController = TorquePID.create(1).build();
     private final PIDController thetaController = new PIDController(Math.PI * 2, 0, 0);
+
+    public boolean needsFieldRelative() { return false; }
 
     private final PPHolonomicDriveController controller;
 
@@ -76,7 +79,7 @@ public final class PathAlignController {
         double currentClosestDistance = Double.MAX_VALUE; 
         int closestID = -1;
        
-        for (final Map.Entry<Integer, Pose3d> aprilPose : Field.APRIL_TAGS.entrySet()) {
+        for (final Map.Entry<Integer, Pose3d> aprilPose : Field.getAprilTagsMap().entrySet()) {
 
             final double distance = robotPose.getTranslation().getDistance(aprilPose.getValue().toPose2d().getTranslation());
             final int id = aprilPose.getKey();
@@ -129,7 +132,7 @@ public final class PathAlignController {
                     ? findClosestAprilTagID()
                     : gridOverride.getID();
 
-            final Pose3d aprilPose = Field.APRIL_TAGS.get(closestID);
+            final Pose3d aprilPose = Field.getAprilTagsMap().get(closestID);
 
             final Optional<TranslationState> translationState = getTranslationState(closestID);
             if (translationState.isEmpty()) {
@@ -140,9 +143,9 @@ public final class PathAlignController {
             final Pose2d goalPose = translationState.get().calculate(aprilPose);
 
             trajectory = PathPlanner.generatePath(
-                new PathConstraints(2, 2),
-                new PathPoint(current.getTranslation(), Rotation2d.fromRadians(0), current.getRotation(), 2),
-                new PathPoint(goalPose.getTranslation(), Rotation2d.fromRadians(Math.PI), current.getRotation()));
+                new PathConstraints(3.5, 4),
+                new PathPoint(current.getTranslation(), Rotation2d.fromRadians(Math.PI), current.getRotation(), 2),
+                new PathPoint(goalPose.getTranslation().plus(new Translation2d(-Units.inchesToMeters(8), 0)), Rotation2d.fromRadians(0), new Rotation2d(Math.PI)));
 
             timer.reset();
             timer.start();
@@ -150,6 +153,11 @@ public final class PathAlignController {
 
         final double elapsed = timer.get();
         final PathPlannerState desired = (PathPlannerState) trajectory.sample(elapsed);
+
+
+        final boolean done = timer.hasElapsed(trajectory.getTotalTimeSeconds());
+
+        SmartDashboard.putBoolean("Align Done", done);
 
         final ChassisSpeeds speeds = controller.calculate(current, desired);
         
