@@ -75,7 +75,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
     public static final Pose2d INITIAL_POS = new Pose2d(0, 0, new Rotation2d(0));
 
-    private static final double SIZE = Units.inchesToMeters(12);
+    private static final double SIZE = Units.inchesToMeters(18);
 
     private final Translation2d
             LOC_FL = new Translation2d(SIZE, -SIZE),
@@ -112,7 +112,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     private final TorqueNavXGyro gyro = TorqueNavXGyro.getInstance();
 
     private double lastRotationRadians;
-    private final PIDController teleopOmegaController = new PIDController(Math.PI, 0, 0);
+    private final PIDController teleopOmegaController = new PIDController(2 * Math.PI, 0, 0);
 
     private SwerveModuleState[] swerveStates;
 
@@ -242,6 +242,8 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     private void calculateTeleop() {
         final double realRotationRadians = gyro.getHeadingCCW().getRadians();
 
+        SmartDashboard.putBoolean("IS ROT LOCKED", isRotationLocked);
+
         if (isRotationLocked && inputSpeeds.omegaRadiansPerSecond == 0
                 && inputSpeeds.vxMetersPerSecond != 0 && inputSpeeds.vyMetersPerSecond != 0) {
             final double omega = teleopOmegaController.calculate(
@@ -301,14 +303,20 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
                 bl.setDesiredState(swerveStates[2]);
                 br.setDesiredState(swerveStates[3]);
             }
-
-            
         }
 
         alignmentController.resetIf(state != State.ALIGN);
         autoLevelController.resetIf(state != State.BALANCE);
        
         state = state.parent;
+    }
+
+    public double getSpeed() {
+        return inputSpeeds.vxMetersPerSecond * inputSpeeds.vxMetersPerSecond + inputSpeeds.vyMetersPerSecond * inputSpeeds.vyMetersPerSecond;
+    }
+
+    public Rotation2d getHeading() {
+        return Rotation2d.fromRadians(Math.atan2(inputSpeeds.vyMetersPerSecond, inputSpeeds.vxMetersPerSecond));
     }
 
     public void resetPose(final Pose2d pose) {

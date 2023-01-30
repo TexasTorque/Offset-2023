@@ -9,6 +9,7 @@ import org.texastorque.Field.AprilTagType;
 import org.texastorque.controllers.SwerveAlignController.AlignState;
 import org.texastorque.controllers.SwerveAlignController.GridState;
 import org.texastorque.controllers.SwerveAlignController.TranslationState;
+import org.texastorque.subsystems.Drivebase;
 import org.texastorque.torquelib.control.TorquePID;
 
 import com.pathplanner.lib.PathConstraints;
@@ -125,7 +126,8 @@ public final class PathAlignController implements IAlignmentController{
         if (notInLoop) trajectory = null;
     }
 
-    final double LAST_LEG_X_OFFSET = Units.inchesToMeters(12);
+    final double LAST_LEG_X_OFFSET_MAX = Units.inchesToMeters(12);
+    final double LAST_LEG_X_OFFSET_MIN = Units.inchesToMeters(3);
 
     private boolean generateTrajectory(final Pose2d current) {
         final int targetID = getTargetID();
@@ -138,12 +140,22 @@ public final class PathAlignController implements IAlignmentController{
 
         final Pose2d goalPose = translationState.get().calculate(aprilPose);
 
+        final double  offset = Math.min(Math.max(current.getX(), LAST_LEG_X_OFFSET_MIN), LAST_LEG_X_OFFSET_MAX);
+
         trajectory = PathPlanner.generatePath(
-            new PathConstraints(3.5, 4),
+            new PathConstraints(3.5, 3.5),
             new PathPoint(current.getTranslation(), Rotation2d.fromRadians(Math.PI), current.getRotation()),
-            new PathPoint(new Translation2d(goalPose.getX() + LAST_LEG_X_OFFSET, goalPose.getY()),
+            new PathPoint(new Translation2d(goalPose.getX() + offset, goalPose.getY()),
                     Rotation2d.fromRadians(Math.PI), new Rotation2d(Math.PI)),
             new PathPoint(goalPose.getTranslation(), Rotation2d.fromRadians(0), new Rotation2d(Math.PI)));
+
+       
+        trajectory = PathPlanner.generatePath(
+            new PathConstraints(3.5, 4),
+            new PathPoint(current.getTranslation(), Drivebase.getInstance().getHeading(), current.getRotation(), Drivebase.getInstance().getSpeed()),
+            new PathPoint(new Translation2d(goalPose.getX() + offset, goalPose.getY()),
+                    Rotation2d.fromRadians(Math.PI), new Rotation2d(Math.PI), 3),
+            new PathPoint(goalPose.getTranslation(), Rotation2d.fromRadians(0), new Rotation2d(Math.PI))); 
 
         timer.reset();
         timer.start();
