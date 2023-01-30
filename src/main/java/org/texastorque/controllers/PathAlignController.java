@@ -142,7 +142,7 @@ public final class PathAlignController implements IAlignmentController{
             new PathConstraints(3.5, 4),
             new PathPoint(current.getTranslation(), Rotation2d.fromRadians(Math.PI), current.getRotation()),
             new PathPoint(new Translation2d(goalPose.getX() + LAST_LEG_X_OFFSET, goalPose.getY()),
-                    Rotation2d.fromRadians(0), new Rotation2d(Math.PI)),
+                    Rotation2d.fromRadians(Math.PI), new Rotation2d(Math.PI)),
             new PathPoint(goalPose.getTranslation(), Rotation2d.fromRadians(0), new Rotation2d(Math.PI)));
 
         timer.reset();

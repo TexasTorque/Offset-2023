@@ -88,7 +88,7 @@ public final class Field {
    public static final Pose2d reflectPosition(final Pose2d pose) {
         return new Pose2d(
             FIELD_LENGTH - pose.getTranslation().getX(),
-            pose.getTranslation().getY(),
+            FIELD_WIDTH - pose.getTranslation().getY(),
             pose.getRotation().plus(new Rotation2d(Math.PI)));
     }
 

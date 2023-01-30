@@ -220,7 +220,9 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
         poseEstimator.update(gyro.getHeadingCCW(), getModulePositions());
 
-        fieldMap.setRobotPose(poseEstimator.getEstimatedPosition());
+        fieldMap.setRobotPose(DriverStation.getAlliance() == DriverStation.Alliance.Blue
+                ? poseEstimator.getEstimatedPosition()
+                : Field.reflectPosition(poseEstimator.getEstimatedPosition()));
     }
 
     private void zeroModules() {
