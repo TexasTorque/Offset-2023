@@ -93,9 +93,16 @@ public final class PathAlignController implements IAlignmentController{
         return closestID;
     } 
 
-    private Optional<TranslationState> getTranslationState(final int closestID) {
-        final AprilTagType tagType = Field.getAprilTagType(closestID);
+    private int getTargetID() {
+        return gridOverride == GridState.NONE
+                ? findClosestAprilTagID()
+                : gridOverride.getID();
+    }
 
+    private Optional<TranslationState> getTranslationState(final int targetID) {
+        final AprilTagType tagType = Field.getAprilTagType(targetID);
+
+        // This should never reasonably fail
         if (!tagType.isValid()) {
             onFail.run();
             return Optional.empty();
@@ -115,8 +122,32 @@ public final class PathAlignController implements IAlignmentController{
         alignment = AlignState.NONE;
         gridOverride = GridState.NONE;
 
-        if (notInLoop)
-            trajectory = null;
+        if (notInLoop) trajectory = null;
+    }
+
+    final double LAST_LEG_X_OFFSET = Units.inchesToMeters(12);
+
+    private boolean generateTrajectory(final Pose2d current) {
+        final int targetID = getTargetID();
+
+        final Pose3d aprilPose = Field.getAprilTagsMap().get(targetID);
+
+        final Optional<TranslationState> translationState = getTranslationState(targetID);
+        if (translationState.isEmpty()) 
+            return false; 
+
+        final Pose2d goalPose = translationState.get().calculate(aprilPose);
+
+        trajectory = PathPlanner.generatePath(
+            new PathConstraints(3.5, 4),
+            new PathPoint(current.getTranslation(), Rotation2d.fromRadians(Math.PI), current.getRotation()),
+            new PathPoint(new Translation2d(goalPose.getX() + LAST_LEG_X_OFFSET, goalPose.getY()),
+                    Rotation2d.fromRadians(0), new Rotation2d(Math.PI)),
+            new PathPoint(goalPose.getTranslation(), Rotation2d.fromRadians(0), new Rotation2d(Math.PI)));
+
+        timer.reset();
+        timer.start();
+        return true;
     }
 
     public Optional<ChassisSpeeds> calculateAlignment() {
@@ -127,37 +158,15 @@ public final class PathAlignController implements IAlignmentController{
         
         final Pose2d current = poseSupplier.get();
 
-        if (trajectory == null) {
-            final int closestID = (gridOverride == GridState.NONE)
-                    ? findClosestAprilTagID()
-                    : gridOverride.getID();
-
-            final Pose3d aprilPose = Field.getAprilTagsMap().get(closestID);
-
-            final Optional<TranslationState> translationState = getTranslationState(closestID);
-            if (translationState.isEmpty()) {
+        if (trajectory == null)
+            if (!generateTrajectory(current)) {
                 onFail.run();
                 return Optional.empty();
             }
-
-            final Pose2d goalPose = translationState.get().calculate(aprilPose);
-
-            final double goalX = goalPose.getX(), goalY = goalPose.getY();
-            final double offset = Units.inchesToMeters(12);
-
-            trajectory = PathPlanner.generatePath(
-                new PathConstraints(3.5, 4),
-                new PathPoint(current.getTranslation(), Rotation2d.fromRadians(Math.PI), current.getRotation()),
-                new PathPoint(new Translation2d(goalX + offset, goalY), Rotation2d.fromRadians(0), new Rotation2d(Math.PI)),
-                new PathPoint(new Translation2d(goalX, goalY), Rotation2d.fromRadians(0), new Rotation2d(Math.PI)));
-
-            timer.reset();
-            timer.start();
-        }
+        
 
         final double elapsed = timer.get();
         final PathPlannerState desired = (PathPlannerState) trajectory.sample(elapsed);
-
 
         final boolean done = timer.hasElapsed(trajectory.getTotalTimeSeconds());
 
