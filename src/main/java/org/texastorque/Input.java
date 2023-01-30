@@ -100,6 +100,14 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
             drivebase.isRotationLocked = !drivebase.isRotationLocked;
     }
 
+    public void rumbleDriver() {
+
+    }
+
+    public void rumbleOperator() {
+            
+    }
+
     public static final synchronized Input getInstance() {
         return instance == null ? instance = new Input() : instance;
     }

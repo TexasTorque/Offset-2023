@@ -10,14 +10,11 @@ The codebase is actually for the two versions of the robot:
 ## Subsystems
 
 - Drivebase: custom swerve drive.
-- Spintakeadexer:
-  - Intake: intakes cubes and cones from the floor.
-  - Indexer ("Weedwackers"): helps index gamepeices to center.
-  - Indexer ("Spindexer"): makes gamepeices aligned in one direction.
-- Rotarmavatand:
-  - Elevator: a thin, tilted, sidewase elevator.
-  - Rotary arm: a small arm on the end of the elvator.
-  - Hand: a claw on the end of the arm to grab the gamepeices.
+- Intake: intakes cubes and cones from the floor.
+- Indexer ("Spindexer"): makes gamepeices aligned in one direction.
+- Elevator: a thin, tilted, sidewase elevator.
+- Rotary: the rotating pivot for the static arm.
+- Hand: a claw on the end of the arm to grab the gamepeices.
 - Climber: Rotary fork climb.
 
 ## Contributors
