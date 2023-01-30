@@ -124,7 +124,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
     //PathAlignController
     //SSwerveAlignmentController
-    private final IAlignmentController alignmentController = new SwerveAlignController(
+    private final IAlignmentController alignmentController = new PathAlignController(
         this::getPose, () -> state = state.parent);
 
     public void setAlignState(final AlignState alignment) {
@@ -245,12 +245,8 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
             final double omega = teleopOmegaController.calculate(
                     realRotationRadians, lastRotationRadians);
             inputSpeeds.omegaRadiansPerSecond = omega;
-            SmartDashboard.putNumber("CT_pidOutput", inputSpeeds.omegaRadiansPerSecond);
         } else
             lastRotationRadians = realRotationRadians;
-        
-        SmartDashboard.putNumber("CT_omega", inputSpeeds.omegaRadiansPerSecond);
-    
     }
 
     public void convertToFieldRelative() {

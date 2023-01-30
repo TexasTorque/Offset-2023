@@ -142,10 +142,14 @@ public final class PathAlignController implements IAlignmentController{
 
             final Pose2d goalPose = translationState.get().calculate(aprilPose);
 
+            final double goalX = goalPose.getX(), goalY = goalPose.getY();
+            final double offset = Units.inchesToMeters(12);
+
             trajectory = PathPlanner.generatePath(
                 new PathConstraints(3.5, 4),
-                new PathPoint(current.getTranslation(), Rotation2d.fromRadians(Math.PI), current.getRotation(), 2),
-                new PathPoint(goalPose.getTranslation().plus(new Translation2d(-Units.inchesToMeters(8), 0)), Rotation2d.fromRadians(0), new Rotation2d(Math.PI)));
+                new PathPoint(current.getTranslation(), Rotation2d.fromRadians(Math.PI), current.getRotation()),
+                new PathPoint(new Translation2d(goalX + offset, goalY), Rotation2d.fromRadians(0), new Rotation2d(Math.PI)),
+                new PathPoint(new Translation2d(goalX, goalY), Rotation2d.fromRadians(0), new Rotation2d(Math.PI)));
 
             timer.reset();
             timer.start();
