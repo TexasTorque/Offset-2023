@@ -5,8 +5,8 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-import org.texastorque.controllers.SwerveAlignController.AlignState;
-import org.texastorque.controllers.SwerveAlignController.GridState;
+import org.texastorque.controllers.PathAlignController.AlignState;
+import org.texastorque.controllers.PathAlignController.GridState;
 import org.texastorque.subsystems.Drivebase;
 import org.texastorque.torquelib.base.TorqueDirection;
 import org.texastorque.torquelib.base.TorqueInput;

@@ -13,11 +13,9 @@ import org.texastorque.Field;
 import org.texastorque.Ports;
 import org.texastorque.Subsystems;
 import org.texastorque.controllers.AutoLevelController;
-import org.texastorque.controllers.IAlignmentController;
 import org.texastorque.controllers.PathAlignController;
-import org.texastorque.controllers.SwerveAlignController;
-import org.texastorque.controllers.SwerveAlignController.AlignState;
-import org.texastorque.controllers.SwerveAlignController.GridState;
+import org.texastorque.controllers.PathAlignController.AlignState;
+import org.texastorque.controllers.PathAlignController.GridState;
 import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.modules.TorqueSwerveModule2022;
@@ -124,8 +122,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
     //PathAlignController
     //SSwerveAlignmentController
-    private final IAlignmentController alignmentController = new PathAlignController(
-        this::getPose, () -> state = state.parent);
+    private final PathAlignController alignmentController = new PathAlignController(this::getPose, this::getSpeed, this::getHeading);
 
     public void setAlignState(final AlignState alignment) {
         state = alignment == AlignState.NONE ? state.parent : State.ALIGN;
@@ -242,8 +239,6 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     private void calculateTeleop() {
         final double realRotationRadians = gyro.getHeadingCCW().getRadians();
 
-        SmartDashboard.putBoolean("IS ROT LOCKED", isRotationLocked);
-
         if (isRotationLocked && inputSpeeds.omegaRadiansPerSecond == 0
                 && inputSpeeds.vxMetersPerSecond != 0 && inputSpeeds.vyMetersPerSecond != 0) {
             final double omega = teleopOmegaController.calculate(
@@ -270,12 +265,10 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         } else {
             if (state == State.ALIGN) {
                 final Optional<ChassisSpeeds> speedsWrapper = alignmentController.calculateAlignment();
-                if (speedsWrapper.isPresent()) {
+                if (speedsWrapper.isPresent())
                     inputSpeeds = speedsWrapper.get();
-                    if (alignmentController.needsFieldRelative())
-                        convertToFieldRelative();
-                }
                 lights.set(Color.kGreen, Lights.OFF);
+
             } else if (state == State.BALANCE) {
                 inputSpeeds = autoLevelController.calculate();
                 lights.set(Color.kGreen, Lights.OFF);

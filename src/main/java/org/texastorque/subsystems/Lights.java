@@ -58,16 +58,16 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
     public static final Color ALLIANCE = DriverStation.getAlliance() == Alliance.Blue ? Color.kBlue : Color.kRed;
 
     private final void setColor(final Color color) {
-            if (color.equals(OFF)) {
-                leds.stop();
-                return;
-            }
+        if (color.equals(OFF)) {
+            leds.stop();
+            return;
+        }
 
-            for (int i = 0; i < LENGTH; i++)
-                buff.setLED(i, color);
-            leds.setData(buff);
+        for (int i = 0; i < LENGTH; i++)
+            buff.setLED(i, color);
+        leds.setData(buff);
 
-            leds.start();
+        leds.start();
     }
 
 
