@@ -103,9 +103,6 @@ public final class SwerveAlignController implements IAlignmentController {
 
     private ChassisSpeeds calculateChassisSpeedsAlignment(final Pose2d goalPose) {
 
-  SmartDashboard.putString("ALIGN", alignment.toString());
-        SmartDashboard.putString("GRID", gridOverride.toString());
-
         final Pose2d robotPose = poseSupplier.get();
 
         xController.setGoal(goalPose.getX());
@@ -166,7 +163,7 @@ public final class SwerveAlignController implements IAlignmentController {
     }
 
 
-    public static double ALIGN_X_OFFSET_GRID = (15.589758 - 14.72);
+    public static double ALIGN_X_OFFSET_GRID = (15.589758 - 14.72) - Units.inchesToMeters(4);
     public static double ALIGN_X_OFFSET_LOAD_ZONE = 1;
 
     public static enum TranslationState {

@@ -6,9 +6,9 @@
   "configurations": [
     {
       "type": "java",
-      "name": "Launch TorqueAutoManager",
+      "name": "Launch TorqueToggle",
       "request": "launch",
-      "mainClass": "org.texastorque.torquelib.auto.TorqueAutoManager",
+      "mainClass": "org.texastorque.torquelib.control.TorqueToggle",
       "projectName": "Torque-2023"
     },
     {

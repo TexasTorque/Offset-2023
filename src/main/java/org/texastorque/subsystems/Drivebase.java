@@ -75,7 +75,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
     public static final Pose2d INITIAL_POS = new Pose2d(0, 0, new Rotation2d(0));
 
-    private static final double SIZE = Units.inchesToMeters(12);
+    private static final double SIZE = Units.inchesToMeters(18);
 
     private final Translation2d
             LOC_FL = new Translation2d(SIZE, -SIZE),
@@ -112,7 +112,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     private final TorqueNavXGyro gyro = TorqueNavXGyro.getInstance();
 
     private double lastRotationRadians;
-    private final PIDController teleopOmegaController = new PIDController(Math.PI, 0, 0);
+    private final PIDController teleopOmegaController = new PIDController(2 * Math.PI, 0, 0);
 
     private SwerveModuleState[] swerveStates;
 
@@ -124,7 +124,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
     //PathAlignController
     //SSwerveAlignmentController
-    private final IAlignmentController alignmentController = new SwerveAlignController(
+    private final IAlignmentController alignmentController = new PathAlignController(
         this::getPose, () -> state = state.parent);
 
     public void setAlignState(final AlignState alignment) {
@@ -220,7 +220,9 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
         poseEstimator.update(gyro.getHeadingCCW(), getModulePositions());
 
-        fieldMap.setRobotPose(poseEstimator.getEstimatedPosition());
+        fieldMap.setRobotPose(DriverStation.getAlliance() == DriverStation.Alliance.Blue
+                ? poseEstimator.getEstimatedPosition()
+                : Field.reflectPosition(poseEstimator.getEstimatedPosition()));
     }
 
     private void zeroModules() {
@@ -240,17 +242,15 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     private void calculateTeleop() {
         final double realRotationRadians = gyro.getHeadingCCW().getRadians();
 
+        SmartDashboard.putBoolean("IS ROT LOCKED", isRotationLocked);
+
         if (isRotationLocked && inputSpeeds.omegaRadiansPerSecond == 0
                 && inputSpeeds.vxMetersPerSecond != 0 && inputSpeeds.vyMetersPerSecond != 0) {
             final double omega = teleopOmegaController.calculate(
                     realRotationRadians, lastRotationRadians);
             inputSpeeds.omegaRadiansPerSecond = omega;
-            SmartDashboard.putNumber("CT_pidOutput", inputSpeeds.omegaRadiansPerSecond);
         } else
             lastRotationRadians = realRotationRadians;
-        
-        SmartDashboard.putNumber("CT_omega", inputSpeeds.omegaRadiansPerSecond);
-    
     }
 
     public void convertToFieldRelative() {
@@ -303,14 +303,20 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
                 bl.setDesiredState(swerveStates[2]);
                 br.setDesiredState(swerveStates[3]);
             }
-
-            
         }
 
         alignmentController.resetIf(state != State.ALIGN);
         autoLevelController.resetIf(state != State.BALANCE);
        
         state = state.parent;
+    }
+
+    public double getSpeed() {
+        return inputSpeeds.vxMetersPerSecond * inputSpeeds.vxMetersPerSecond + inputSpeeds.vyMetersPerSecond * inputSpeeds.vyMetersPerSecond;
+    }
+
+    public Rotation2d getHeading() {
+        return Rotation2d.fromRadians(Math.atan2(inputSpeeds.vyMetersPerSecond, inputSpeeds.vxMetersPerSecond));
     }
 
     public void resetPose(final Pose2d pose) {
