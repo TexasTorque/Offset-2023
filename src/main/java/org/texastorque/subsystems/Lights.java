@@ -25,18 +25,10 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
 
     private static final int LENGTH = 20;
 
-    private List<LightAction> actions = new ArrayList<>();
-
     private Lights() {
         leds = new AddressableLED(0);
         leds.setLength(LENGTH);
         buff = new AddressableLEDBuffer(LENGTH);
-
-        actions.add(new Solid(() -> ((indexer.isIntaking() || arm.isAtShelf()) && indexer.getLastWantedGamePiece() == GamePiece.CUBE), () -> Color.kPurple));
-        actions.add(new Solid(() -> ((indexer.isIntaking() || arm.isAtShelf()) && indexer.getLastWantedGamePiece() == GamePiece.CONE), () -> Color.kYellow));
-        actions.add(new Solid(() -> drivebase.isState(Drivebase.State.ALIGN), () -> Color.kGreen));
-        actions.add(new Blink(() -> drivebase.isState(Drivebase.State.BALANCE), () -> Color.kGreen, 3)); 
-        actions.add(new Solid(() -> drivebase.isState(Drivebase.State.FIELD_RELATIVE), () -> getAllianceColorFIRST()));
     }
 
     public static final Color getAllianceColor() {
@@ -52,32 +44,56 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
         leds.start();
     }
 
+
+    private LightAction
+        solidGreen = new Solid(() -> Color.kGreen),
+        solidAlliance = new Solid(() -> getAllianceColorFIRST()),
+        blinkGreen = new Blink(() -> Color.kGreen, 3),
+        blinkAlliance = new Blink(() -> getAllianceColorFIRST(), 3),
+        solidPurple = new Solid(() -> Color.kPurple),
+        solidYellow = new Solid(() -> Color.kYellow),
+        blinkPurple = new Blink(() -> Color.kPurple, 3),
+        blinkYellow = new Blink(() -> Color.kYellow, 3),
+        solidRainbow = new Rainbow();
+
+    public final LightAction getColor() {
+
+        if (indexer.isIntaking() || arm.isAtShelf()) {
+            if (indexer.getLastWantedGamePiece() == GamePiece.CUBE)
+                return solidPurple;
+            if (indexer.getLastWantedGamePiece() == GamePiece.CONE)
+                return solidYellow;
+        }
+
+        if (drivebase.isState(Drivebase.State.ALIGN)) {
+            if (drivebase.isPathAlignDone())
+                return blinkGreen;
+            return solidGreen;
+        }
+
+        if (drivebase.isState(Drivebase.State.BALANCE)) {
+            if (drivebase.isAutoLevelDone())
+                return blinkGreen;
+            return solidGreen;
+        }
+
+        return solidAlliance;
+    }
+
     @Override
     public final void update(final TorqueMode mode) {
-        for (final LightAction action : actions) {
-            if (action.condition.getAsBoolean()) {
-                action.run(buff);
-                leds.setData(buff);
-                break;
-            }
-        }
+        getColor().run(buff);
+        leds.setData(buff);
     }
 
     private static abstract class LightAction {
-        public final BooleanSupplier condition; 
-
-        public LightAction(final BooleanSupplier condition) {
-            this.condition = condition;
-        }
-
         public abstract void run(AddressableLEDBuffer buff);
     }
 
     public static class Solid extends LightAction {
         private final Supplier<Color> color;
 
-        public Solid(final BooleanSupplier condition, final Supplier<Color> color) {
-            super(condition);
+        public Solid(final Supplier<Color> color) {
             this.color = color;
         }
 
@@ -92,12 +108,11 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
         private final Supplier<Color> color1, color2;
         private final double hertz;
     
-        public Blink(final BooleanSupplier condition, final Supplier<Color> color1, final double hertz) {
-            this(condition, color1, () -> Color.kBlack, hertz);
+        public Blink(final Supplier<Color> color1, final double hertz) {
+            this(color1, () -> Color.kBlack, hertz);
         }
 
-        public Blink(final BooleanSupplier condition, final Supplier<Color> color1, final Supplier<Color> color2, final double hertz) {
-            super(condition);
+        public Blink(final Supplier<Color> color1, final Supplier<Color> color2, final double hertz) {
             this.color1 = color1;
             this.color2 = color2;
             this.hertz = hertz;
@@ -114,10 +129,6 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
 
     public static class Rainbow extends LightAction {
         private int rainbowFirstPixelHue = 0;
-
-        public Rainbow(final BooleanSupplier condition) {
-            super(condition);
-        }
 
         @Override
         public void run(AddressableLEDBuffer buff) {
