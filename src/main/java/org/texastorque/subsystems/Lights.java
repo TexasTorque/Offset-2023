@@ -3,6 +3,7 @@ package org.texastorque.subsystems;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
 
 import org.texastorque.Subsystems;
 import org.texastorque.torquelib.base.TorqueMode;
@@ -30,9 +31,17 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
         leds.setLength(LENGTH);
         buff = new AddressableLEDBuffer(LENGTH);
 
-        actions.add(new ShowSolidLights(() -> drivebase.getLastGoodState() == Drivebase.State.ALIGN, Color.kGreen));
-        actions.add(new ShowAllianceSolidLights(() -> drivebase.getLastGoodState() == Drivebase.State.FIELD_RELATIVE));
-        actions.add(new BlinkAlternateColors(() -> drivebase.getLastGoodState() == Drivebase.State.BALANCE, Color.kGreen, Color.kBlack, 3));
+        actions.add(new Solid(() -> drivebase.getLastGoodState() == Drivebase.State.ALIGN, () -> Color.kGreen));
+        actions.add(new Solid(() -> drivebase.getLastGoodState() == Drivebase.State.FIELD_RELATIVE, () -> getAllianceColorFIRST()));
+        actions.add(new Blink(() -> drivebase.getLastGoodState() == Drivebase.State.BALANCE, () -> Color.kGreen, 3));
+    }
+
+    public static final Color getAllianceColor() {
+        return DriverStation.getAlliance() == Alliance.Blue ? Color.kBlue : Color.kRed;
+    }
+
+    public static final Color getAllianceColorFIRST() {
+        return DriverStation.getAlliance() == Alliance.Blue ? Color.kFirstBlue : Color.kFirstRed;
     }
 
     @Override
@@ -61,10 +70,10 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
         public abstract void run(AddressableLEDBuffer buff);
     }
 
-    public static class ShowSolidLights extends LightAction {
-        private final Color color;
-    
-        public ShowSolidLights(final BooleanSupplier condition, final Color color) {
+    public static class Solid extends LightAction {
+        private final Supplier<Color> color;
+
+        public Solid(final BooleanSupplier condition, final Supplier<Color> color) {
             super(condition);
             this.color = color;
         }
@@ -72,29 +81,19 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
         @Override
         public void run(AddressableLEDBuffer buff) {
             for (int i = 0; i < LENGTH; i++)
-                buff.setLED(i, color);
+                buff.setLED(i, color.get());
         }
     }
 
-    public static class ShowAllianceSolidLights extends LightAction {
-        public ShowAllianceSolidLights(final BooleanSupplier condition) {
-            super(condition);
-        }
-
-        @Override
-        public void run(AddressableLEDBuffer buff) {
-            final Color color = DriverStation.getAlliance() == Alliance.Blue ? Color.kBlue : Color.kRed;
-
-            for (int i = 0; i < LENGTH; i++)
-                buff.setLED(i, color);
-        }
-    }
-
-    public static class BlinkAlternateColors extends LightAction {
-        private final Color color1, color2;
+    public static class Blink extends LightAction {
+        private final Supplier<Color> color1, color2;
         private final double hertz;
     
-        public BlinkAlternateColors(final BooleanSupplier condition, final Color color1, final Color color2, final double hertz) {
+        public Blink(final BooleanSupplier condition, final Supplier<Color> color1, final double hertz) {
+            this(condition, color1, () -> Color.kBlack, hertz);
+        }
+
+        public Blink(final BooleanSupplier condition, final Supplier<Color> color1, final Supplier<Color> color2, final double hertz) {
             super(condition);
             this.color1 = color1;
             this.color2 = color2;
@@ -107,9 +106,9 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
             final boolean on = (Math.floor(timestamp * hertz) % 2 == 1);
 
             for (int i = 0; i < LENGTH; i++)
-                buff.setLED(i, on ? color1 : color2);
+                buff.setLED(i, on ? color1.get() : color2.get());
         }
-    }
+    }    
 
     public static final synchronized Lights getInstance() {
         return instance == null ? instance = new Lights() : instance;
