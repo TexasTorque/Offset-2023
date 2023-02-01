@@ -5,14 +5,17 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-import org.texastorque.controllers.SwerveAlignController.AlignState;
-import org.texastorque.controllers.SwerveAlignController.GridState;
+import org.texastorque.controllers.PathAlignController.AlignState;
+import org.texastorque.controllers.PathAlignController.GridState;
 import org.texastorque.subsystems.Drivebase;
 import org.texastorque.torquelib.base.TorqueDirection;
 import org.texastorque.torquelib.base.TorqueInput;
+import org.texastorque.torquelib.control.TorqueBoolSupplier;
 import org.texastorque.torquelib.control.TorqueClick;
+import org.texastorque.torquelib.control.TorqueClickSupplier;
 import org.texastorque.torquelib.control.TorquePID;
 import org.texastorque.torquelib.control.TorqueSlewLimiter;
+import org.texastorque.torquelib.control.TorqueToggleSupplier;
 import org.texastorque.torquelib.control.TorqueTraversableSelection;
 import org.texastorque.torquelib.sensors.TorqueController;
 import org.texastorque.torquelib.util.TorqueMath;
@@ -24,48 +27,65 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
     private Input() {
         driver = new TorqueController(0, .001);
         operator = new TorqueController(1);
+
+        isZeroingWheels = new TorqueBoolSupplier(() -> driver.isBButtonDown());
+        slowModeToggle = new TorqueToggleSupplier(() -> driver.isLeftBumperDown());
+        alignGridLeft = new TorqueBoolSupplier(() -> driver.isLeftTriggerDown());
+        alignGridCenter = new TorqueBoolSupplier(() -> driver.isRightBumperDown());
+        alignGridRight = new TorqueBoolSupplier(() -> driver.isRightTriggerDown());
+        gridOverrideLeft = new TorqueBoolSupplier(() -> operator.isDPADLeftDown());
+        gridOverrideRight = new TorqueBoolSupplier(() -> operator.isDPADRightDown());
+        gridOverrideCenter = new TorqueBoolSupplier(() -> operator.isDPADDownDown());
+        resetGyroClick = new TorqueClickSupplier(() -> driver.isRightCenterButtonPressed());
+        resetPoseClick = new TorqueClickSupplier(() -> driver.isLeftCenterButtonPressed());
+        toggleRotationLockClick = new TorqueClickSupplier(() -> driver.isAButtonDown());
+        autoLevel = new TorqueBoolSupplier(() -> driver.isYButtonDown());
     }
+
+    private final TorqueBoolSupplier 
+            isZeroingWheels,
+            slowModeToggle,
+            alignGridLeft,
+            alignGridCenter,
+            alignGridRight,
+            gridOverrideLeft,
+            gridOverrideRight,
+            gridOverrideCenter,
+            resetGyroClick,
+            resetPoseClick,
+            toggleRotationLockClick,
+            autoLevel;
 
     @Override
     public final void update() {
         updateDrivebase();
     }
 
-
     private void updateDrivebase() {
-        drivebase.state = driver.isXButtonDown() ? Drivebase.State.ZERO :   
-                (driver.isYButtonDown() ? Drivebase.State.BALANCE : Drivebase.State.FIELD_RELATIVE );
-
         updateDrivebaseSpeeds();
-        updateDrivebaseAlign();
-        updateDrivebasePositions();
-        updateDrivebaseSettings();
+        drivebase.state = Drivebase.State.FIELD_RELATIVE;
+
+        resetGyroClick.onTrue(() -> drivebase.resetGyro());
+        resetPoseClick.onTrue(() -> drivebase.resetPose(Drivebase.INITIAL_POS));
+    
+        toggleRotationLockClick.onTrue(() -> drivebase.isRotationLocked = !drivebase.isRotationLocked);
+
+        alignGridLeft.onTrue(() -> drivebase.setAlignState(AlignState.LEFT));
+        alignGridCenter.onTrue(() -> drivebase.setAlignState(AlignState.CENTER));
+        alignGridRight.onTrue(() -> drivebase.setAlignState(AlignState.RIGHT));
+
+        gridOverrideLeft.onTrue(() -> drivebase.setGridOverride(GridState.LEFT));
+        gridOverrideCenter.onTrue(() -> drivebase.setGridOverride(GridState.CENTER));
+        gridOverrideRight.onTrue(() -> drivebase.setGridOverride(GridState.RIGHT));
+
+        autoLevel.onTrue(() -> drivebase.state = Drivebase.State.BALANCE);
+        isZeroingWheels.onTrue(() -> drivebase.state = Drivebase.State.ZERO);
     }
-
-    private void updateDrivebaseAlign() {
-        if (driver.isDPADUpDown()) 
-            drivebase.setAlignState(AlignState.CENTER);
-         else if (driver.isDPADLeftDown()) 
-          drivebase.setAlignState(AlignState.LEFT);
-         else if (driver.isDPADRightDown()) 
-            drivebase.setAlignState(AlignState.RIGHT);
-
-        if (operator.isDPADUpDown()) 
-            drivebase.setGridOverride(GridState.CENTER);
-         else if (operator.isDPADLeftDown()) 
-            drivebase.setGridOverride(GridState.LEFT);
-         else if (operator.isDPADRightDown()) 
-            drivebase.setGridOverride(GridState.RIGHT);
-    }
-
-    private boolean slowMode = false;
-    private final TorqueClick slowModeClick = new TorqueClick();
 
     private final static double DEADBAND = 0.125;
 
     private void updateDrivebaseSpeeds() {
-        if (slowModeClick.calculate(driver.isLeftBumperPressed())) slowMode = !slowMode;
-        final double speedSetting = slowMode ? 0.2 : 1;
+        final double speedSetting = slowModeToggle.get() ? 0.2 : 1;
         
         final double xVelocity = TorqueMath
                 .scaledLinearDeadband(driver.getLeftYAxis(), DEADBAND) * Drivebase.MAX_VELOCITY * speedSetting;
@@ -76,28 +96,9 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
         drivebase.inputSpeeds = new ChassisSpeeds(xVelocity, yVelocity, rotationVelocity);
 
-        drivebase.requestedRotation = Math.PI + Math.atan2(driver.getRightXAxis(), driver.getRightYAxis());
-        if (drivebase.requestedRotation == Math.PI)
-            drivebase.requestedRotation = 0;
-    }
-
-    private final TorqueClick resetGyro = new TorqueClick();
-    private final TorqueClick resetPose = new TorqueClick();
-
-    private void updateDrivebasePositions() {
-        if (resetGyro.calculate(driver.isRightCenterButtonPressed()))
-            drivebase.resetGyro();
-
-        if (resetPose.calculate(driver.isLeftCenterButtonPressed()))
-            drivebase.resetPose(Drivebase.INITIAL_POS);
-    }
-
-
-    private final TorqueClick toggleRotationLock = new TorqueClick();
-
-    private void updateDrivebaseSettings() {
-        if (toggleRotationLock.calculate(driver.isAButtonDown()))
-            drivebase.isRotationLocked = !drivebase.isRotationLocked;
+        // drivebase.requestedRotation = Math.PI + Math.atan2(driver.getRightXAxis(), driver.getRightYAxis());
+        // if (drivebase.requestedRotation == Math.PI)
+        //     drivebase.requestedRotation = 0;
     }
 
     public void rumbleDriver() {
