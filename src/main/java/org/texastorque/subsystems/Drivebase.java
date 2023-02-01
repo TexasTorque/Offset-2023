@@ -58,7 +58,15 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         }
     }
 
-    public State state = State.ROBOT_RELATIVE;
+    private State state = State.ROBOT_RELATIVE;
+    private State requestedState = State.ROBOT_RELATIVE;
+
+    public void setState(final State state) {
+        this.state = state;
+    }
+
+    public State getState() { return requestedState; }
+    public boolean isState(final State state) { return getState() == state; }
 
     public static final double WIDTH = Units.inchesToMeters(21.745), // m (swerve to swerve)
             LENGTH = Units.inchesToMeters(21.745), // m (swerve to swerve)
@@ -256,15 +264,10 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
                 gyro.getHeadingCCW());
     }
 
-    private State lastState = State.ZERO;
-
-    public State getLastGoodState() {
-        return lastState;
-    }
-
     @Override
     public final void update(final TorqueMode mode) {
         updateFeedback();
+        requestedState = state;
 
         if (state == State.ZERO) {
             zeroModules();
@@ -301,8 +304,6 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
             }
         }
 
-        this.lastState = state;
-
         alignmentController.resetIf(state != State.ALIGN);
         autoLevelController.resetIf(state != State.BALANCE);
        
@@ -336,10 +337,6 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
     public void resetGyro() {
         gyro.setOffsetCW(new Rotation2d(0));
-    }
-
-    public void setState(final State state) {
-        this.state = state;
     }
 
     @Log.ToString(name = "Robot Pose")

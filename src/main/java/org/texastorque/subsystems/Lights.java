@@ -31,9 +31,9 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
         leds.setLength(LENGTH);
         buff = new AddressableLEDBuffer(LENGTH);
 
-        actions.add(new Solid(() -> drivebase.getLastGoodState() == Drivebase.State.ALIGN, () -> Color.kGreen));
-        actions.add(new Solid(() -> drivebase.getLastGoodState() == Drivebase.State.FIELD_RELATIVE, () -> getAllianceColorFIRST()));
-        actions.add(new Blink(() -> drivebase.getLastGoodState() == Drivebase.State.BALANCE, () -> Color.kGreen, 3));
+        actions.add(new Solid(() -> drivebase.isState(Drivebase.State.ALIGN), () -> Color.kGreen));
+        actions.add(new Solid(() -> drivebase.isState(Drivebase.State.FIELD_RELATIVE), () -> getAllianceColorFIRST()));
+        actions.add(new Blink(() -> drivebase.isState(Drivebase.State.BALANCE), () -> Color.kGreen, 3));
     }
 
     public static final Color getAllianceColor() {
