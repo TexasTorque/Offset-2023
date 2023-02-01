@@ -75,11 +75,9 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
             lastState = state;
             if (state == State.OPEN) {
                 currentGamePiece = GamePiece.NONE;
-                Input.getInstance().rumbleDriver();
+                Input.getInstance().setDriverRumbleFor(0.5);
             }
         }
-
-
     }
 
 
