@@ -6,6 +6,7 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 import org.texastorque.Subsystems;
+import org.texastorque.subsystems.Hand.GamePiece;
 import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.util.TorqueUtil;
@@ -31,9 +32,11 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
         leds.setLength(LENGTH);
         buff = new AddressableLEDBuffer(LENGTH);
 
+        actions.add(new Solid(() -> ((indexer.isIntaking() || arm.isAtShelf()) && indexer.getLastWantedGamePiece() == GamePiece.CUBE), () -> Color.kPurple));
+        actions.add(new Solid(() -> ((indexer.isIntaking() || arm.isAtShelf()) && indexer.getLastWantedGamePiece() == GamePiece.CONE), () -> Color.kYellow));
         actions.add(new Solid(() -> drivebase.isState(Drivebase.State.ALIGN), () -> Color.kGreen));
+        actions.add(new Blink(() -> drivebase.isState(Drivebase.State.BALANCE), () -> Color.kGreen, 3)); 
         actions.add(new Solid(() -> drivebase.isState(Drivebase.State.FIELD_RELATIVE), () -> getAllianceColorFIRST()));
-        actions.add(new Blink(() -> drivebase.isState(Drivebase.State.BALANCE), () -> Color.kGreen, 3));
     }
 
     public static final Color getAllianceColor() {
@@ -80,7 +83,7 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
 
         @Override
         public void run(AddressableLEDBuffer buff) {
-            for (int i = 0; i < LENGTH; i++)
+            for (int i = 0; i < buff.getLength(); i++)
                 buff.setLED(i, color.get());
         }
     }
@@ -104,11 +107,30 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
         public void run(AddressableLEDBuffer buff) {
             final double timestamp = TorqueUtil.time();
             final boolean on = (Math.floor(timestamp * hertz) % 2 == 1);
-
-            for (int i = 0; i < LENGTH; i++)
+            for (int i = 0; i < buff.getLength(); i++)
                 buff.setLED(i, on ? color1.get() : color2.get());
         }
     }    
+
+    public static class Rainbow extends LightAction {
+        private int rainbowFirstPixelHue = 0;
+
+        public Rainbow(final BooleanSupplier condition) {
+            super(condition);
+        }
+
+        @Override
+        public void run(AddressableLEDBuffer buff) {
+            for (var i = 0; i < buff.getLength(); i++) {
+                final int hue = (rainbowFirstPixelHue + (i * 180 / buff.getLength())) % 180;
+                buff.setHSV(i, hue, 255, 128);
+            }
+            rainbowFirstPixelHue += 3;
+            rainbowFirstPixelHue %= 180;
+        }
+    }    
+
+   
 
     public static final synchronized Lights getInstance() {
         return instance == null ? instance = new Lights() : instance;

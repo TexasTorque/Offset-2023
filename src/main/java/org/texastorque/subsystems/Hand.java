@@ -22,10 +22,10 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
     public GamePiece currentGamePiece = GamePiece.NONE;
 
     @Log.ToString
-    private GamePiece lastHelPiece = GamePiece.NONE;
+    private GamePiece lastHeldPiece = GamePiece.NONE;
 
     public GamePiece getLastHeldGamePiece() {
-        return lastHelPiece;
+        return lastHeldPiece;
     }
 
     public static enum State {
@@ -62,7 +62,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
     @Override
     public final void update(final TorqueMode mode) {
         if (currentGamePiece != GamePiece.NONE) {
-            lastHelPiece = currentGamePiece;
+            lastHeldPiece = currentGamePiece;
         }
 
         realClawPose = claw.getPosition();

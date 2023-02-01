@@ -6,6 +6,7 @@ import io.github.oblarg.oblog.annotations.Log;
 
 import org.texastorque.Ports;
 import org.texastorque.Subsystems;
+import org.texastorque.subsystems.Hand.GamePiece;
 import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.motors.TorqueNEO;
@@ -29,6 +30,12 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
             this.rotaryPose = rotaryPose;
             this.spinVolt = spinVolt;
         }
+    }
+
+    private GamePiece lastWantedGamepiece = GamePiece.NONE;
+
+    public GamePiece getLastWantedGamePiece() {
+        return lastWantedGamepiece;
     }
 
     @Log.ToString(name = "State")
@@ -81,6 +88,12 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
                 state = State.PRIME;
         }
 
+        if (state == State.INTAKE_CONE) {
+            lastWantedGamepiece = GamePiece.CONE;
+        } else if (state == State.INTAKE_CUBE) {
+            lastWantedGamepiece = GamePiece.CUBE;
+        }
+
         realRollerVelo = rollers.getVelocity();
         realRotaryPose = rotary.getPosition();
 
@@ -98,12 +111,16 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
     public static final double INTAKE_INTERFERE_MIN = 1; // ?
     public static final double INTAKE_INTERFERE_MAX = 1; // ?
 
-    public final boolean isConflictingWithArm() {
+    public boolean isConflictingWithArm() {
         return INTAKE_INTERFERE_MIN < realRotaryPose && realRotaryPose < INTAKE_INTERFERE_MAX;
     }
 
-    public final boolean wantsToConflictWithArm() {
+    public boolean wantsToConflictWithArm() {
         return state == State.UP;
+    }
+
+    public boolean isIntaking() {
+        return state == State.INTAKE_CUBE || state == State.INTAKE_CONE;
     }
 
     public static final synchronized Indexer getInstance() {

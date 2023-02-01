@@ -64,6 +64,10 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         }
     }
 
+    public boolean isAtShelf() {
+        return state == State.SHELF;
+    }
+
     public boolean isAtScoringPose() {
         return state == State.MID || state == State.TOP;
     }
