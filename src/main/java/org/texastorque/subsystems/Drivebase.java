@@ -270,7 +270,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
             zeroModules();
         } else {
             if (state == State.ALIGN) {
-                final Optional<ChassisSpeeds> speedsWrapper = alignmentController.calculateAlignment();
+                final Optional<ChassisSpeeds> speedsWrapper = alignmentController.calculate();
                 if (speedsWrapper.isPresent())
                     inputSpeeds = speedsWrapper.get();
 

@@ -31,7 +31,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-public final class PathAlignController {
+public final class PathAlignController extends AbstractController<Optional<ChassisSpeeds>> {
     private final PIDController xController = TorquePID.create(1).build();
     private final PIDController yController = TorquePID.create(1).build();
     private final PIDController thetaController = new PIDController(Math.PI * 2, 0, 0);
@@ -143,7 +143,7 @@ public final class PathAlignController {
         return true;
     }
 
-    public Optional<ChassisSpeeds> calculateAlignment() {
+    public Optional<ChassisSpeeds> calculate() {
         final Pose2d current = poseSupplier.get();
 
         if (trajectory == null) generateTrajectory(current);
