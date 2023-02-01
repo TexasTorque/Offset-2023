@@ -141,7 +141,15 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         alignmentController.setGridOverride(override);
     }
 
+    public final boolean isPathAlignDone() {
+        return alignmentController.isDone();
+    }
+
     private final AutoLevelController autoLevelController = new AutoLevelController(this::getPose);
+
+    public final boolean isAutoLevelDone() {
+        return autoLevelController.isDone();
+    }
 
     public final TorqueVision cameraLeft, cameraRight; 
 

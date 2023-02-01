@@ -50,6 +50,14 @@ public final class AutoLevelController extends AbstractController<ChassisSpeeds>
 
     private final PIDController controller = new PIDController(.02, 0, .0007);
 
+    public final boolean isDone() {
+        return isFlat && hasTilted;
+    }
+
+    private boolean hasTilted = false, isFlat = false;
+
+    private static final double TILT_THRESHOLD_DEG = 10, FLAT_THRESHOLD_DEG = 2;
+
     public ChassisSpeeds calculate() {
 
         final Rotation2d startingRotation = TorqueNavXGyro.getInstance().getHeadingCCW();
@@ -63,6 +71,11 @@ public final class AutoLevelController extends AbstractController<ChassisSpeeds>
 
         final double gyroMeasurement = -balanceDirection.getAngle();
 
+        isFlat = Math.abs(gyroMeasurement) <= FLAT_THRESHOLD_DEG;
+
+        if (Math.abs(gyroMeasurement) >= TILT_THRESHOLD_DEG)
+            hasTilted = true;
+
         double drivePower = -controller.calculate(gyroMeasurement, 0);
 
         if (Math.abs(drivePower) > 0.4)
@@ -73,5 +86,6 @@ public final class AutoLevelController extends AbstractController<ChassisSpeeds>
 
     public void resetIf(final boolean notInLoop) {
         if (!notInLoop) return;
+        hasTilted = false;
     }
 }

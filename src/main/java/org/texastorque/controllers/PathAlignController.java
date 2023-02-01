@@ -138,9 +138,18 @@ public final class PathAlignController extends AbstractController<Optional<Chass
             new PathConstraints(3.5, 4),
             startPoint, midPoint, endPoint);
 
+
         timer.reset();
         timer.start();
         return true;
+    }
+
+    private static final double DISTANCE_TOLERANCE = Units.inchesToMeters(3);
+
+    public boolean isDone() {
+        if (trajectory == null) return false;
+        final Pose2d endPoint = trajectory.getEndState().poseMeters;
+        return endPoint.getTranslation().getDistance(poseSupplier.get().getTranslation()) <= DISTANCE_TOLERANCE;
     }
 
     public Optional<ChassisSpeeds> calculate() {
