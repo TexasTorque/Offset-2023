@@ -7,6 +7,7 @@ import java.util.function.Supplier;
 
 import org.texastorque.Field;
 import org.texastorque.Field.AprilTagType;
+import org.texastorque.auto.commands.FollowEventPath;
 import org.texastorque.subsystems.Drivebase;
 import org.texastorque.torquelib.control.TorquePID;
 
@@ -134,15 +135,15 @@ public final class PathAlignController extends AbstractController<Optional<Chass
         final PathPoint midPoint = new PathPoint(new Translation2d(goalPose.getX() + offset, goalPose.getY()), Rotation2d.fromRadians(Math.PI), new Rotation2d(Math.PI), 3);
         final PathPoint endPoint = new PathPoint(goalPose.getTranslation(), Rotation2d.fromRadians(0), new Rotation2d(Math.PI));
        
-        trajectory = PathPlanner.generatePath(
-            new PathConstraints(3.5, 4),
-            startPoint, midPoint, endPoint);
-
+    
+        trajectory = PathPlanner.generatePath(MAX_PATH_CONSTRAINTS, startPoint, midPoint, endPoint);
 
         timer.reset();
         timer.start();
         return true;
     }
+
+    public static final PathConstraints MAX_PATH_CONSTRAINTS = new PathConstraints(FollowEventPath.MAX_VELOCITY_PATH, FollowEventPath.MAX_ACCELERATION_PATH);
 
     private static final double DISTANCE_TOLERANCE = Units.inchesToMeters(3);
 
