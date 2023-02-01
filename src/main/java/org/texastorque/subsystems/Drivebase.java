@@ -256,6 +256,12 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
                 gyro.getHeadingCCW());
     }
 
+    private State lastState = State.ZERO;
+
+    public State getLastGoodState() {
+        return lastState;
+    }
+
     @Override
     public final void update(final TorqueMode mode) {
         updateFeedback();
@@ -267,17 +273,14 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
                 final Optional<ChassisSpeeds> speedsWrapper = alignmentController.calculateAlignment();
                 if (speedsWrapper.isPresent())
                     inputSpeeds = speedsWrapper.get();
-                lights.set(Color.kGreen, Lights.OFF);
 
             } else if (state == State.BALANCE) {
                 inputSpeeds = autoLevelController.calculate();
-                lights.set(Color.kGreen, Lights.OFF);
                 convertToFieldRelative();
             }
             
             if (state == State.FIELD_RELATIVE) {
                 calculateTeleop();
-                lights.set(Lights.ALLIANCE, Lights.SOLID);
                 convertToFieldRelative();
             }
 
@@ -297,6 +300,8 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
                 br.setDesiredState(swerveStates[3]);
             }
         }
+
+        this.lastState = state;
 
         alignmentController.resetIf(state != State.ALIGN);
         autoLevelController.resetIf(state != State.BALANCE);
