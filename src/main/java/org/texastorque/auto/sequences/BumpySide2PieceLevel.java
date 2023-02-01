@@ -41,8 +41,7 @@ public final class BumpySide2PieceLevel extends TorqueSequence implements Subsys
         final FollowEventPath goToLevel = new FollowEventPath("bumpy-side-go-level");
         addBlock(goToLevel);
 
-        final CreepUntilLeveled levelChargeStation = new CreepUntilLeveled();
-        addBlock(levelChargeStation);
+        addBlock(new TorqueExecute(() -> drivebase.setState(Drivebase.State.BALANCE)));
 
         addBlock(new TorqueExecute(() -> SmartDashboard.putNumber("ELAPSED", TorqueUtil.time() - autoStart)));
     }

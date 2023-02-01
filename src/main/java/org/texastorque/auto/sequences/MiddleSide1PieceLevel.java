@@ -33,8 +33,7 @@ public final class MiddleSide1PieceLevel extends TorqueSequence implements Subsy
         final FollowEventPath goOverChargeStation = new FollowEventPath("middle-over-and-back", 1.5, 3.5);
         addBlock(goOverChargeStation);
 
-        final CreepUntilLeveled levelChargeStation = new CreepUntilLeveled();
-        addBlock(levelChargeStation);
+        addBlock(new TorqueExecute(() -> drivebase.setState(Drivebase.State.BALANCE)));
 
         addBlock(new TorqueExecute(() -> SmartDashboard.putNumber("ELAPSED", TorqueUtil.time() - autoStart)));
     }

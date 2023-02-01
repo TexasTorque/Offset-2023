@@ -50,8 +50,7 @@ public final class FlatSide3PieceLevel extends TorqueSequence implements Subsyst
         final FollowEventPath goToLevel = new FollowEventPath("flat-side-go-level-fast", 6, 8);
         addBlock(goToLevel);
 
-        final CreepUntilLeveled levelChargeStation = new CreepUntilLeveled();
-        addBlock(levelChargeStation);
+        addBlock(new TorqueExecute(() -> drivebase.setState(Drivebase.State.BALANCE)));
 
         addBlock(new TorqueExecute(() -> SmartDashboard.putNumber("ELAPSED", TorqueUtil.time() - autoStart)));
     }
