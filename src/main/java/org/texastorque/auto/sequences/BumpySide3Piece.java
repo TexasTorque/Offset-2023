@@ -14,6 +14,7 @@ import org.texastorque.torquelib.auto.TorqueBlock;
 import org.texastorque.torquelib.auto.TorqueCommand;
 import org.texastorque.torquelib.auto.TorqueSequence;
 import org.texastorque.torquelib.auto.commands.TorqueExecute;
+import org.texastorque.torquelib.auto.commands.TorqueWait;
 import org.texastorque.torquelib.util.TorqueUtil;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -23,27 +24,27 @@ public final class BumpySide3Piece extends TorqueSequence implements Subsystems 
 
     public BumpySide3Piece() { 
         SmartDashboard.putNumber("ELAPSED", 0);
-        addBlock(new SetIntakeMode(false));
+        addBlock(new IntakeCube(false));
 
         addBlock(new TorqueExecute(() -> autoStart = TorqueUtil.time()));
 
-        final WaitForSeconds dropInitialCone = new WaitForSeconds(.5);
+        final TorqueWait dropInitialCone = new TorqueWait(.5);
         addBlock(dropInitialCone);
 
         final FollowEventPath pickUpFirstCube = new FollowEventPath("bumpy-side-get-first"); // ends (1.8, 1.05)
-        pickUpFirstCube.addEvent("intake-on", new SetIntakeMode(true)); 
-        pickUpFirstCube.addEvent("intake-off", new SetIntakeMode(false)); 
+        pickUpFirstCube.addEvent("intake-on", new IntakeCube(true)); 
+        pickUpFirstCube.addEvent("intake-off", new IntakeCube(false)); 
         addBlock(pickUpFirstCube);
 
-        final WaitForSeconds dropFirstCone = new WaitForSeconds(.5);
+        final TorqueWait dropFirstCone = new TorqueWait(.5);
         addBlock(dropFirstCone);
 
         final FollowEventPath pickUpSecondCube = new FollowEventPath("bumpy-side-get-second");
-        pickUpSecondCube.addEvent("intake-on", new SetIntakeMode(true));
-        pickUpSecondCube.addEvent("intake-off", new SetIntakeMode(false)); 
+        pickUpSecondCube.addEvent("intake-on", new IntakeCube(true));
+        pickUpSecondCube.addEvent("intake-off", new IntakeCube(false)); 
         addBlock(pickUpSecondCube);
 
-        final WaitForSeconds dropSecondCube = new WaitForSeconds(.5);
+        final TorqueWait dropSecondCube = new TorqueWait(.5);
         addBlock(dropSecondCube);
 
         addBlock(new TorqueExecute(() -> SmartDashboard.putNumber("ELAPSED", TorqueUtil.time() - autoStart)));

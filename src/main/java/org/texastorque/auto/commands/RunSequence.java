@@ -7,29 +7,32 @@
 package org.texastorque.auto.commands;
 
 import org.texastorque.Subsystems;
+import org.texastorque.subsystems.Lights;
 import org.texastorque.torquelib.auto.TorqueCommand;
+import org.texastorque.torquelib.auto.TorqueSequence;
 import org.texastorque.torquelib.util.TorqueUtil;
 
-public final class WaitForSeconds extends TorqueCommand implements Subsystems {
-    private double start = 0;
-    private final double time;
+import edu.wpi.first.wpilibj.util.Color;
 
-    public WaitForSeconds(final double time) {
-        this.time = time;
+public final class RunSequence extends TorqueCommand implements Subsystems {
+    private final TorqueSequence sequence;
+
+    public RunSequence(final TorqueSequence sequence) {
+        this.sequence = sequence;
     }
 
     @Override
     protected final void init() {
-        start = TorqueUtil.time();
     }
 
     @Override
     protected final void continuous() {
+        sequence.run();
     }
 
     @Override
     protected final boolean endCondition() {
-        return TorqueUtil.time() - start > time;
+        return sequence.hasEnded();
     }
 
     @Override

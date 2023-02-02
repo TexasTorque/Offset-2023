@@ -13,10 +13,10 @@ import org.texastorque.torquelib.util.TorqueUtil;
 
 import edu.wpi.first.wpilibj.util.Color;
 
-public final class SetIntakeMode extends TorqueCommand implements Subsystems {
+public final class IntakeCube extends TorqueCommand implements Subsystems {
     private final boolean on;
 
-    public SetIntakeMode(final boolean on) {
+    public IntakeCube(final boolean on) {
         this.on = on;
     }
 
