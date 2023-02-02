@@ -1,6 +1,6 @@
 /**
  * Copyright 2023 Texas Torque.
- * 
+ *
  * This file is part of Torque-2023, which is not licensed for distribution.
  * For more details, see ./license.txt or write <jus@justusl.com>.
  */
@@ -9,7 +9,6 @@ package org.texastorque.subsystems;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import io.github.oblarg.oblog.annotations.Log;
-
 import org.texastorque.Ports;
 import org.texastorque.Subsystems;
 import org.texastorque.subsystems.Hand.GamePiece;
@@ -40,9 +39,7 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
 
     private GamePiece lastWantedGamepiece = GamePiece.NONE;
 
-    public GamePiece getLastWantedGamePiece() {
-        return lastWantedGamepiece;
-    }
+    public GamePiece getLastWantedGamePiece() { return lastWantedGamepiece; }
 
     private State state = State.UP;
     private State requestedState = State.UP;
@@ -50,11 +47,9 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
     public State getState() { return requestedState; }
     public boolean isState(final State state) { return getState() == state; }
 
-    @Log.ToString(name = "Real Roller Velo")
-    public double realRollerVelo = 0;
+    @Log.ToString(name = "Real Roller Velo") public double realRollerVelo = 0;
 
-    @Log.ToString
-    public double realRotaryPose = 0;
+    @Log.ToString public double realRotaryPose = 0;
 
     private final TorqueNEO rollers = new TorqueNEO(Ports.INDEXER_ROLLER_MOTOR);
     private final PIDController rollerVeloController =
@@ -94,7 +89,8 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
     public final void update(final TorqueMode mode) {
         requestedState = state;
 
-        if (arm.wantsToConflictWithIndexer() || arm.isConflictingWithIndexer()) {
+        if (arm.wantsToConflictWithIndexer() ||
+            arm.isConflictingWithIndexer()) {
             if (wantsToConflictWithArm())
                 state = State.PRIME;
         }
@@ -108,15 +104,20 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
         // realRollerVelo = rollers.getVelocity();
         // realRotaryPose = rotary.getPosition();
 
-        final double requestedRollerVolts = rollerVeloController.calculate(realRollerVelo, state.rollerVelo);
-        SmartDashboard.putNumber("indexer::requestedRollerVolts", requestedRollerVolts);
+        final double requestedRollerVolts =
+            rollerVeloController.calculate(realRollerVelo, state.rollerVelo);
+        SmartDashboard.putNumber("indexer::requestedRollerVolts",
+                                 requestedRollerVolts);
         // rollers.setVolts(requestedRollerVolts);
 
-        final double requestedRotaryVolts = rotaryPoseController.calculate(realRotaryPose, state.rotaryPose);
-        SmartDashboard.putNumber("indexer::requestedRotaryVolts", requestedRotaryVolts);
+        final double requestedRotaryVolts =
+            rotaryPoseController.calculate(realRotaryPose, state.rotaryPose);
+        SmartDashboard.putNumber("indexer::requestedRotaryVolts",
+                                 requestedRotaryVolts);
         // rotary.setVolts(requestedRotaryVolts);
 
-        SmartDashboard.putNumber("indexer::requestedSpindexerVolts", state.spinVolt);
+        SmartDashboard.putNumber("indexer::requestedSpindexerVolts",
+                                 state.spinVolt);
         // spindexer.setVolts(state.spinVolt);
     }
 
@@ -124,12 +125,11 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
     public static final double INTAKE_INTERFERE_MAX = 1; // ?
 
     public boolean isConflictingWithArm() {
-        return INTAKE_INTERFERE_MIN < realRotaryPose && realRotaryPose < INTAKE_INTERFERE_MAX;
+        return INTAKE_INTERFERE_MIN < realRotaryPose &&
+            realRotaryPose < INTAKE_INTERFERE_MAX;
     }
 
-    public boolean wantsToConflictWithArm() {
-        return state == State.UP;
-    }
+    public boolean wantsToConflictWithArm() { return state == State.UP; }
 
     public boolean isIntaking() {
         return state == State.INTAKE_CUBE || state == State.INTAKE_CONE;

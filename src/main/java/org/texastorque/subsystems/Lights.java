@@ -1,27 +1,25 @@
 /**
  * Copyright 2023 Texas Torque.
- * 
+ *
  * This file is part of Torque-2023, which is not licensed for distribution.
  * For more details, see ./license.txt or write <jus@justusl.com>.
  */
 package org.texastorque.subsystems;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.BooleanSupplier;
-import java.util.function.Supplier;
-
-import org.texastorque.Subsystems;
-import org.texastorque.subsystems.Hand.GamePiece;
-import org.texastorque.torquelib.base.TorqueMode;
-import org.texastorque.torquelib.base.TorqueSubsystem;
-import org.texastorque.torquelib.util.TorqueUtil;
 
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.util.Color;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
+import org.texastorque.Subsystems;
+import org.texastorque.subsystems.Hand.GamePiece;
+import org.texastorque.torquelib.base.TorqueMode;
+import org.texastorque.torquelib.base.TorqueSubsystem;
+import org.texastorque.torquelib.util.TorqueUtil;
 
 public final class Lights extends TorqueSubsystem implements Subsystems {
     private static volatile Lights instance;
@@ -38,11 +36,13 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
     }
 
     public static final Color getAllianceColor() {
-        return DriverStation.getAlliance() == Alliance.Blue ? Color.kBlue : Color.kRed;
+        return DriverStation.getAlliance() == Alliance.Blue ? Color.kBlue
+                                                            : Color.kRed;
     }
 
     public static final Color getAllianceColorFIRST() {
-        return DriverStation.getAlliance() == Alliance.Blue ? Color.kFirstBlue : Color.kFirstRed;
+        return DriverStation.getAlliance() == Alliance.Blue ? Color.kFirstBlue
+                                                            : Color.kFirstRed;
     }
 
     @Override
@@ -50,17 +50,17 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
         leds.start();
     }
 
-
-    private LightAction
-        solidGreen = new Solid(() -> Color.kGreen),
-        solidAlliance = new Solid(() -> getAllianceColorFIRST()),
-        blinkGreen = new Blink(() -> Color.kGreen, 3),
-        blinkAlliance = new Blink(() -> getAllianceColorFIRST(), 3),
-        solidPurple = new Solid(() -> Color.kPurple),
-        solidYellow = new Solid(() -> Color.kYellow),
-        blinkPurple = new Blink(() -> Color.kPurple, 3),
-        blinkYellow = new Blink(() -> Color.kYellow, 3),
-        solidRainbow = new Rainbow();
+    private LightAction solidGreen = new Solid(() -> Color.kGreen),
+                        solidAlliance =
+                            new Solid(() -> getAllianceColorFIRST()),
+                        blinkGreen = new Blink(() -> Color.kGreen, 3),
+                        blinkAlliance =
+                            new Blink(() -> getAllianceColorFIRST(), 3),
+                        solidPurple = new Solid(() -> Color.kPurple),
+                        solidYellow = new Solid(() -> Color.kYellow),
+                        blinkPurple = new Blink(() -> Color.kPurple, 3),
+                        blinkYellow = new Blink(() -> Color.kYellow, 3),
+                        solidRainbow = new Rainbow();
 
     public final LightAction getColor() {
 
@@ -99,9 +99,7 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
     public static class Solid extends LightAction {
         private final Supplier<Color> color;
 
-        public Solid(final Supplier<Color> color) {
-            this.color = color;
-        }
+        public Solid(final Supplier<Color> color) { this.color = color; }
 
         @Override
         public void run(AddressableLEDBuffer buff) {
@@ -113,12 +111,13 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
     public static class Blink extends LightAction {
         private final Supplier<Color> color1, color2;
         private final double hertz;
-    
+
         public Blink(final Supplier<Color> color1, final double hertz) {
             this(color1, () -> Color.kBlack, hertz);
         }
 
-        public Blink(final Supplier<Color> color1, final Supplier<Color> color2, final double hertz) {
+        public Blink(final Supplier<Color> color1, final Supplier<Color> color2,
+                     final double hertz) {
             this.color1 = color1;
             this.color2 = color2;
             this.hertz = hertz;
@@ -131,7 +130,7 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
             for (int i = 0; i < buff.getLength(); i++)
                 buff.setLED(i, on ? color1.get() : color2.get());
         }
-    }    
+    }
 
     public static class Rainbow extends LightAction {
         private int rainbowFirstPixelHue = 0;
@@ -139,15 +138,14 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
         @Override
         public void run(AddressableLEDBuffer buff) {
             for (var i = 0; i < buff.getLength(); i++) {
-                final int hue = (rainbowFirstPixelHue + (i * 180 / buff.getLength())) % 180;
+                final int hue =
+                    (rainbowFirstPixelHue + (i * 180 / buff.getLength())) % 180;
                 buff.setHSV(i, hue, 255, 128);
             }
             rainbowFirstPixelHue += 3;
             rainbowFirstPixelHue %= 180;
         }
-    }    
-
-   
+    }
 
     public static final synchronized Lights getInstance() {
         return instance == null ? instance = new Lights() : instance;

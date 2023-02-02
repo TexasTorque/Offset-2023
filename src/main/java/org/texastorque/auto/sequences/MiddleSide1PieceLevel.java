@@ -1,11 +1,12 @@
 /**
  * Copyright 2023 Texas Torque.
- * 
+ *
  * This file is part of Torque-2023, which is not licensed for distribution.
  * For more details, see ./license.txt or write <jus@justusl.com>.
  */
 package org.texastorque.auto.sequences;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import org.texastorque.Robot;
 import org.texastorque.Subsystems;
 import org.texastorque.auto.commands.*;
@@ -17,16 +18,18 @@ import org.texastorque.torquelib.auto.commands.TorqueExecute;
 import org.texastorque.torquelib.auto.commands.TorqueWaitForSeconds;
 import org.texastorque.torquelib.util.TorqueUtil;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-
-public final class MiddleSide1PieceLevel extends TorqueSequence implements Subsystems {
-    public MiddleSide1PieceLevel() { 
-        final TorqueWaitForSeconds dropInitialCone = new TorqueWaitForSeconds(.5);
+public final class MiddleSide1PieceLevel
+    extends TorqueSequence implements Subsystems {
+    public MiddleSide1PieceLevel() {
+        final TorqueWaitForSeconds dropInitialCone =
+            new TorqueWaitForSeconds(.5);
         addBlock(dropInitialCone);
 
-        final FollowEventPath goOverChargeStation = new FollowEventPath("middle-over-and-back", 1.5, 3.5);
+        final FollowEventPath goOverChargeStation =
+            new FollowEventPath("middle-over-and-back", 1.5, 3.5);
         addBlock(goOverChargeStation);
 
-        addBlock(new TorqueExecute(() -> drivebase.setState(Drivebase.State.BALANCE)));
+        addBlock(new TorqueExecute(
+            () -> drivebase.setState(Drivebase.State.BALANCE)));
     }
 }
