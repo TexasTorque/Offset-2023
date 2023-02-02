@@ -14,28 +14,19 @@ import org.texastorque.torquelib.auto.TorqueBlock;
 import org.texastorque.torquelib.auto.TorqueCommand;
 import org.texastorque.torquelib.auto.TorqueSequence;
 import org.texastorque.torquelib.auto.commands.TorqueExecute;
-import org.texastorque.torquelib.auto.commands.TorqueWait;
+import org.texastorque.torquelib.auto.commands.TorqueWaitForSeconds;
 import org.texastorque.torquelib.util.TorqueUtil;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public final class MiddleSide1PieceLevel extends TorqueSequence implements Subsystems {
-    private double autoStart = 0;
-
     public MiddleSide1PieceLevel() { 
-        SmartDashboard.putNumber("ELAPSED", 0);
-
-        addBlock(new TorqueExecute(() -> autoStart = TorqueUtil.time()));
-        addBlock(new IntakeCube(false));
-
-        final TorqueWait dropInitialCone = new TorqueWait(.5);
+        final TorqueWaitForSeconds dropInitialCone = new TorqueWaitForSeconds(.5);
         addBlock(dropInitialCone);
 
         final FollowEventPath goOverChargeStation = new FollowEventPath("middle-over-and-back", 1.5, 3.5);
         addBlock(goOverChargeStation);
 
         addBlock(new TorqueExecute(() -> drivebase.setState(Drivebase.State.BALANCE)));
-
-        addBlock(new TorqueExecute(() -> SmartDashboard.putNumber("ELAPSED", TorqueUtil.time() - autoStart)));
     }
 }

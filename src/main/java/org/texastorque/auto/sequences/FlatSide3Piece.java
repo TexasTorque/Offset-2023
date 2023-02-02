@@ -14,40 +14,26 @@ import org.texastorque.torquelib.auto.TorqueBlock;
 import org.texastorque.torquelib.auto.TorqueCommand;
 import org.texastorque.torquelib.auto.TorqueSequence;
 import org.texastorque.torquelib.auto.commands.TorqueExecute;
-import org.texastorque.torquelib.auto.commands.TorqueWait;
+import org.texastorque.torquelib.auto.commands.TorqueWaitForSeconds;
 import org.texastorque.torquelib.util.TorqueUtil;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public final class FlatSide3Piece extends TorqueSequence implements Subsystems {
-    private double autoStart = 0;
-
     public FlatSide3Piece() { 
-        SmartDashboard.putNumber("ELAPSED", 0);
-        addBlock(new IntakeCube(false));
-
-        addBlock(new TorqueExecute(() -> autoStart = TorqueUtil.time()));
-
-        final TorqueWait dropInitialCone = new TorqueWait(.5);
+        final TorqueWaitForSeconds dropInitialCone = new TorqueWaitForSeconds(.5);
         addBlock(dropInitialCone);
 
-
         final FollowEventPath pickUpFirstCube = new FollowEventPath("flat-side-get-first"); // ends (1.8, 1.05)
-        pickUpFirstCube.addEvent("intake-on", new IntakeCube(true)); 
-        pickUpFirstCube.addEvent("intake-off", new IntakeCube(false)); 
         addBlock(pickUpFirstCube);
 
-        final TorqueWait dropFirstCone = new TorqueWait(.5);
+        final TorqueWaitForSeconds dropFirstCone = new TorqueWaitForSeconds(.5);
         addBlock(dropFirstCone);
 
         final FollowEventPath pickUpSecondCube = new FollowEventPath("flat-side-get-second");
-        pickUpSecondCube.addEvent("intake-on", new IntakeCube(true));
-        pickUpSecondCube.addEvent("intake-off", new IntakeCube(false)); 
         addBlock(pickUpSecondCube);
 
-        final TorqueWait dropSecondCube = new TorqueWait(.5);
+        final TorqueWaitForSeconds dropSecondCube = new TorqueWaitForSeconds(.5);
         addBlock(dropSecondCube);
-
-        addBlock(new TorqueExecute(() -> SmartDashboard.putNumber("ELAPSED", TorqueUtil.time() - autoStart)));
     }
 }
