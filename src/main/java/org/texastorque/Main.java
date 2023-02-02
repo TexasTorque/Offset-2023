@@ -1,7 +1,9 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
-
+/**
+ * Copyright 2023 Texas Torque.
+ * 
+ * This file is part of Torque-2023, which is not licensed for distribution.
+ * For more details, see ./license.txt or write <jus@justusl.com>.
+ */
 package org.texastorque;
 
 import edu.wpi.first.wpilibj.RobotBase;
