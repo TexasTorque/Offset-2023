@@ -104,15 +104,15 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         autoLevel.onTrue(() -> drivebase.setState(Drivebase.State.BALANCE));
         isZeroingWheels.onTrue(() -> drivebase.setState(Drivebase.State.ZERO));
 
-        wantsIntakeCube.onTrue(() -> indexer.state = Indexer.State.INTAKE_CUBE);
-        wantsIntakeCone.onTrue(() -> indexer.state = Indexer.State.INTAKE_CONE);
+        wantsIntakeCube.onTrue(() -> indexer.setState(Indexer.State.INTAKE_CUBE));
+        wantsIntakeCone.onTrue(() -> indexer.setState(Indexer.State.INTAKE_CONE));
 
-        clawClose.onTrueOrFalse(() -> hand.state = Hand.State.CLOSE, () -> hand.state = Hand.State.OPEN);
+        clawClose.onTrueOrFalse(() -> hand.setState(Hand.State.CLOSE), () -> hand.setState(Hand.State.OPEN));
 
-        armToHandoff.onTrue(() -> arm.state = Arm.State.HANDOFF);
-        armToShelf.onTrue(() -> arm.state = Arm.State.SHELF);
-        armToMid.onTrue(() -> arm.state = Arm.State.MID);
-        armToTop.onTrue(() -> arm.state = Arm.State.TOP);
+        armToHandoff.onTrue(() -> arm.setState(Arm.State.HANDOFF));
+        armToShelf.onTrue(() -> arm.setState(Arm.State.SHELF));
+        armToMid.onTrue(() -> arm.setState(Arm.State.MID));
+        armToTop.onTrue(() -> arm.setState(Arm.State.TOP));
     }
 
     private final static double DEADBAND = 0.125;

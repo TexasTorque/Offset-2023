@@ -38,8 +38,11 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
         return lastWantedGamepiece;
     }
 
-    @Log.ToString(name = "State")
-    public State state = State.UP;
+    private State state = State.UP;
+    private State requestedState = State.UP;
+    public void setState(final State state) { this.state = state; }
+    public State getState() { return requestedState; }
+    public boolean isState(final State state) { return getState() == state; }
 
     @Log.ToString(name = "Real Roller Velo")
     public double realRollerVelo = 0;
@@ -60,22 +63,22 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
 
     private Indexer() {
         // rollers.setConversionFactors();
-        rollers.setCurrentLimit(20);
-        rollers.setVoltageCompensation(12.6);
-        rollers.setBreakMode(true);
-        rollers.burnFlash();
+        // rollers.setCurrentLimit(20);
+        // rollers.setVoltageCompensation(12.6);
+        // rollers.setBreakMode(true);
+        // rollers.burnFlash();
 
         // rotary.setConversionFactors();
-        rotary.setCurrentLimit(20);
-        rotary.setVoltageCompensation(12.6);
-        rotary.setBreakMode(true);
-        rotary.burnFlash();
+        // rotary.setCurrentLimit(20);
+        // rotary.setVoltageCompensation(12.6);
+        // rotary.setBreakMode(true);
+        // rotary.burnFlash();
 
         // spindexer.setConversionFactors();
-        spindexer.setCurrentLimit(20);
-        spindexer.setVoltageCompensation(12.6);
-        spindexer.setBreakMode(true);
-        spindexer.burnFlash();
+        // spindexer.setCurrentLimit(20);
+        // spindexer.setVoltageCompensation(12.6);
+        // spindexer.setBreakMode(true);
+        // spindexer.burnFlash();
     }
 
     @Override
@@ -83,6 +86,8 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
 
     @Override
     public final void update(final TorqueMode mode) {
+        requestedState = state;
+
         if (arm.wantsToConflictWithIndexer() || arm.isConflictingWithIndexer()) {
             if (wantsToConflictWithArm())
                 state = State.PRIME;
@@ -94,18 +99,19 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
             lastWantedGamepiece = GamePiece.CUBE;
         }
 
-        realRollerVelo = rollers.getVelocity();
-        realRotaryPose = rotary.getPosition();
+        // realRollerVelo = rollers.getVelocity();
+        // realRotaryPose = rotary.getPosition();
 
         final double requestedRollerVolts = rollerVeloController.calculate(realRollerVelo, state.rollerVelo);
         SmartDashboard.putNumber("indexer::requestedRollerVolts", requestedRollerVolts);
-        rollers.setVolts(requestedRollerVolts);
+        // rollers.setVolts(requestedRollerVolts);
 
         final double requestedRotaryVolts = rotaryPoseController.calculate(realRotaryPose, state.rotaryPose);
         SmartDashboard.putNumber("indexer::requestedRotaryVolts", requestedRotaryVolts);
-        rotary.setVolts(requestedRotaryVolts);
+        // rotary.setVolts(requestedRotaryVolts);
 
-        spindexer.setVolts(state.spinVolt);
+        SmartDashboard.putNumber("indexer::requestedSpindexerVolts", state.spinVolt);
+        // spindexer.setVolts(state.spinVolt);
     }
 
     public static final double INTAKE_INTERFERE_MIN = 1; // ?

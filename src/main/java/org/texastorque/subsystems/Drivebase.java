@@ -60,11 +60,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
     private State state = State.ROBOT_RELATIVE;
     private State requestedState = State.ROBOT_RELATIVE;
-
-    public void setState(final State state) {
-        this.state = state;
-    }
-
+    public void setState(final State state) { this.state = state; }
     public State getState() { return requestedState; }
     public boolean isState(final State state) { return getState() == state; }
 

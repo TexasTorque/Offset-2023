@@ -72,8 +72,11 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         return state == State.MID || state == State.TOP;
     }
 
-    @Log.ToString(name = "State")
-    public State state = State.HANDOFF;
+    private State state = State.HANDOFF;
+    private State requestedState = State.HANDOFF;
+    public void setState(final State state) { this.state = state; }
+    public State getState() { return requestedState; }
+    public boolean isState(final State state) { return getState() == state; }
 
     @Log.ToString
     public double realElevatorPose = 0;
@@ -94,23 +97,23 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     private Arm() {
         // elevator.setConversionFactors();
-        elevator.setCurrentLimit(20);
-        elevator.setVoltageCompensation(12.6);
-        elevator.setBreakMode(true);
-        elevator.burnFlash();
+        // elevator.setCurrentLimit(20);
+        // elevator.setVoltageCompensation(12.6);
+        // elevator.setBreakMode(true);
+        // elevator.burnFlash();
 
         // rotary.setConversionFactors();
-        rotary.setCurrentLimit(20);
-        rotary.setVoltageCompensation(12.6);
-        rotary.setBreakMode(true);
-        rotary.burnFlash();
+        // rotary.setCurrentLimit(20);
+        // rotary.setVoltageCompensation(12.6);
+        // rotary.setBreakMode(true);
+        // rotary.burnFlash();
 
-        final CANCoderConfiguration cancoderConfig = new CANCoderConfiguration();
-        cancoderConfig.sensorCoefficient = 2 * Math.PI / 4096.0;
-        cancoderConfig.unitString = "rad";
-        cancoderConfig.sensorTimeBase = SensorTimeBase.PerSecond;
-        cancoderConfig.initializationStrategy = SensorInitializationStrategy.BootToAbsolutePosition;
-        rotaryEncoder.configAllSettings(cancoderConfig);
+        // final CANCoderConfiguration cancoderConfig = new CANCoderConfiguration();
+        // cancoderConfig.sensorCoefficient = 2 * Math.PI / 4096.0;
+        // cancoderConfig.unitString = "rad";
+        // cancoderConfig.sensorTimeBase = SensorTimeBase.PerSecond;
+        // cancoderConfig.initializationStrategy = SensorInitializationStrategy.BootToAbsolutePosition;
+        // rotaryEncoder.configAllSettings(cancoderConfig);
     }
 
     @Override
@@ -120,20 +123,22 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     @Override
     public final void update(final TorqueMode mode) {
+        requestedState = state;
+
         wantsHandoff = state == State.HANDOFF;
         if (wantsHandoff && indexer.isConflictingWithArm())
             state = State.DOWN;
 
-        realElevatorPose = elevator.getVelocity();
-        realRotaryPose = rotary.getPosition() - ARM_ROTARY_ENCODER_OFFSET;
+        // realElevatorPose = elevator.getVelocity();
+        // realRotaryPose = rotary.getPosition() - ARM_ROTARY_ENCODER_OFFSET;
 
         final double requestedElevatorVolts = elevatorPoseController.calculate(realElevatorPose, state.get().elevatorPose);
         SmartDashboard.putNumber("arm::requestedElevatorVolts", requestedElevatorVolts);
-        elevator.setVolts(requestedElevatorVolts);
+        // elevator.setVolts(requestedElevatorVolts);
 
         final double requestedRotaryVolts = rotaryPoseController.calculate(realRotaryPose, state.get().rotaryPose);
         SmartDashboard.putNumber("arm::requestedRotaryVolts", requestedRotaryVolts);
-        rotary.setVolts(requestedRotaryVolts);
+        // rotary.setVolts(requestedRotaryVolts);
     }
 
     public static final double ARM_INTERFERE_MIN = (5. / 6.) * Math.PI;

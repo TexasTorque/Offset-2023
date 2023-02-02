@@ -38,9 +38,12 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
         }
     }
 
-    @Log.ToString(name = "State")
-    public State state = State.OPEN;
+    private State state = State.OPEN;
     private State lastState = State.OPEN;
+    private State requestedState = State.OPEN;
+    public void setState(final State state) { this.state = state; }
+    public State getState() { return requestedState; }
+    public boolean isState(final State state) { return getState() == state; }
 
     @Log.ToString
     public double realClawPose = 0;
@@ -61,15 +64,17 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
 
     @Override
     public final void update(final TorqueMode mode) {
+        requestedState = state;
+
         if (currentGamePiece != GamePiece.NONE) {
             lastHeldPiece = currentGamePiece;
         }
 
-        realClawPose = claw.getPosition();
+        // realClawPose = claw.getPosition();
 
         final double requestedClawVolts = clawPoseController.calculate(realClawPose, state.clawPose);
-        SmartDashboard.putNumber("indexer::requestedRotaryVolts", requestedClawVolts);
-        claw.setVolts(requestedClawVolts);
+        SmartDashboard.putNumber("hand::requestedClawVolts", requestedClawVolts);
+        // claw.setVolts(requestedClawVolts);
 
         if (lastState != state) {
             lastState = state;
