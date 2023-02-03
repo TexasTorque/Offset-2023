@@ -17,9 +17,10 @@ import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.texastorque.torquelib.control.TorqueClick;
 import org.texastorque.torquelib.sensors.TorqueNavXGyro;
+import org.texastorque.torquelib.swerve.TorqueSwerveSpeeds;
 
 public final class AutoLevelController
-    extends AbstractController<ChassisSpeeds> {
+    extends AbstractController<TorqueSwerveSpeeds> {
     private static enum BalanceDirection {
         POS_X(315, 45, () -> - TorqueNavXGyro.getInstance().getPitch()),
         NEG_X(135, 225, () -> TorqueNavXGyro.getInstance().getPitch()),
@@ -60,7 +61,7 @@ public final class AutoLevelController
 
     private static final double TILT_THRESHOLD_DEG = 10, FLAT_THRESHOLD_DEG = 2;
 
-    public ChassisSpeeds calculate() {
+    public TorqueSwerveSpeeds calculate() {
 
         final Rotation2d startingRotation =
             TorqueNavXGyro.getInstance().getHeadingCCW();
@@ -84,7 +85,7 @@ public final class AutoLevelController
         if (Math.abs(drivePower) > 0.4)
             drivePower = Math.copySign(.4, drivePower);
 
-        return isFlat ? new ChassisSpeeds() : new ChassisSpeeds(drivePower * 3.5, 0, 0);
+        return isFlat ? new TorqueSwerveSpeeds() : new TorqueSwerveSpeeds(drivePower * 3.5, 0, 0);
     }
 
     public void resetIf(final boolean notInLoop) {

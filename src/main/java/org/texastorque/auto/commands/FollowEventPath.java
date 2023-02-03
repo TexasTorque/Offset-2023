@@ -36,6 +36,7 @@ import org.texastorque.Subsystems;
 import org.texastorque.subsystems.Drivebase;
 import org.texastorque.torquelib.auto.TorqueCommand;
 import org.texastorque.torquelib.control.TorquePID;
+import org.texastorque.torquelib.swerve.TorqueSwerveSpeeds;
 
 public final class FollowEventPath extends TorqueCommand implements Subsystems {
     public static final double MAX_VELOCITY_PATH = 3.5, MAX_ACCELERATION_PATH =
@@ -110,12 +111,8 @@ public final class FollowEventPath extends TorqueCommand implements Subsystems {
 
         final PathPlannerState desired = reflect(trajectory.sample(elapsed));
 
-        final ChassisSpeeds speeds =
-            controller.calculate(drivebase.getPose(), desired);
-
-        drivebase.inputSpeeds = new ChassisSpeeds(-speeds.vxMetersPerSecond,
-                                                  -speeds.vyMetersPerSecond,
-                                                  speeds.omegaRadiansPerSecond);
+        final TorqueSwerveSpeeds speeds = TorqueSwerveSpeeds.fromChassisSpeeds(controller.calculate(drivebase.getPose(), desired));
+        drivebase.inputSpeeds = speeds.times(-1, -1, 1);
 
         if (unpassed.size() > 0 && elapsed >= unpassed.get(0).timeSeconds) {
             final EventMarker marker = unpassed.remove(0);
@@ -146,7 +143,7 @@ public final class FollowEventPath extends TorqueCommand implements Subsystems {
         timer.stop();
         for (final TorqueCommand command : running)
             command.reset();
-        drivebase.inputSpeeds = new ChassisSpeeds();
+        drivebase.inputSpeeds = new TorqueSwerveSpeeds();
 
         drivebase.fieldMap.getObject("traj").close();
     }

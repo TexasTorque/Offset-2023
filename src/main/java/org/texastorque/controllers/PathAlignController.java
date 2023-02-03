@@ -19,7 +19,6 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -35,9 +34,9 @@ import org.texastorque.Field.AprilTagType;
 import org.texastorque.auto.commands.FollowEventPath;
 import org.texastorque.subsystems.Drivebase;
 import org.texastorque.torquelib.control.TorquePID;
+import org.texastorque.torquelib.swerve.TorqueSwerveSpeeds;
 
-public final class PathAlignController
-    extends AbstractController<Optional<ChassisSpeeds>> {
+public final class PathAlignController extends AbstractController<Optional<TorqueSwerveSpeeds>> {
     private final PIDController xController = TorquePID.create(1).build();
     private final PIDController yController = TorquePID.create(1).build();
     private final PIDController thetaController =
@@ -57,15 +56,12 @@ public final class PathAlignController
     }
 
     private final Supplier<Pose2d> poseSupplier;
-    private final DoubleSupplier speedSupplier;
-    private final Supplier<Rotation2d> headingSupplier;
+    private final Supplier<TorqueSwerveSpeeds> speedsSupplier;
 
     private PathPlannerTrajectory trajectory;
     private final Timer timer = new Timer();
 
-    public PathAlignController(final Supplier<Pose2d> poseSupplier,
-                               final DoubleSupplier speedSupplier,
-                               final Supplier<Rotation2d> headingSupplier) {
+    public PathAlignController(final Supplier<Pose2d> poseSupplier, final Supplier<TorqueSwerveSpeeds> speedsSupplier) {
         xController.setTolerance(0.01);
         yController.setTolerance(0.01);
         thetaController.setTolerance(Units.degreesToRadians(2));
@@ -75,8 +71,7 @@ public final class PathAlignController
                                                     thetaController);
 
         this.poseSupplier = poseSupplier;
-        this.speedSupplier = speedSupplier;
-        this.headingSupplier = headingSupplier;
+        this.speedsSupplier = speedsSupplier;
 
         setAlignment(AlignState.NONE);
         setGridOverride(GridState.NONE);
@@ -151,9 +146,11 @@ public final class PathAlignController
             Math.min(Math.max(current.getX(), LAST_LEG_X_OFFSET_MIN),
                      LAST_LEG_X_OFFSET_MAX);
 
+        final double initialSpeed = speedsSupplier.get().getVelocityMagnitude();
+        final Rotation2d initialHeading = speedsSupplier.get().getHeading();
+
         final PathPoint startPoint =
-            new PathPoint(current.getTranslation(), headingSupplier.get(),
-                          current.getRotation(), speedSupplier.getAsDouble());
+            new PathPoint(current.getTranslation(), initialHeading, current.getRotation(), initialSpeed);
         final PathPoint midPoint = new PathPoint(
             new Translation2d(goalPose.getX() + offset, goalPose.getY()),
             Rotation2d.fromRadians(Math.PI), new Rotation2d(Math.PI), 3);
@@ -161,8 +158,8 @@ public final class PathAlignController
             new PathPoint(goalPose.getTranslation(), Rotation2d.fromRadians(0),
                           new Rotation2d(Math.PI));
 
-        trajectory = PathPlanner.generatePath(MAX_PATH_CONSTRAINTS, startPoint,
-                                              midPoint, endPoint);
+        // trajectory = PathPlanner.generatePath(MAX_PATH_CONSTRAINTS, startPoint, midPoint, endPoint);
+        trajectory = PathPlanner.generatePath(MAX_PATH_CONSTRAINTS, midPoint, endPoint);
 
         timer.reset();
         timer.start();
@@ -192,7 +189,7 @@ public final class PathAlignController
                    poseSupplier.get().getTranslation()) <= tolerance;
     }
 
-    public Optional<ChassisSpeeds> calculate() {
+    public Optional<TorqueSwerveSpeeds> calculate() {
         final Pose2d current = poseSupplier.get();
 
         if (trajectory == null)
@@ -204,14 +201,9 @@ public final class PathAlignController
 
         final boolean done = timer.hasElapsed(trajectory.getTotalTimeSeconds());
 
-        SmartDashboard.putBoolean("Align Done", done);
+        final TorqueSwerveSpeeds speeds = TorqueSwerveSpeeds.fromChassisSpeeds(controller.calculate(current, desired));
 
-        final ChassisSpeeds speeds = controller.calculate(current, desired);
-
-
-        return Optional.of(isSuperDone() ? new ChassisSpeeds() : new ChassisSpeeds(-speeds.vxMetersPerSecond,
-                                             -speeds.vyMetersPerSecond,
-                                             speeds.omegaRadiansPerSecond));
+        return Optional.of(isSuperDone() ? new TorqueSwerveSpeeds() : speeds.times(-1, -1, 1));
     }
 
     public static double ALIGN_X_OFFSET_GRID =
