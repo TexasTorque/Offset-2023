@@ -40,9 +40,12 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
         private State(final double clawPose) { this.clawPose = clawPose; }
     }
 
-    private State state = State.OPEN;
-    private State lastState = State.OPEN;
-    private State requestedState = State.OPEN;
+    @Log.ToString
+    private State state = State.CLOSE;
+    @Log.ToString
+    private State lastState = State.CLOSE;
+    @Log.ToString
+    private State requestedState = State.CLOSE;
     public void setState(final State state) { this.state = state; }
     public State getState() { return requestedState; }
     public boolean isState(final State state) { return getState() == state; }
@@ -84,9 +87,18 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
             lastState = state;
             if (state == State.OPEN) {
                 currentGamePiece = GamePiece.NONE;
-                Input.getInstance().setDriverRumbleFor(0.5);
+                if (arm.isAtScoringPose())
+                    Input.getInstance().setDriverRumbleFor(1);
+            } else {
+                currentGamePiece = indexer.getLastWantedGamePiece();
             }
         }
+
+
+        if (drivebase.isPathAlignDone() && state == State.CLOSE)
+            Input.getInstance().setOperatorRumbleFor(0.5);
+
+        state = State.CLOSE;
     }
 
     public static final synchronized Hand getInstance() {

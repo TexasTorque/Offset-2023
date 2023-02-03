@@ -41,7 +41,9 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
 
     public GamePiece getLastWantedGamePiece() { return lastWantedGamepiece; }
 
+    @Log.ToString
     private State state = State.UP;
+    @Log.ToString
     private State requestedState = State.UP;
     public void setState(final State state) { this.state = state; }
     public State getState() { return requestedState; }
@@ -119,6 +121,8 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
         SmartDashboard.putNumber("indexer::requestedSpindexerVolts",
                                  state.spinVolt);
         // spindexer.setVolts(state.spinVolt);
+
+        state = State.PRIME;
     }
 
     public static final double INTAKE_INTERFERE_MIN = 1; // ?
@@ -132,7 +136,7 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
     public boolean wantsToConflictWithArm() { return state == State.UP; }
 
     public boolean isIntaking() {
-        return state == State.INTAKE_CUBE || state == State.INTAKE_CONE;
+        return requestedState == State.INTAKE_CUBE || requestedState == State.INTAKE_CONE;
     }
 
     public static final synchronized Indexer getInstance() {

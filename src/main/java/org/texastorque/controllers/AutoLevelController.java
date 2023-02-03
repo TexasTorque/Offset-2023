@@ -84,7 +84,7 @@ public final class AutoLevelController
         if (Math.abs(drivePower) > 0.4)
             drivePower = Math.copySign(.4, drivePower);
 
-        return new ChassisSpeeds(drivePower * 3.5, 0, 0);
+        return isFlat ? new ChassisSpeeds() : new ChassisSpeeds(drivePower * 3.5, 0, 0);
     }
 
     public void resetIf(final boolean notInLoop) {

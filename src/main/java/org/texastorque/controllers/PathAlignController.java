@@ -30,6 +30,7 @@ import java.util.Optional;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.texastorque.Field;
+import org.texastorque.Input;
 import org.texastorque.Field.AprilTagType;
 import org.texastorque.auto.commands.FollowEventPath;
 import org.texastorque.subsystems.Drivebase;
@@ -172,14 +173,23 @@ public final class PathAlignController
         new PathConstraints(FollowEventPath.MAX_VELOCITY_PATH,
                             FollowEventPath.MAX_ACCELERATION_PATH);
 
-    private static final double DISTANCE_TOLERANCE = Units.inchesToMeters(3);
+    private static final double DISTANCE_TOLERANCE_TIGHT = Units.inchesToMeters(1);
+    private static final double DISTANCE_TOLERANCE_LOOSE = Units.inchesToMeters(3);
 
     public boolean isDone() {
+        return isDone(DISTANCE_TOLERANCE_LOOSE);
+    }
+
+    private final boolean isSuperDone() {
+        return isDone(DISTANCE_TOLERANCE_TIGHT);
+    }
+
+    private boolean isDone(final double tolerance) {
         if (trajectory == null)
             return false;
         final Pose2d endPoint = trajectory.getEndState().poseMeters;
         return endPoint.getTranslation().getDistance(
-                   poseSupplier.get().getTranslation()) <= DISTANCE_TOLERANCE;
+                   poseSupplier.get().getTranslation()) <= tolerance;
     }
 
     public Optional<ChassisSpeeds> calculate() {
@@ -198,7 +208,8 @@ public final class PathAlignController
 
         final ChassisSpeeds speeds = controller.calculate(current, desired);
 
-        return Optional.of(new ChassisSpeeds(-speeds.vxMetersPerSecond,
+
+        return Optional.of(isSuperDone() ? new ChassisSpeeds() : new ChassisSpeeds(-speeds.vxMetersPerSecond,
                                              -speeds.vyMetersPerSecond,
                                              speeds.omegaRadiansPerSecond));
     }

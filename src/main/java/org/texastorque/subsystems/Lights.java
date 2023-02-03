@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.util.Color;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 import org.texastorque.Subsystems;
@@ -28,6 +29,8 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
     private final AddressableLEDBuffer buff;
 
     private static final int LENGTH = 20;
+
+    public boolean dangerMode = false;
 
     private Lights() {
         leds = new AddressableLED(0);
@@ -52,17 +55,19 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
 
     private LightAction solidGreen = new Solid(() -> Color.kGreen),
                         solidAlliance =
-                            new Solid(() -> getAllianceColorFIRST()),
-                        blinkGreen = new Blink(() -> Color.kGreen, 3),
+                            new Solid(() -> getAllianceColor()),
+                        blinkGreen = new Blink(() -> Color.kGreen, 6),
                         blinkAlliance =
-                            new Blink(() -> getAllianceColorFIRST(), 3),
+                            new Blink(() -> getAllianceColor(), 6),
                         solidPurple = new Solid(() -> Color.kPurple),
                         solidYellow = new Solid(() -> Color.kYellow),
-                        blinkPurple = new Blink(() -> Color.kPurple, 3),
-                        blinkYellow = new Blink(() -> Color.kYellow, 3),
-                        solidRainbow = new Rainbow();
+                        blinkPurple = new Blink(() -> Color.kPurple, 6),
+                        blinkYellow = new Blink(() -> Color.kYellow, 6),
+                        rainbow = new Rainbow();
 
-    public final LightAction getColor() {
+    public final LightAction getColor(final TorqueMode mode) {
+        if (dangerMode)
+            return blinkYellow;
 
         if (indexer.isIntaking() || arm.isAtShelf()) {
             if (indexer.getLastWantedGamePiece() == GamePiece.CUBE)
@@ -78,8 +83,11 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
         }
 
         if (drivebase.isState(Drivebase.State.BALANCE)) {
-            if (drivebase.isAutoLevelDone())
+            if (drivebase.isAutoLevelDone()) {
+                if (mode.isAuto())
+                    return rainbow;
                 return blinkGreen;
+            }
             return solidGreen;
         }
 
@@ -88,7 +96,7 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
 
     @Override
     public final void update(final TorqueMode mode) {
-        getColor().run(buff);
+        getColor(mode).run(buff);
         leds.setData(buff);
     }
 

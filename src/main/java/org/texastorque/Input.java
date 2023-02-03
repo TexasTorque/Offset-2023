@@ -35,8 +35,8 @@ public final class Input
     private final TorqueBoolSupplier isZeroingWheels, slowModeToggle,
         alignGridLeft, alignGridCenter, alignGridRight, gridOverrideLeft,
         gridOverrideRight, gridOverrideCenter, resetGyroClick, resetPoseClick,
-        toggleRotationLockClick, autoLevel, wantsIntakeCube, wantsIntakeCone,
-        clawClose, armToHandoff, armToShelf, armToMid, armToTop;
+        toggleRotationLock, autoLevel, wantsIntakeCube, wantsIntakeCone,
+        clawClose, armToHandoff, armToShelf, armToMid, armToTop, dangerMode;
 
     private Input() {
         driver = new TorqueController(0, .001);
@@ -64,8 +64,8 @@ public final class Input
             new TorqueClickSupplier(() -> driver.isRightCenterButtonPressed());
         resetPoseClick =
             new TorqueClickSupplier(() -> driver.isLeftCenterButtonPressed());
-        toggleRotationLockClick =
-            new TorqueClickSupplier(() -> driver.isAButtonDown());
+        toggleRotationLock =
+            new TorqueToggleSupplier(() -> driver.isAButtonDown(), true);
         autoLevel = new TorqueBoolSupplier(() -> driver.isYButtonDown());
 
         wantsIntakeCube =
@@ -74,12 +74,13 @@ public final class Input
             new TorqueBoolSupplier(() -> operator.isRightTriggerDown());
 
         clawClose =
-            new TorqueToggleSupplier(() -> operator.isRightBumperDown());
+            new TorqueToggleSupplier(() -> operator.isRightBumperDown(), true);
 
         armToHandoff = new TorqueBoolSupplier(() -> operator.isAButtonDown());
         armToShelf = new TorqueBoolSupplier(() -> operator.isXButtonDown());
         armToMid = new TorqueBoolSupplier(() -> operator.isBButtonDown());
         armToTop = new TorqueBoolSupplier(() -> operator.isYButtonDown());
+        dangerMode = new TorqueToggleSupplier(() -> operator.isLeftCenterButtonDown());
     }
 
     @Override
@@ -89,13 +90,16 @@ public final class Input
 
     private void updateDrivebase() {
         updateDrivebaseSpeeds();
+
+        driver.setRumble(driverTimeout.calculate());
+        operator.setRumble(operatorTimeout.calculate());
+
         drivebase.setState(Drivebase.State.FIELD_RELATIVE);
 
         resetGyroClick.onTrue(() -> drivebase.resetGyro());
         resetPoseClick.onTrue(() -> drivebase.resetPose(Drivebase.INITIAL_POS));
 
-        toggleRotationLockClick.onTrue(
-            () -> drivebase.isRotationLocked = !drivebase.isRotationLocked);
+        drivebase.isRotationLocked = toggleRotationLock.get();
 
         alignGridLeft.onTrue(() -> drivebase.setAlignState(AlignState.LEFT));
         alignGridCenter.onTrue(
@@ -125,6 +129,8 @@ public final class Input
         armToShelf.onTrue(() -> arm.setState(Arm.State.SHELF));
         armToMid.onTrue(() -> arm.setState(Arm.State.MID));
         armToTop.onTrue(() -> arm.setState(Arm.State.TOP));
+
+        lights.dangerMode = dangerMode.get();
     }
 
     private final static double DEADBAND = 0.125;

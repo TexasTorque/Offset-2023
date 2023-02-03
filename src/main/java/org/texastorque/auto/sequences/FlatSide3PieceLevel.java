@@ -14,6 +14,7 @@ import org.texastorque.subsystems.Drivebase;
 import org.texastorque.torquelib.auto.TorqueBlock;
 import org.texastorque.torquelib.auto.TorqueCommand;
 import org.texastorque.torquelib.auto.TorqueSequence;
+import org.texastorque.torquelib.auto.commands.TorqueContinuous;
 import org.texastorque.torquelib.auto.commands.TorqueExecute;
 import org.texastorque.torquelib.auto.commands.TorqueWaitForSeconds;
 import org.texastorque.torquelib.util.TorqueUtil;
@@ -44,7 +45,7 @@ public final class FlatSide3PieceLevel
             new FollowEventPath("flat-side-go-level-fast", 6, 8);
         addBlock(goToLevel);
 
-        addBlock(new TorqueExecute(
+        addBlock(new TorqueContinuous(
             () -> drivebase.setState(Drivebase.State.BALANCE)));
     }
 }

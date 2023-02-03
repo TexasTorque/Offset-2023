@@ -69,7 +69,9 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         return state == State.MID || state == State.TOP;
     }
 
+    @Log.ToString
     private State state = State.HANDOFF;
+    @Log.ToString
     private State requestedState = State.HANDOFF;
     public void setState(final State state) { this.state = state; }
     public State getState() { return requestedState; }
@@ -111,6 +113,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         // cancoderConfig.initializationStrategy =
         // SensorInitializationStrategy.BootToAbsolutePosition;
         // rotaryEncoder.configAllSettings(cancoderConfig);
+
+        state = State.HANDOFF;
     }
 
     @Override
