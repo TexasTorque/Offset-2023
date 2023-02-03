@@ -127,14 +127,17 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
 
     public static final double INTAKE_INTERFERE_MIN = 1; // ?
     public static final double INTAKE_INTERFERE_MAX = 1; // ?
-
+    
+    @Log.BooleanBox
     public boolean isConflictingWithArm() {
         return INTAKE_INTERFERE_MIN < realRotaryPose &&
             realRotaryPose < INTAKE_INTERFERE_MAX;
     }
 
+    @Log.BooleanBox
     public boolean wantsToConflictWithArm() { return activeState == State.UP; }
 
+    @Log.BooleanBox
     public boolean isIntaking() {
         return desiredState == State.INTAKE_CUBE || desiredState == State.INTAKE_CONE;
     }

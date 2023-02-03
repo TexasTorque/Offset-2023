@@ -24,12 +24,18 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     private static volatile Arm instance;
 
     public static class ArmPose {
-        public final double elevatorPose;
-        public final double rotaryPose;
+        private static final double ELEVATOR_TOLERANCE = 0.1, ROTARY_TOLERANCE = 0.1;
+
+        public final double elevatorPose, rotaryPose;
 
         public ArmPose(final double elevatorPose, final double rotaryPose) {
             this.elevatorPose = elevatorPose;
             this.rotaryPose = rotaryPose;
+        }
+
+        public boolean atPose(final double elevatorReal, final double rotaryReal) {
+            return Math.abs(elevatorReal - elevatorPose) < ELEVATOR_TOLERANCE
+                   && Math.abs(rotaryReal - rotaryPose) < ROTARY_TOLERANCE;
         }
     }
 
@@ -63,8 +69,10 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         }
     }
 
+    @Log.BooleanBox
     public boolean isAtShelf() { return activeState == State.SHELF; }
 
+    @Log.BooleanBox
     public boolean isAtScoringPose() {
         return activeState == State.MID || activeState == State.TOP;
     }
@@ -120,7 +128,12 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     @Override
     public final void initialize(final TorqueMode mode) {}
 
+    @Log.BooleanBox
     private boolean wantsHandoff = false;
+
+    public boolean isAtDesiredPose() {
+        return activeState.get().atPose(realElevatorPose, realRotaryPose);
+    }
 
     @Override
     public final void update(final TorqueMode mode) {
@@ -149,11 +162,13 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     public static final double ARM_INTERFERE_MIN = (5. / 6.) * Math.PI;
     public static final double ARM_INTERFERE_MAX = (11. / 6.) * Math.PI;
 
+    @Log.BooleanBox
     public final boolean isConflictingWithIndexer() {
         return ARM_INTERFERE_MIN < realRotaryPose &&
             realRotaryPose < ARM_INTERFERE_MAX;
     }
 
+    @Log.BooleanBox
     public final boolean wantsToConflictWithIndexer() { return wantsHandoff; }
 
     public static final synchronized Arm getInstance() {
