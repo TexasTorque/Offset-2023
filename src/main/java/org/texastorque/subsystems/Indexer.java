@@ -42,11 +42,11 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
     public GamePiece getLastWantedGamePiece() { return lastWantedGamepiece; }
 
     @Log.ToString
-    private State state = State.UP;
+    private State activeState = State.UP;
     @Log.ToString
-    private State requestedState = State.UP;
-    public void setState(final State state) { this.state = state; }
-    public State getState() { return requestedState; }
+    private State desiredState = State.UP;
+    public void setState(final State state) { this.desiredState = state; }
+    public State getState() { return desiredState; }
     public boolean isState(final State state) { return getState() == state; }
 
     @Log.ToString(name = "Real Roller Velo") public double realRollerVelo = 0;
@@ -89,17 +89,17 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
 
     @Override
     public final void update(final TorqueMode mode) {
-        requestedState = state;
+        activeState = desiredState;
 
         if (arm.wantsToConflictWithIndexer() ||
             arm.isConflictingWithIndexer()) {
             if (wantsToConflictWithArm())
-                state = State.PRIME;
+                activeState = State.PRIME;
         }
 
-        if (state == State.INTAKE_CONE) {
+        if (activeState == State.INTAKE_CONE) {
             lastWantedGamepiece = GamePiece.CONE;
-        } else if (state == State.INTAKE_CUBE) {
+        } else if (activeState == State.INTAKE_CUBE) {
             lastWantedGamepiece = GamePiece.CUBE;
         }
 
@@ -107,22 +107,22 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
         // realRotaryPose = rotary.getPosition();
 
         final double requestedRollerVolts =
-            rollerVeloController.calculate(realRollerVelo, state.rollerVelo);
+            rollerVeloController.calculate(realRollerVelo, activeState.rollerVelo);
         SmartDashboard.putNumber("indexer::requestedRollerVolts",
                                  requestedRollerVolts);
         // rollers.setVolts(requestedRollerVolts);
 
         final double requestedRotaryVolts =
-            rotaryPoseController.calculate(realRotaryPose, state.rotaryPose);
+            rotaryPoseController.calculate(realRotaryPose, activeState.rotaryPose);
         SmartDashboard.putNumber("indexer::requestedRotaryVolts",
                                  requestedRotaryVolts);
         // rotary.setVolts(requestedRotaryVolts);
 
         SmartDashboard.putNumber("indexer::requestedSpindexerVolts",
-                                 state.spinVolt);
+                                 activeState.spinVolt);
         // spindexer.setVolts(state.spinVolt);
 
-        state = State.PRIME;
+        activeState = State.PRIME;
     }
 
     public static final double INTAKE_INTERFERE_MIN = 1; // ?
@@ -133,10 +133,10 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
             realRotaryPose < INTAKE_INTERFERE_MAX;
     }
 
-    public boolean wantsToConflictWithArm() { return state == State.UP; }
+    public boolean wantsToConflictWithArm() { return activeState == State.UP; }
 
     public boolean isIntaking() {
-        return requestedState == State.INTAKE_CUBE || requestedState == State.INTAKE_CONE;
+        return desiredState == State.INTAKE_CUBE || desiredState == State.INTAKE_CONE;
     }
 
     public static final synchronized Indexer getInstance() {
