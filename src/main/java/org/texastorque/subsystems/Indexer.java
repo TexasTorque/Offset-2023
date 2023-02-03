@@ -54,11 +54,11 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
     @Log.ToString public double realRotaryPose = 0;
 
     private final TorqueNEO rollers = new TorqueNEO(Ports.INDEXER_ROLLER_MOTOR);
-    private final PIDController rollerVeloController =
+    public final PIDController rollerVeloController =
         new PIDController(0.1, 0, 0);
 
     private final TorqueNEO rotary = new TorqueNEO(Ports.INDEXER_ROTARY_MOTOR);
-    private final PIDController rotaryPoseController =
+    public final PIDController rotaryPoseController =
         new PIDController(0.1, 0, 0);
 
     private final TorqueNEO spindexer =
@@ -127,7 +127,7 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
 
     public static final double INTAKE_INTERFERE_MIN = 1; // ?
     public static final double INTAKE_INTERFERE_MAX = 1; // ?
-    
+
     @Log.BooleanBox
     public boolean isConflictingWithArm() {
         return INTAKE_INTERFERE_MIN < realRotaryPose &&

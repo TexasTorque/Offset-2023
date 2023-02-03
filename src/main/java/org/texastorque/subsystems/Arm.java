@@ -19,6 +19,7 @@ import org.texastorque.subsystems.Hand.GamePiece;
 import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.motors.TorqueNEO;
+import org.texastorque.torquelib.util.TorqueMath;
 
 public final class Arm extends TorqueSubsystem implements Subsystems {
     private static volatile Arm instance;
@@ -90,11 +91,11 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     @Log.ToString public double realRotaryPose = 0;
 
     private final TorqueNEO elevator = new TorqueNEO(Ports.ARM_ELEVATOR_MOTOR);
-    private final PIDController elevatorPoseController =
+    public final PIDController elevatorPoseController =
         new PIDController(0.1, 0, 0);
 
     private final TorqueNEO rotary = new TorqueNEO(Ports.ARM_ROTARY_MOTOR);
-    private final PIDController rotaryPoseController =
+    public final PIDController rotaryPoseController =
         new PIDController(0.1, 0, 0);
 
     private final CANCoder rotaryEncoder =
@@ -146,8 +147,10 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         // realElevatorPose = elevator.getVelocity();
         // realRotaryPose = rotary.getPosition() - ARM_ROTARY_ENCODER_OFFSET;
 
-        final double requestedElevatorVolts = elevatorPoseController.calculate(
-            realElevatorPose, activeState.get().elevatorPose);
+        final double requestedElevatorVolts = TorqueMath.linearConstraint(
+                elevatorPoseController.calculate(realElevatorPose, activeState.get().elevatorPose),
+                realElevatorPose, ELEVATOR_MIN, ELEVATOR_MAX);
+
         SmartDashboard.putNumber("arm::requestedElevatorVolts",
                                  requestedElevatorVolts);
         // elevator.setVolts(requestedElevatorVolts);
@@ -158,6 +161,9 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
                                  requestedRotaryVolts);
         // rotary.setVolts(requestedRotaryVolts);
     }
+
+    public static final double ELEVATOR_MIN = 0;
+    public static final double ELEVATOR_MAX = 1477;
 
     public static final double ARM_INTERFERE_MIN = (5. / 6.) * Math.PI;
     public static final double ARM_INTERFERE_MAX = (11. / 6.) * Math.PI;

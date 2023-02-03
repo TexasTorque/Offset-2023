@@ -53,7 +53,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
     @Log.ToString public double realClawPose = 0;
 
     private final TorqueNEO claw = new TorqueNEO(Ports.HAND_MOTOR);
-    private final PIDController clawPoseController =
+    public final PIDController clawPoseController =
         new PIDController(0.1, 0, 0);
 
     private Hand() {
