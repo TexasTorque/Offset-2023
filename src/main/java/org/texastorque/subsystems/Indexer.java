@@ -139,7 +139,7 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
 
     @Log.BooleanBox
     public boolean isIntaking() {
-        return desiredState == State.INTAKE_CUBE || desiredState == State.INTAKE_CONE;
+        return activeState == State.INTAKE_CUBE || activeState == State.INTAKE_CONE;
     }
 
     public static final synchronized Indexer getInstance() {

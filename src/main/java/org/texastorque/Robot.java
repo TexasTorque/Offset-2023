@@ -6,6 +6,8 @@
  */
 package org.texastorque;
 
+import java.util.Map;
+
 import org.texastorque.auto.AutoManager;
 import org.texastorque.torquelib.base.*;
 
@@ -13,10 +15,10 @@ import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 
 public final class Robot extends TorqueRobotBase implements Subsystems {
-    private final ShuffleboardTab competition, pid;
-
     public Robot() {
         super(Input.getInstance(), AutoManager.getInstance());
+
+        Shuffleboard.update();
 
         // Configure Subsystems
         addSubsystem(drivebase);
@@ -25,17 +27,13 @@ public final class Robot extends TorqueRobotBase implements Subsystems {
         addSubsystem(arm);
         addSubsystem(hand);
 
-        // Configure Competiiton dashboard
-        competition = Shuffleboard.getTab("COMPETITION");
-        competition.addCamera("LEFT CAMERA", drivebase.cameraLeft.getName(), "TBD").withPosition(0, 0).withSize(6, 4);
-        competition.addCamera("RIGHT CAMERA", drivebase.cameraRight.getName(), "TBD").withPosition(6, 0).withSize(6, 4);
-        competition.add("FIELD", drivebase.fieldMap).withPosition(0, 4).withSize(7, 4);
-        competition.add("AUTO SELECTOR", AutoManager.getInstance().getAutoSelector()).withPosition(7, 4).withSize(4, 2);
-        
-        // PID Dashboard
-        pid = Shuffleboard.getTab("PID");
-        pid.add("elevator", arm.elevatorPoseController).withSize(2, 3);
-        pid.add("arm", arm.rotaryPoseController).withSize(2, 3);
-        pid.add("claw", hand.clawPoseController).withSize(2, 3);
+        final ShuffleboardTab dashboard = Shuffleboard.getTab("COMPETITION");
+
+        dashboard.addCamera("LEFT CAMERA", drivebase.cameraLeft.getName(), "http://10.14.77.79:1182/stream.mjpg").withPosition(0, 0).withSize(6, 4)
+                .withProperties(Map.of("Show crosshair", false, "Show controls", false));
+        dashboard.addCamera("RIGHT CAMERA", drivebase.cameraRight.getName(), "http://10.14.77.105:1182/stream.mjpg").withPosition(6, 0).withSize(6, 4)
+                .withProperties(Map.of("Show crosshair", false, "Show controls", false));
+        dashboard.add("FIELD", drivebase.fieldMap).withPosition(0, 4).withSize(7, 4);
+        dashboard.add("AUTO SELECTOR", AutoManager.getInstance().getAutoSelector()).withPosition(7, 4).withSize(4, 2);
     }
 }

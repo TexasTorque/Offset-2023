@@ -97,7 +97,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     // measures like April tag positions
     private final SwerveDrivePoseEstimator poseEstimator;
 
-    @Log.Field2d(name = "Robot Field")
+    // @Log.Field2d(name = "Robot Field")
     public final Field2d fieldMap = new Field2d();
 
     /**
