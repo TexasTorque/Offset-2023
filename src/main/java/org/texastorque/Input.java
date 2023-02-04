@@ -25,6 +25,7 @@ import org.texastorque.torquelib.control.TorqueTimeout;
 import org.texastorque.torquelib.control.TorqueToggleSupplier;
 import org.texastorque.torquelib.control.TorqueTraversableSelection;
 import org.texastorque.torquelib.sensors.TorqueController;
+import org.texastorque.torquelib.swerve.TorqueSwerveSpeeds;
 import org.texastorque.torquelib.util.TorqueMath;
 import org.texastorque.torquelib.util.TorqueUtil;
 
@@ -149,7 +150,7 @@ public final class Input
             Drivebase.MAX_ANGULAR_VELOCITY * speedSetting;
 
         drivebase.inputSpeeds =
-            new ChassisSpeeds(xVelocity, yVelocity, rotationVelocity);
+            new TorqueSwerveSpeeds(xVelocity, yVelocity, rotationVelocity);
 
         // drivebase.requestedRotation = Math.PI +
         // Math.atan2(driver.getRightXAxis(), driver.getRightYAxis()); if

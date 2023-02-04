@@ -6,7 +6,7 @@
  */
 package org.texastorque;
 
-import org.texastorque.torquelib.modules.TorqueSwerveModule2022.SwervePorts;
+import org.texastorque.torquelib.swerve.TorqueSwerveModule2022.SwervePorts;
 
 public final class Ports {
     public static final SwervePorts FL_MOD = new SwervePorts(3, 4, 10);

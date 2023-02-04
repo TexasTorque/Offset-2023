@@ -41,19 +41,19 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
     }
 
     @Log.ToString
-    private State state = State.CLOSE;
+    private State activeState = State.CLOSE;
     @Log.ToString
     private State lastState = State.CLOSE;
     @Log.ToString
-    private State requestedState = State.CLOSE;
-    public void setState(final State state) { this.state = state; }
-    public State getState() { return requestedState; }
+    private State desiredState = State.CLOSE;
+    public void setState(final State state) { this.desiredState = state; }
+    public State getState() { return desiredState; }
     public boolean isState(final State state) { return getState() == state; }
 
     @Log.ToString public double realClawPose = 0;
 
     private final TorqueNEO claw = new TorqueNEO(Ports.HAND_MOTOR);
-    private final PIDController clawPoseController =
+    public final PIDController clawPoseController =
         new PIDController(0.1, 0, 0);
 
     private Hand() {
@@ -69,7 +69,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
 
     @Override
     public final void update(final TorqueMode mode) {
-        requestedState = state;
+        activeState = desiredState;
 
         if (currentGamePiece != GamePiece.NONE) {
             lastHeldPiece = currentGamePiece;
@@ -78,14 +78,14 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
         // realClawPose = claw.getPosition();
 
         final double requestedClawVolts =
-            clawPoseController.calculate(realClawPose, state.clawPose);
+            clawPoseController.calculate(realClawPose, activeState.clawPose);
         SmartDashboard.putNumber("hand::requestedClawVolts",
                                  requestedClawVolts);
         // claw.setVolts(requestedClawVolts);
 
-        if (lastState != state) {
-            lastState = state;
-            if (state == State.OPEN) {
+        if (lastState != activeState) {
+            lastState = activeState;
+            if (activeState == State.OPEN) {
                 currentGamePiece = GamePiece.NONE;
                 if (arm.isAtScoringPose())
                     Input.getInstance().setDriverRumbleFor(1);
@@ -95,10 +95,10 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
         }
 
 
-        if (drivebase.isPathAlignDone() && state == State.CLOSE)
+        if (drivebase.isPathAlignDone() && activeState == State.CLOSE)
             Input.getInstance().setOperatorRumbleFor(0.5);
 
-        state = State.CLOSE;
+        activeState = State.CLOSE;
     }
 
     public static final synchronized Hand getInstance() {

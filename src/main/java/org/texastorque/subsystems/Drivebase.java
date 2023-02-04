@@ -39,10 +39,11 @@ import org.texastorque.controllers.PathAlignController.AlignState;
 import org.texastorque.controllers.PathAlignController.GridState;
 import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
-import org.texastorque.torquelib.modules.TorqueSwerveModule2022;
-import org.texastorque.torquelib.modules.TorqueSwerveModule2022.SwerveConfig;
 import org.texastorque.torquelib.sensors.TorqueNavXGyro;
 import org.texastorque.torquelib.sensors.TorqueVision;
+import org.texastorque.torquelib.swerve.TorqueSwerveModule2022;
+import org.texastorque.torquelib.swerve.TorqueSwerveSpeeds;
+import org.texastorque.torquelib.swerve.TorqueSwerveModule2022.SwerveConfig;
 
 public final class Drivebase extends TorqueSubsystem implements Subsystems {
     private static volatile Drivebase instance;
@@ -96,7 +97,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     // measures like April tag positions
     private final SwerveDrivePoseEstimator poseEstimator;
 
-    @Log.Field2d(name = "Robot Field")
+    // @Log.Field2d(name = "Robot Field")
     public final Field2d fieldMap = new Field2d();
 
     /**
@@ -126,16 +127,12 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     private SwerveModuleState[] swerveStates;
 
     @Log.ToString(name = "Chassis Speeds")
-    public ChassisSpeeds inputSpeeds = new ChassisSpeeds(0, 0, 0);
+    public TorqueSwerveSpeeds inputSpeeds = new TorqueSwerveSpeeds(0, 0, 0);
 
     public double requestedRotation = 0;
     public boolean isRotationLocked = true;
 
-    // PathAlignController
-    // SSwerveAlignmentController
-    private final PathAlignController alignmentController =
-        new PathAlignController(this::getPose, this::getSpeed,
-                                this::getHeading);
+    private final PathAlignController alignmentController = new PathAlignController(this::getPose, () -> inputSpeeds);
 
     public void setAlignState(final AlignState alignment) {
         state = alignment == AlignState.NONE ? state.parent : State.ALIGN;
@@ -235,8 +232,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         cameraRight.setFieldLayout(Field.getCurrentFieldLayout());
     }
 
-    public static SwerveModulePosition
-    invertSwerveModuleDistance(final SwerveModulePosition pose) {
+    public static SwerveModulePosition invertSwerveModuleDistance(final SwerveModulePosition pose) {
         return new SwerveModulePosition(-pose.distanceMeters, pose.angle);
     }
 
@@ -278,9 +274,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     private void calculateTeleop() {
         final double realRotationRadians = gyro.getHeadingCCW().getRadians();
 
-        if (isRotationLocked && inputSpeeds.omegaRadiansPerSecond == 0 &&
-            inputSpeeds.vxMetersPerSecond != 0 &&
-            inputSpeeds.vyMetersPerSecond != 0) {
+        if (isRotationLocked && !inputSpeeds.hasRotationalVelocity() && inputSpeeds.hasTranslationalVelocity()) {
             final double omega = teleopOmegaController.calculate(
                 realRotationRadians, lastRotationRadians);
             inputSpeeds.omegaRadiansPerSecond = omega;
@@ -289,9 +283,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     }
 
     public void convertToFieldRelative() {
-        inputSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
-            inputSpeeds.vxMetersPerSecond, inputSpeeds.vyMetersPerSecond,
-            inputSpeeds.omegaRadiansPerSecond, gyro.getHeadingCCW());
+        inputSpeeds = inputSpeeds.toFieldRelativeSpeeds(gyro.getHeadingCCW());
     }
 
     @Override
@@ -303,7 +295,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
             zeroModules();
         } else {
             if (state == State.ALIGN) {
-                final Optional<ChassisSpeeds> speedsWrapper =
+                final Optional<TorqueSwerveSpeeds> speedsWrapper =
                     alignmentController.calculate();
                 if (speedsWrapper.isPresent())
                     inputSpeeds = speedsWrapper.get();
@@ -326,9 +318,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
             SwerveDriveKinematics.desaturateWheelSpeeds(swerveStates,
                                                         MAX_VELOCITY);
 
-            if (inputSpeeds.vxMetersPerSecond == 0 &&
-                inputSpeeds.vyMetersPerSecond == 0 &&
-                inputSpeeds.omegaRadiansPerSecond == 0) {
+            if (inputSpeeds.hasZeroVelocity()) {
                 preseveModulePositions();
             } else {
                 fl.setDesiredState(swerveStates[0]);
@@ -342,16 +332,6 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         autoLevelController.resetIf(state != State.BALANCE);
 
         state = state.parent;
-    }
-
-    public double getSpeed() {
-        return inputSpeeds.vxMetersPerSecond * inputSpeeds.vxMetersPerSecond +
-            inputSpeeds.vyMetersPerSecond * inputSpeeds.vyMetersPerSecond;
-    }
-
-    public Rotation2d getHeading() {
-        return Rotation2d.fromRadians(Math.atan2(
-            inputSpeeds.vyMetersPerSecond, inputSpeeds.vxMetersPerSecond));
     }
 
     public void resetPose(final Pose2d pose) {

@@ -12,6 +12,10 @@ import org.texastorque.torquelib.auto.*;
 public final class AutoManager extends TorqueAutoManager {
     private static volatile AutoManager instance;
 
+    public AutoManager() {
+        super(false);
+    }
+
     @Override
     public final void init() {
         addSequence(new BumpySide2PieceLevel());
