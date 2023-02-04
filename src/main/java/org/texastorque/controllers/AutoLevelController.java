@@ -7,31 +7,26 @@
 package org.texastorque.controllers;
 
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
-import org.texastorque.torquelib.control.TorqueClick;
 import org.texastorque.torquelib.sensors.TorqueNavXGyro;
 import org.texastorque.torquelib.swerve.TorqueSwerveSpeeds;
 
 public final class AutoLevelController
-    extends AbstractController<TorqueSwerveSpeeds> {
+        extends AbstractController<TorqueSwerveSpeeds> {
     private static enum BalanceDirection {
-        POS_X(315, 45, () -> - TorqueNavXGyro.getInstance().getPitch()),
+        POS_X(315, 45, () -> -TorqueNavXGyro.getInstance().getPitch()),
         NEG_X(135, 225, () -> TorqueNavXGyro.getInstance().getPitch()),
         POS_Y(45, 135, () -> TorqueNavXGyro.getInstance().getRoll()),
-        NEG_Y(225, 315, () -> - TorqueNavXGyro.getInstance().getRoll());
+        NEG_Y(225, 315, () -> -TorqueNavXGyro.getInstance().getRoll());
 
         private final double lower, upper;
         private final DoubleSupplier angleSupplier;
 
         private BalanceDirection(final double lower, final double upper,
-                                 final DoubleSupplier angleSupplier) {
+                final DoubleSupplier angleSupplier) {
             this.lower = (lower + 45) % 360;
             this.upper = (upper + 45) % 360;
             this.angleSupplier = angleSupplier;
@@ -42,7 +37,9 @@ public final class AutoLevelController
             return lower <= theta && theta <= upper;
         }
 
-        public double getAngle() { return angleSupplier.getAsDouble(); }
+        public double getAngle() {
+            return angleSupplier.getAsDouble();
+        }
     }
 
     private BalanceDirection balanceDirection = BalanceDirection.POS_X;
@@ -55,7 +52,9 @@ public final class AutoLevelController
 
     private final PIDController controller = new PIDController(.02, 0, .0007);
 
-    public final boolean isDone() { return isFlat && hasTilted; }
+    public final boolean isDone() {
+        return isFlat && hasTilted;
+    }
 
     private boolean hasTilted = false, isFlat = false;
 
@@ -63,8 +62,7 @@ public final class AutoLevelController
 
     public TorqueSwerveSpeeds calculate() {
 
-        final Rotation2d startingRotation =
-            TorqueNavXGyro.getInstance().getHeadingCCW();
+        final Rotation2d startingRotation = TorqueNavXGyro.getInstance().getHeadingCCW();
 
         for (final BalanceDirection direction : BalanceDirection.values()) {
             if (direction.isConstrained(startingRotation)) {

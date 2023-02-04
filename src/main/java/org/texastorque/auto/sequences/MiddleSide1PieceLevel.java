@@ -6,31 +6,23 @@
  */
 package org.texastorque.auto.sequences;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import org.texastorque.Robot;
 import org.texastorque.Subsystems;
 import org.texastorque.auto.commands.*;
 import org.texastorque.subsystems.Drivebase;
-import org.texastorque.torquelib.auto.TorqueBlock;
-import org.texastorque.torquelib.auto.TorqueCommand;
 import org.texastorque.torquelib.auto.TorqueSequence;
 import org.texastorque.torquelib.auto.commands.TorqueContinuous;
-import org.texastorque.torquelib.auto.commands.TorqueExecute;
 import org.texastorque.torquelib.auto.commands.TorqueWaitForSeconds;
-import org.texastorque.torquelib.util.TorqueUtil;
 
 public final class MiddleSide1PieceLevel
-    extends TorqueSequence implements Subsystems {
+        extends TorqueSequence implements Subsystems {
     public MiddleSide1PieceLevel() {
-        final TorqueWaitForSeconds dropInitialCone =
-            new TorqueWaitForSeconds(.5);
+        final TorqueWaitForSeconds dropInitialCone = new TorqueWaitForSeconds(.5);
         addBlock(dropInitialCone);
 
-        final FollowEventPath goOverChargeStation =
-            new FollowEventPath("middle-over-and-back", 1.5, 3.5);
+        final FollowEventPath goOverChargeStation = new FollowEventPath("middle-over-and-back", 1.5, 3.5);
         addBlock(goOverChargeStation);
 
         addBlock(new TorqueContinuous(
-            () -> drivebase.setState(Drivebase.State.BALANCE)));
+                () -> drivebase.setState(Drivebase.State.BALANCE)));
     }
 }
