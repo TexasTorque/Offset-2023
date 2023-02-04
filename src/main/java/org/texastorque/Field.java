@@ -8,19 +8,12 @@ package org.texastorque;
 
 import edu.wpi.first.apriltag.AprilTag;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFieldLayout.OriginPosition;
-import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,66 +23,64 @@ public final class Field {
     public static final double FIELD_WIDTH = Units.inchesToMeters(315.5);
 
     private static final Map<Integer, Pose3d> APRIL_TAG_ORIGINALS = Map.of(
-        1,
-        new Pose3d(Units.inchesToMeters(610.77), // 15.589758
-                   Units.inchesToMeters(42.19),  // 1.071626
-                   Units.inchesToMeters(18.22),
-                   new Rotation3d(0.0, 0.0, Math.PI)),
-        2,
-        new Pose3d(Units.inchesToMeters(610.77), Units.inchesToMeters(108.19),
-                   Units.inchesToMeters(18.22),
-                   new Rotation3d(0.0, 0.0, Math.PI)),
-        3,
-        new Pose3d(Units.inchesToMeters(610.77),
-                   Units.inchesToMeters(
-                       174.19), // FIRST's diagram has a typo (it says 147.19)
-                   Units.inchesToMeters(18.22),
-                   new Rotation3d(0.0, 0.0, Math.PI)),
-        4,
-        new Pose3d(Units.inchesToMeters(636.96), Units.inchesToMeters(265.74),
-                   Units.inchesToMeters(27.38),
-                   new Rotation3d(0.0, 0.0, Math.PI)),
-        5,
-        new Pose3d(Units.inchesToMeters(14.25), Units.inchesToMeters(265.74),
-                   Units.inchesToMeters(27.38), new Rotation3d()),
-        6,
-        new Pose3d(Units.inchesToMeters(40.45),
-                   Units.inchesToMeters(
-                       174.19), // FIRST's diagram has a typo (it says 147.19)
-                   Units.inchesToMeters(18.22), new Rotation3d()),
-        7,
-        new Pose3d(Units.inchesToMeters(40.45), Units.inchesToMeters(108.19),
-                   Units.inchesToMeters(18.22), new Rotation3d()),
-        8,
-        new Pose3d(Units.inchesToMeters(40.45), Units.inchesToMeters(42.19),
-                   Units.inchesToMeters(18.22), new Rotation3d()));
+            1,
+            new Pose3d(Units.inchesToMeters(610.77), // 15.589758
+                    Units.inchesToMeters(42.19), // 1.071626
+                    Units.inchesToMeters(18.22),
+                    new Rotation3d(0.0, 0.0, Math.PI)),
+            2,
+            new Pose3d(Units.inchesToMeters(610.77), Units.inchesToMeters(108.19),
+                    Units.inchesToMeters(18.22),
+                    new Rotation3d(0.0, 0.0, Math.PI)),
+            3,
+            new Pose3d(Units.inchesToMeters(610.77),
+                    Units.inchesToMeters(
+                            174.19), // FIRST's diagram has a typo (it says 147.19)
+                    Units.inchesToMeters(18.22),
+                    new Rotation3d(0.0, 0.0, Math.PI)),
+            4,
+            new Pose3d(Units.inchesToMeters(636.96), Units.inchesToMeters(265.74),
+                    Units.inchesToMeters(27.38),
+                    new Rotation3d(0.0, 0.0, Math.PI)),
+            5,
+            new Pose3d(Units.inchesToMeters(14.25), Units.inchesToMeters(265.74),
+                    Units.inchesToMeters(27.38), new Rotation3d()),
+            6,
+            new Pose3d(Units.inchesToMeters(40.45),
+                    Units.inchesToMeters(
+                            174.19), // FIRST's diagram has a typo (it says 147.19)
+                    Units.inchesToMeters(18.22), new Rotation3d()),
+            7,
+            new Pose3d(Units.inchesToMeters(40.45), Units.inchesToMeters(108.19),
+                    Units.inchesToMeters(18.22), new Rotation3d()),
+            8,
+            new Pose3d(Units.inchesToMeters(40.45), Units.inchesToMeters(42.19),
+                    Units.inchesToMeters(18.22), new Rotation3d()));
 
     public static final Pose3d reflectPosition(final Pose3d pose) {
         return new Pose3d(
-            FIELD_LENGTH - pose.getTranslation().getX(),
-            FIELD_WIDTH - pose.getTranslation().getY(),
-            pose.getTranslation().getZ(),
-            pose.getRotation().plus(new Rotation3d(0, 0, Math.PI)));
+                FIELD_LENGTH - pose.getTranslation().getX(),
+                FIELD_WIDTH - pose.getTranslation().getY(),
+                pose.getTranslation().getZ(),
+                pose.getRotation().plus(new Rotation3d(0, 0, Math.PI)));
     }
 
     public static final Pose2d reflectPosition(final Pose2d pose) {
         return new Pose2d(FIELD_LENGTH - pose.getTranslation().getX(),
-                          FIELD_WIDTH - pose.getTranslation().getY(),
-                          pose.getRotation().plus(new Rotation2d(Math.PI)));
+                FIELD_WIDTH - pose.getTranslation().getY(),
+                pose.getRotation().plus(new Rotation2d(Math.PI)));
     }
 
     // Key (int): ID of the AprilTag
     // Value (boolean): True if the AprilTag is marks a grid, false if it marks
     // a load zone
-    public static Map<Integer, Boolean> OUR_TAG_IDS =
-        DriverStation.getAlliance() == DriverStation.Alliance.Blue
+    public static Map<Integer, Boolean> OUR_TAG_IDS = DriverStation.getAlliance() == DriverStation.Alliance.Blue
             ? Map.of(8, true, 7, true, 6, true, 4, false)
             : Map.of(1, true, 2, true, 3, true, 5, false);
 
     private static final Map<Integer, Pose3d> reflectAprilTags() {
         final Map<Integer, Pose3d> newMap = new HashMap<>();
-        for (final Map.Entry<Integer, Pose3d> aprilTag :
-             APRIL_TAG_ORIGINALS.entrySet()) {
+        for (final Map.Entry<Integer, Pose3d> aprilTag : APRIL_TAG_ORIGINALS.entrySet()) {
             newMap.put(aprilTag.getKey(), reflectPosition(aprilTag.getValue()));
         }
         return newMap;
@@ -97,21 +88,21 @@ public final class Field {
 
     public static final Map<Integer, Pose3d> getAprilTagsMap() {
         return DriverStation.getAlliance() == DriverStation.Alliance.Blue
-            ? APRIL_TAG_ORIGINALS
-            : reflectAprilTags();
+                ? APRIL_TAG_ORIGINALS
+                : reflectAprilTags();
     }
 
     public static List<AprilTag> getAprilTagsList() {
         return getAprilTagsMap()
-            .entrySet()
-            .stream()
-            .map(entry -> new AprilTag(entry.getKey(), entry.getValue()))
-            .toList();
+                .entrySet()
+                .stream()
+                .map(entry -> new AprilTag(entry.getKey(), entry.getValue()))
+                .toList();
     }
 
     public static AprilTagFieldLayout getCurrentFieldLayout() {
         return new AprilTagFieldLayout(getAprilTagsList(), FIELD_LENGTH,
-                                       FIELD_WIDTH);
+                FIELD_WIDTH);
     }
 
     public static enum AprilTagType {
@@ -119,11 +110,17 @@ public final class Field {
         LOAD_ZONE,
         INVALID;
 
-        public boolean isGrid() { return this == GRID; }
+        public boolean isGrid() {
+            return this == GRID;
+        }
 
-        public boolean isLoadZone() { return this == LOAD_ZONE; }
+        public boolean isLoadZone() {
+            return this == LOAD_ZONE;
+        }
 
-        public boolean isValid() { return this != INVALID; }
+        public boolean isValid() {
+            return this != INVALID;
+        }
     }
 
     public static AprilTagType getAprilTagType(final int id) {

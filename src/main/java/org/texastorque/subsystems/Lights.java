@@ -11,10 +11,6 @@ import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.util.Color;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 import org.texastorque.Subsystems;
 import org.texastorque.subsystems.Hand.GamePiece;
@@ -40,12 +36,12 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
 
     public static final Color getAllianceColor() {
         return DriverStation.getAlliance() == Alliance.Blue ? Color.kBlue
-                                                            : Color.kRed;
+                : Color.kRed;
     }
 
     public static final Color getAllianceColorFIRST() {
         return DriverStation.getAlliance() == Alliance.Blue ? Color.kFirstBlue
-                                                            : Color.kFirstRed;
+                : Color.kFirstRed;
     }
 
     @Override
@@ -54,16 +50,14 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
     }
 
     private LightAction solidGreen = new Solid(() -> Color.kGreen),
-                        solidAlliance =
-                            new Solid(() -> getAllianceColor()),
-                        blinkGreen = new Blink(() -> Color.kGreen, 6),
-                        blinkAlliance =
-                            new Blink(() -> getAllianceColor(), 6),
-                        solidPurple = new Solid(() -> Color.kPurple),
-                        solidYellow = new Solid(() -> Color.kYellow),
-                        blinkPurple = new Blink(() -> Color.kPurple, 6),
-                        blinkYellow = new Blink(() -> Color.kYellow, 6),
-                        rainbow = new Rainbow();
+            solidAlliance = new Solid(() -> getAllianceColor()),
+            blinkGreen = new Blink(() -> Color.kGreen, 6),
+            blinkAlliance = new Blink(() -> getAllianceColor(), 6),
+            solidPurple = new Solid(() -> Color.kPurple),
+            solidYellow = new Solid(() -> Color.kYellow),
+            blinkPurple = new Blink(() -> Color.kPurple, 6),
+            blinkYellow = new Blink(() -> Color.kYellow, 6),
+            rainbow = new Rainbow();
 
     public final LightAction getColor(final TorqueMode mode) {
         if (dangerMode)
@@ -107,7 +101,9 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
     public static class Solid extends LightAction {
         private final Supplier<Color> color;
 
-        public Solid(final Supplier<Color> color) { this.color = color; }
+        public Solid(final Supplier<Color> color) {
+            this.color = color;
+        }
 
         @Override
         public void run(AddressableLEDBuffer buff) {
@@ -125,7 +121,7 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
         }
 
         public Blink(final Supplier<Color> color1, final Supplier<Color> color2,
-                     final double hertz) {
+                final double hertz) {
             this.color1 = color1;
             this.color2 = color2;
             this.hertz = hertz;
@@ -146,8 +142,7 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
         @Override
         public void run(AddressableLEDBuffer buff) {
             for (var i = 0; i < buff.getLength(); i++) {
-                final int hue =
-                    (rainbowFirstPixelHue + (i * 180 / buff.getLength())) % 180;
+                final int hue = (rainbowFirstPixelHue + (i * 180 / buff.getLength())) % 180;
                 buff.setHSV(i, hue, 255, 128);
             }
             rainbowFirstPixelHue += 3;

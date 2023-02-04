@@ -7,9 +7,6 @@
 package org.texastorque.subsystems;
 
 import com.ctre.phoenix.sensors.CANCoder;
-import com.ctre.phoenix.sensors.CANCoderConfiguration;
-import com.ctre.phoenix.sensors.SensorInitializationStrategy;
-import com.ctre.phoenix.sensors.SensorTimeBase;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import io.github.oblarg.oblog.annotations.Log;
@@ -36,25 +33,25 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
         public boolean atPose(final double elevatorReal, final double rotaryReal) {
             return Math.abs(elevatorReal - elevatorPose) < ELEVATOR_TOLERANCE
-                   && Math.abs(rotaryReal - rotaryPose) < ROTARY_TOLERANCE;
+                    && Math.abs(rotaryReal - rotaryPose) < ROTARY_TOLERANCE;
         }
     }
 
     public static enum State {
         HANDOFF(new ArmPose(0, 0),
                 new ArmPose(
-                    0, 0)), // Position to grab from indexer (contacts indexer)
+                        0, 0)), // Position to grab from indexer (contacts indexer)
         DOWN(new ArmPose(0, 0),
-             new ArmPose(0,
-                         0)), // Position to grab from ground (contacts ground)
+                new ArmPose(0,
+                        0)), // Position to grab from ground (contacts ground)
         SHELF(new ArmPose(0, 0),
-              new ArmPose(0,
-                          0)), // Position to grab from shelf (contacts shelf)
+                new ArmPose(0,
+                        0)), // Position to grab from shelf (contacts shelf)
         MID(new ArmPose(0, 0),
-            new ArmPose(0, 0)), // Position to grab from human player (contacts
-                                // human player)
+                new ArmPose(0, 0)), // Position to grab from human player (contacts
+        // human player)
         TOP(new ArmPose(0, 0),
-            new ArmPose(0, 0)); // Position to intake (contacts intake)
+                new ArmPose(0, 0)); // Position to intake (contacts intake)
 
         public final ArmPose cubePose;
         public final ArmPose conePose;
@@ -66,12 +63,14 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
         public ArmPose get() {
             return hand.getLastHeldGamePiece() == GamePiece.CUBE ? cubePose
-                                                                 : conePose;
+                    : conePose;
         }
     }
 
     @Log.BooleanBox
-    public boolean isAtShelf() { return activeState == State.SHELF; }
+    public boolean isAtShelf() {
+        return activeState == State.SHELF;
+    }
 
     @Log.BooleanBox
     public boolean isAtScoringPose() {
@@ -82,24 +81,32 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     private State activeState = State.HANDOFF;
     @Log.ToString
     private State desiredState = State.HANDOFF;
-    public void setState(final State state) { this.desiredState = state; }
-    public State getState() { return desiredState; }
-    public boolean isState(final State state) { return getState() == state; }
 
-    @Log.ToString public double realElevatorPose = 0;
+    public void setState(final State state) {
+        this.desiredState = state;
+    }
 
-    @Log.ToString public double realRotaryPose = 0;
+    public State getState() {
+        return desiredState;
+    }
+
+    public boolean isState(final State state) {
+        return getState() == state;
+    }
+
+    @Log.ToString
+    public double realElevatorPose = 0;
+
+    @Log.ToString
+    public double realRotaryPose = 0;
 
     private final TorqueNEO elevator = new TorqueNEO(Ports.ARM_ELEVATOR_MOTOR);
-    public final PIDController elevatorPoseController =
-        new PIDController(0.1, 0, 0);
+    public final PIDController elevatorPoseController = new PIDController(0.1, 0, 0);
 
     private final TorqueNEO rotary = new TorqueNEO(Ports.ARM_ROTARY_MOTOR);
-    public final PIDController rotaryPoseController =
-        new PIDController(0.1, 0, 0);
+    public final PIDController rotaryPoseController = new PIDController(0.1, 0, 0);
 
-    private final CANCoder rotaryEncoder =
-        new CANCoder(Ports.ARM_ROTARY_ENCODER);
+    private final CANCoder rotaryEncoder = new CANCoder(Ports.ARM_ROTARY_ENCODER);
     private static final double ARM_ROTARY_ENCODER_OFFSET = 0;
 
     private Arm() {
@@ -127,7 +134,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     @Override
-    public final void initialize(final TorqueMode mode) {}
+    public final void initialize(final TorqueMode mode) {
+    }
 
     @Log.BooleanBox
     private boolean wantsHandoff = false;
@@ -152,13 +160,13 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
                 realElevatorPose, ELEVATOR_MIN, ELEVATOR_MAX);
 
         SmartDashboard.putNumber("arm::requestedElevatorVolts",
-                                 requestedElevatorVolts);
+                requestedElevatorVolts);
         // elevator.setVolts(requestedElevatorVolts);
 
         final double requestedRotaryVolts = rotaryPoseController.calculate(
-            realRotaryPose, activeState.get().rotaryPose);
+                realRotaryPose, activeState.get().rotaryPose);
         SmartDashboard.putNumber("arm::requestedRotaryVolts",
-                                 requestedRotaryVolts);
+                requestedRotaryVolts);
         // rotary.setVolts(requestedRotaryVolts);
     }
 
@@ -171,11 +179,13 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     @Log.BooleanBox
     public final boolean isConflictingWithIndexer() {
         return ARM_INTERFERE_MIN < realRotaryPose &&
-            realRotaryPose < ARM_INTERFERE_MAX;
+                realRotaryPose < ARM_INTERFERE_MAX;
     }
 
     @Log.BooleanBox
-    public final boolean wantsToConflictWithIndexer() { return wantsHandoff; }
+    public final boolean wantsToConflictWithIndexer() {
+        return wantsHandoff;
+    }
 
     public static final synchronized Arm getInstance() {
         return instance == null ? instance = new Arm() : instance;
