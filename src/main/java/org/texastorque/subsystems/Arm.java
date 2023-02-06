@@ -9,6 +9,7 @@ package org.texastorque.subsystems;
 import com.ctre.phoenix.sensors.CANCoder;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
 import org.texastorque.Ports;
 import org.texastorque.Subsystems;
@@ -38,15 +39,11 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     public static enum State {
-        HANDOFF(new ArmPose(0, 0),
-                new ArmPose(
-                        0, 0)), // Position to grab from indexer (contacts indexer)
-        DOWN(new ArmPose(0, 0),
-                new ArmPose(0,
-                        0)), // Position to grab from ground (contacts ground)
-        SHELF(new ArmPose(0, 0),
-                new ArmPose(0,
-                        0)), // Position to grab from shelf (contacts shelf)
+        HANDOFF(new ArmPose(0, 0)),
+                // Position to grab from indexer (contacts indexer)
+        DOWN(new ArmPose(0, 0)),
+                        // Position to grab from ground (contacts ground)
+        SHELF(new ArmPose(0, 0)), // Position to grab from shelf (contacts shelf)
         MID(new ArmPose(0, 0),
                 new ArmPose(0, 0)), // Position to grab from human player (contacts
         // human player)
@@ -56,13 +53,17 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         public final ArmPose cubePose;
         public final ArmPose conePose;
 
+        private State(final ArmPose both) {
+            this(both, both);
+        }
+
         private State(final ArmPose cubePose, final ArmPose conePose) {
             this.cubePose = cubePose;
             this.conePose = conePose;
         }
 
         public ArmPose get() {
-            return hand.getLastHeldGamePiece() == GamePiece.CUBE ? cubePose
+            return hand.getGamePieceMode() == GamePiece.CUBE ? cubePose
                     : conePose;
         }
     }
@@ -101,9 +102,11 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     public double realRotaryPose = 0;
 
     private final TorqueNEO elevator = new TorqueNEO(Ports.ARM_ELEVATOR_MOTOR);
+    @Config
     public final PIDController elevatorPoseController = new PIDController(0.1, 0, 0);
 
     private final TorqueNEO rotary = new TorqueNEO(Ports.ARM_ROTARY_MOTOR);
+    @Config
     public final PIDController rotaryPoseController = new PIDController(0.1, 0, 0);
 
     private final CANCoder rotaryEncoder = new CANCoder(Ports.ARM_ROTARY_ENCODER);

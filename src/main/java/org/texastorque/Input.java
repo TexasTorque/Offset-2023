@@ -9,6 +9,7 @@ package org.texastorque;
 import org.texastorque.controllers.PathAlignController.AlignState;
 import org.texastorque.controllers.PathAlignController.GridState;
 import org.texastorque.subsystems.*;
+import org.texastorque.subsystems.Hand.GamePiece;
 import org.texastorque.torquelib.base.TorqueInput;
 import org.texastorque.torquelib.control.TorqueBoolSupplier;
 import org.texastorque.torquelib.control.TorqueClickSupplier;
@@ -25,7 +26,7 @@ public final class Input
     private final TorqueBoolSupplier isZeroingWheels, slowModeToggle,
             alignGridLeft, alignGridCenter, alignGridRight, gridOverrideLeft,
             gridOverrideRight, gridOverrideCenter, resetGyroClick, resetPoseClick,
-            toggleRotationLock, autoLevel, wantsIntakeCube, wantsIntakeCone,
+            toggleRotationLock, autoLevel, wantsIntake,gamePieceModeToggle,
             clawClose, armToHandoff, armToShelf, armToMid, armToTop, dangerMode;
 
     private Input() {
@@ -48,10 +49,10 @@ public final class Input
         toggleRotationLock = new TorqueToggleSupplier(() -> driver.isAButtonDown(), true);
         autoLevel = new TorqueBoolSupplier(() -> driver.isYButtonDown());
 
-        wantsIntakeCube = new TorqueBoolSupplier(() -> operator.isLeftTriggerDown());
-        wantsIntakeCone = new TorqueBoolSupplier(() -> operator.isRightTriggerDown());
+        wantsIntake = new TorqueBoolSupplier(() -> operator.isLeftTriggerDown());
 
-        clawClose = new TorqueToggleSupplier(() -> operator.isRightBumperDown(), true);
+        clawClose = new TorqueToggleSupplier(() -> operator.isRightTriggerDown(), true);
+        gamePieceModeToggle = new TorqueToggleSupplier(() -> operator.isLeftBumperDown());
 
         armToHandoff = new TorqueBoolSupplier(() -> operator.isAButtonDown());
         armToShelf = new TorqueBoolSupplier(() -> operator.isXButtonDown());
@@ -93,13 +94,14 @@ public final class Input
         autoLevel.onTrue(() -> drivebase.setState(Drivebase.State.BALANCE));
         isZeroingWheels.onTrue(() -> drivebase.setState(Drivebase.State.ZERO));
 
-        wantsIntakeCube.onTrue(
-                () -> indexer.setState(Indexer.State.INTAKE_CUBE));
-        wantsIntakeCone.onTrue(
-                () -> indexer.setState(Indexer.State.INTAKE_CONE));
+        wantsIntake.onTrue(() -> indexer.setState(Indexer.State.INTAKE));
 
         clawClose.onTrueOrFalse(() -> hand.setState(Hand.State.CLOSE),
                 () -> hand.setState(Hand.State.OPEN));
+
+        gamePieceModeToggle.onTrueOrFalse(
+                () -> hand.setGamePieceMode(GamePiece.CONE),
+                () -> hand.setGamePieceMode(GamePiece.CUBE));
 
         armToHandoff.onTrue(() -> arm.setState(Arm.State.HANDOFF));
         armToShelf.onTrue(() -> arm.setState(Arm.State.SHELF));
