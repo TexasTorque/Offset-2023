@@ -25,14 +25,11 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
         CONE;
     }
 
-    @Log.ToString private GamePiece gamePieceMode = GamePiece.CUBE;
+    @Log.ToString
+    private GamePiece gamePieceMode = GamePiece.CUBE;
 
-    public GamePiece getGamePieceMode() {
-        return gamePieceMode;
-    }
-    public void setGamePieceMode(final GamePiece gamePieceMode) {
-        this.gamePieceMode = gamePieceMode;
-    }
+    public GamePiece getGamePieceMode() { return gamePieceMode; }
+    public void setGamePieceMode(final GamePiece gamePieceMode) { this.gamePieceMode = gamePieceMode; }
 
     public static enum State {
         OPEN(0),
@@ -53,12 +50,12 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
     public State getState() { return desiredState; }
     public boolean isState(final State state) { return getState() == state; }
 
-    @Log.ToString public double realClawPose = 0;
+    @Log.ToString
+    public double realClawPose = 0;
 
     private final TorqueNEO claw = new TorqueNEO(Ports.HAND_MOTOR);
     @Config
-    public final PIDController clawPoseController =
-        new PIDController(0.1, 0, 0);
+    public final PIDController clawPoseController = new PIDController(0.1, 0, 0);
 
     private Hand() {
         // rollers.setConversionFactors();
@@ -77,27 +74,20 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
 
         // realClawPose = claw.getPosition();
 
-        final double requestedClawVolts =
-            clawPoseController.calculate(realClawPose, activeState.clawPose);
-        SmartDashboard.putNumber("hand::requestedClawVolts",
-                                 requestedClawVolts);
+        final double requestedClawVolts = clawPoseController.calculate(realClawPose, activeState.clawPose);
+        SmartDashboard.putNumber("hand::requestedClawVolts", requestedClawVolts);
         // claw.setVolts(requestedClawVolts);
 
         if (lastState != activeState) {
             lastState = activeState;
             if (activeState == State.OPEN)
-                if (arm.isAtScoringPose())
-                    Input.getInstance().setDriverRumbleFor(1);
+                if (arm.isAtScoringPose()) Input.getInstance().setDriverRumbleFor(1);
         }
 
-
-        if (drivebase.isPathAlignDone() && activeState == State.CLOSE)
-            Input.getInstance().setOperatorRumbleFor(0.5);
+        if (drivebase.isPathAlignDone() && activeState == State.CLOSE) Input.getInstance().setOperatorRumbleFor(0.5);
 
         activeState = State.CLOSE;
     }
 
-    public static final synchronized Hand getInstance() {
-        return instance == null ? instance = new Hand() : instance;
-    }
+    public static final synchronized Hand getInstance() { return instance == null ? instance = new Hand() : instance; }
 }

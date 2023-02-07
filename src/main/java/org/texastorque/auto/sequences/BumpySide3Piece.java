@@ -11,8 +11,7 @@ import org.texastorque.auto.commands.*;
 import org.texastorque.torquelib.auto.TorqueSequence;
 import org.texastorque.torquelib.auto.commands.TorqueWaitForSeconds;
 
-public final class BumpySide3Piece
-        extends TorqueSequence implements Subsystems {
+public final class BumpySide3Piece extends TorqueSequence implements Subsystems {
     public BumpySide3Piece() {
         final TorqueWaitForSeconds dropInitialCone = new TorqueWaitForSeconds(.5);
         addBlock(dropInitialCone);

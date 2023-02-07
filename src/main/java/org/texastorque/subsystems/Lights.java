@@ -28,9 +28,7 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
 
     public boolean dangerMode = false, showGamePieceColor = false;
 
-    public void shouldShowGamePieceColor(final boolean showGamePieceColor) {
-        this.showGamePieceColor = showGamePieceColor;
-    }
+    public void shouldShowGamePieceColor(final boolean showGamePieceColor) { this.showGamePieceColor = showGamePieceColor; }
 
     private Lights() {
         leds = new AddressableLED(0);
@@ -38,52 +36,37 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
         buff = new AddressableLEDBuffer(LENGTH);
     }
 
-    public static final Color getAllianceColor() {
-        return DriverStation.getAlliance() == Alliance.Blue ? Color.kBlue
-                : Color.kRed;
-    }
+    public static final Color getAllianceColor() { return DriverStation.getAlliance() == Alliance.Blue ? Color.kBlue : Color.kRed; }
 
-    public static final Color getAllianceColorFIRST() {
-        return DriverStation.getAlliance() == Alliance.Blue ? Color.kFirstBlue
-                : Color.kFirstRed;
-    }
+    public static final Color getAllianceColorFIRST() { return DriverStation.getAlliance() == Alliance.Blue ? Color.kFirstBlue : Color.kFirstRed; }
 
     @Override
     public final void initialize(final TorqueMode mode) {
         leds.start();
     }
 
-    private LightAction solidGreen = new Solid(() -> Color.kGreen),
-            solidAlliance = new Solid(() -> getAllianceColor()),
-            blinkGreen = new Blink(() -> Color.kGreen, 6),
-            blinkAlliance = new Blink(() -> getAllianceColor(), 6),
-            solidPurple = new Solid(() -> Color.kPurple),
-            solidYellow = new Solid(() -> Color.kYellow),
-            blinkPurple = new Blink(() -> Color.kPurple, 6),
-            blinkYellow = new Blink(() -> Color.kYellow, 6),
-            rainbow = new Rainbow();
+    private LightAction solidGreen = new Solid(() -> Color.kGreen), solidAlliance = new Solid(() -> getAllianceColor()),
+                        blinkGreen = new Blink(() -> Color.kGreen, 6), blinkAlliance = new Blink(() -> getAllianceColor(), 6),
+                        solidPurple = new Solid(() -> Color.kPurple), solidYellow = new Solid(() -> Color.kYellow),
+                        blinkPurple = new Blink(() -> Color.kPurple, 6), blinkYellow = new Blink(() -> Color.kYellow, 6), rainbow = new Rainbow();
 
     public final LightAction getColor(final TorqueMode mode) {
         // if (dangerMode)
         //     return blinkYellow;
 
-        if (indexer.isIntaking() || arm.isAtShelf() || showGamePieceColor) { 
-            if (hand.getGamePieceMode() == GamePiece.CUBE)
-                return solidPurple;
-            if (hand.getGamePieceMode() == GamePiece.CONE)
-                return solidYellow;
+        if (indexer.isIntaking() || arm.isAtShelf() || showGamePieceColor) {
+            if (hand.getGamePieceMode() == GamePiece.CUBE) return solidPurple;
+            if (hand.getGamePieceMode() == GamePiece.CONE) return solidYellow;
         }
 
         if (drivebase.isState(Drivebase.State.ALIGN)) {
-            if (drivebase.isPathAlignDone())
-                return blinkGreen;
+            if (drivebase.isPathAlignDone()) return blinkGreen;
             return solidGreen;
         }
 
         if (drivebase.isState(Drivebase.State.BALANCE)) {
             if (drivebase.isAutoLevelDone()) {
-                if (mode.isAuto())
-                    return rainbow;
+                if (mode.isAuto()) return rainbow;
                 return blinkGreen;
             }
             return solidGreen;
@@ -98,21 +81,16 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
         leds.setData(buff);
     }
 
-    private static abstract class LightAction {
-        public abstract void run(AddressableLEDBuffer buff);
-    }
+    private static abstract class LightAction { public abstract void run(AddressableLEDBuffer buff); }
 
     public static class Solid extends LightAction {
         private final Supplier<Color> color;
 
-        public Solid(final Supplier<Color> color) {
-            this.color = color;
-        }
+        public Solid(final Supplier<Color> color) { this.color = color; }
 
         @Override
         public void run(AddressableLEDBuffer buff) {
-            for (int i = 0; i < buff.getLength(); i++)
-                buff.setLED(i, color.get());
+            for (int i = 0; i < buff.getLength(); i++) buff.setLED(i, color.get());
         }
     }
 
@@ -120,12 +98,9 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
         private final Supplier<Color> color1, color2;
         private final double hertz;
 
-        public Blink(final Supplier<Color> color1, final double hertz) {
-            this(color1, () -> Color.kBlack, hertz);
-        }
+        public Blink(final Supplier<Color> color1, final double hertz) { this(color1, () -> Color.kBlack, hertz); }
 
-        public Blink(final Supplier<Color> color1, final Supplier<Color> color2,
-                final double hertz) {
+        public Blink(final Supplier<Color> color1, final Supplier<Color> color2, final double hertz) {
             this.color1 = color1;
             this.color2 = color2;
             this.hertz = hertz;
@@ -135,8 +110,7 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
         public void run(AddressableLEDBuffer buff) {
             final double timestamp = TorqueUtil.time();
             final boolean on = (Math.floor(timestamp * hertz) % 2 == 1);
-            for (int i = 0; i < buff.getLength(); i++)
-                buff.setLED(i, on ? color1.get() : color2.get());
+            for (int i = 0; i < buff.getLength(); i++) buff.setLED(i, on ? color1.get() : color2.get());
         }
     }
 
@@ -154,7 +128,5 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
         }
     }
 
-    public static final synchronized Lights getInstance() {
-        return instance == null ? instance = new Lights() : instance;
-    }
+    public static final synchronized Lights getInstance() { return instance == null ? instance = new Lights() : instance; }
 }

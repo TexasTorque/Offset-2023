@@ -12,9 +12,7 @@ import org.texastorque.torquelib.auto.*;
 public final class AutoManager extends TorqueAutoManager {
     private static volatile AutoManager instance;
 
-    public AutoManager() {
-        super(false);
-    }
+    public AutoManager() { super(false); }
 
     @Override
     public final void init() {
@@ -31,7 +29,5 @@ public final class AutoManager extends TorqueAutoManager {
      *
      * @return AutoManager
      */
-    public static final synchronized AutoManager getInstance() {
-        return instance == null ? instance = new AutoManager() : instance;
-    }
+    public static final synchronized AutoManager getInstance() { return instance == null ? instance = new AutoManager() : instance; }
 }

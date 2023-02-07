@@ -27,8 +27,7 @@ import org.texastorque.torquelib.auto.TorqueCommand;
 import org.texastorque.torquelib.swerve.TorqueSwerveSpeeds;
 
 public final class FollowEventPath extends TorqueCommand implements Subsystems {
-    public static final double MAX_VELOCITY_PATH = 3.5, MAX_ACCELERATION_PATH =
-                                                            3.5;
+    public static final double MAX_VELOCITY_PATH = 3.5, MAX_ACCELERATION_PATH = 3.5;
 
     private final PIDController xController = new PIDController(3, 0, 0);
     private final PIDController yController = new PIDController(3, 0, 0);
@@ -43,20 +42,13 @@ public final class FollowEventPath extends TorqueCommand implements Subsystems {
     private final Map<String, TorqueCommand> commands;
     private final List<TorqueCommand> running;
 
-    public FollowEventPath(final String name) {
-        this(name, MAX_VELOCITY_PATH, MAX_ACCELERATION_PATH);
+    public FollowEventPath(final String name) { this(name, MAX_VELOCITY_PATH, MAX_ACCELERATION_PATH); }
+
+    public FollowEventPath(final String name, final double maxSpeed, final double maxAcceleration) {
+        this(name, new HashMap<String, TorqueCommand>(), maxSpeed, maxAcceleration);
     }
 
-    public FollowEventPath(final String name, final double maxSpeed,
-                           final double maxAcceleration) {
-        this(name, new HashMap<String, TorqueCommand>(), maxSpeed,
-             maxAcceleration);
-    }
-
-    public FollowEventPath(final String name,
-                           final Map<String, TorqueCommand> commands,
-                           final double maxSpeed,
-                           final double maxAcceleration) {
+    public FollowEventPath(final String name, final Map<String, TorqueCommand> commands, final double maxSpeed, final double maxAcceleration) {
         omegaController = new PIDController(Math.PI * .75, 0, 0);
 
         xController.setTolerance(0.01);
@@ -64,8 +56,7 @@ public final class FollowEventPath extends TorqueCommand implements Subsystems {
         omegaController.setTolerance(Units.degreesToRadians(2));
         omegaController.enableContinuousInput(-Math.PI, Math.PI);
 
-        controller = new PPHolonomicDriveController(xController, yController,
-                                                    omegaController);
+        controller = new PPHolonomicDriveController(xController, yController, omegaController);
 
         trajectory = PathPlanner.loadPath(name, maxSpeed, maxAcceleration);
         events = trajectory.getMarkers();
@@ -75,8 +66,7 @@ public final class FollowEventPath extends TorqueCommand implements Subsystems {
     }
 
     private final PathPlannerState reflect(final Trajectory.State state) {
-        return PathPlannerTrajectory.transformStateForAlliance(
-            (PathPlannerState)state, DriverStation.getAlliance());
+        return PathPlannerTrajectory.transformStateForAlliance((PathPlannerState)state, DriverStation.getAlliance());
     }
 
     @Override
@@ -106,19 +96,14 @@ public final class FollowEventPath extends TorqueCommand implements Subsystems {
             final EventMarker marker = unpassed.remove(0);
             for (final String name : marker.names) {
                 final TorqueCommand command = commands.getOrDefault(name, null);
-                if (command != null)
-                    running.add(command);
+                if (command != null) running.add(command);
             }
         }
 
         for (int i = running.size() - 1; i >= 0; i--)
-            if (running.get(i).run())
-                running.remove(i);
+            if (running.get(i).run()) running.remove(i);
 
-        PathPlannerServer.sendPathFollowingData(
-            new Pose2d(desired.poseMeters.getTranslation(),
-                       desired.holonomicRotation),
-            drivebase.getPose());
+        PathPlannerServer.sendPathFollowingData(new Pose2d(desired.poseMeters.getTranslation(), desired.holonomicRotation), drivebase.getPose());
     }
 
     @Override
@@ -129,14 +114,11 @@ public final class FollowEventPath extends TorqueCommand implements Subsystems {
     @Override
     protected final void end() {
         timer.stop();
-        for (final TorqueCommand command : running)
-            command.reset();
+        for (final TorqueCommand command : running) command.reset();
         drivebase.inputSpeeds = new TorqueSwerveSpeeds();
 
         drivebase.fieldMap.getObject("traj").close();
     }
 
-    public void addEvent(final String name, final TorqueCommand command) {
-        commands.put(name, command);
-    }
+    public void addEvent(final String name, final TorqueCommand command) { commands.put(name, command); }
 }
