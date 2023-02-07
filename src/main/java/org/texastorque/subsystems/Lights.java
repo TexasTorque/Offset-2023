@@ -26,7 +26,11 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
 
     private static final int LENGTH = 20;
 
-    public boolean dangerMode = false;
+    public boolean dangerMode = false, showGamePieceColor = false;
+
+    public void shouldShowGamePieceColor(final boolean showGamePieceColor) {
+        this.showGamePieceColor = showGamePieceColor;
+    }
 
     private Lights() {
         leds = new AddressableLED(0);
@@ -60,10 +64,10 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
             rainbow = new Rainbow();
 
     public final LightAction getColor(final TorqueMode mode) {
-        if (dangerMode)
-            return blinkYellow;
+        // if (dangerMode)
+        //     return blinkYellow;
 
-        if (indexer.isIntaking() || arm.isAtShelf()) { // might make this a seperate button or the default state
+        if (indexer.isIntaking() || arm.isAtShelf() || showGamePieceColor) { 
             if (hand.getGamePieceMode() == GamePiece.CUBE)
                 return solidPurple;
             if (hand.getGamePieceMode() == GamePiece.CONE)

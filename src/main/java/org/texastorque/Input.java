@@ -27,7 +27,7 @@ public final class Input
             alignGridLeft, alignGridCenter, alignGridRight, gridOverrideLeft,
             gridOverrideRight, gridOverrideCenter, resetGyroClick, resetPoseClick,
             toggleRotationLock, autoLevel, wantsIntake,gamePieceModeToggle,
-            clawClose, armToHandoff, armToShelf, armToMid, armToTop, dangerMode;
+            clawClose, armToHandoff, armToShelf, armToMid, armToTop, dangerMode, showGamePieceColor;
 
     private Input() {
         driver = new TorqueController(0, .001);
@@ -49,10 +49,10 @@ public final class Input
         toggleRotationLock = new TorqueToggleSupplier(() -> driver.isAButtonDown(), true);
         autoLevel = new TorqueBoolSupplier(() -> driver.isYButtonDown());
 
-        wantsIntake = new TorqueBoolSupplier(() -> operator.isLeftTriggerDown());
-
-        clawClose = new TorqueToggleSupplier(() -> operator.isRightTriggerDown(), true);
+        wantsIntake = new TorqueBoolSupplier(() -> operator.isRightTriggerDown());
+        clawClose = new TorqueToggleSupplier(() -> operator.isRightBumperDown(), true);
         gamePieceModeToggle = new TorqueToggleSupplier(() -> operator.isLeftBumperDown());
+        showGamePieceColor = new TorqueBoolSupplier(() -> operator.isLeftTriggerDown());
 
         armToHandoff = new TorqueBoolSupplier(() -> operator.isAButtonDown());
         armToShelf = new TorqueBoolSupplier(() -> operator.isXButtonDown());
@@ -109,6 +109,7 @@ public final class Input
         armToTop.onTrue(() -> arm.setState(Arm.State.TOP));
 
         lights.dangerMode = dangerMode.get();
+        lights.shouldShowGamePieceColor(showGamePieceColor.get());
     }
 
     private final static double DEADBAND = 0.125;

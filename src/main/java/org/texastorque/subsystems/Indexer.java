@@ -61,12 +61,12 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
         }
     }
 
-
-
     @Log.ToString
     private State activeState = State.UP;
+
     @Log.ToString
     private State desiredState = State.UP;
+
     public void setState(final State state) { this.desiredState = state; }
     public State getState() { return desiredState; }
     public boolean isState(final State state) { return getState() == state; }
