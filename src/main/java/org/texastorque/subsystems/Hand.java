@@ -8,6 +8,7 @@ package org.texastorque.subsystems;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
 import org.texastorque.Input;
 import org.texastorque.Ports;
@@ -20,16 +21,18 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
     private static volatile Hand instance;
 
     public static enum GamePiece {
-        NONE,
         CUBE,
         CONE;
     }
 
-    @Log.ToString public GamePiece currentGamePiece = GamePiece.NONE;
+    @Log.ToString private GamePiece gamePieceMode = GamePiece.CUBE;
 
-    @Log.ToString private GamePiece lastHeldPiece = GamePiece.NONE;
-
-    public GamePiece getLastHeldGamePiece() { return lastHeldPiece; }
+    public GamePiece getGamePieceMode() {
+        return gamePieceMode;
+    }
+    public void setGamePieceMode(final GamePiece gamePieceMode) {
+        this.gamePieceMode = gamePieceMode;
+    }
 
     public static enum State {
         OPEN(0),
@@ -53,6 +56,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
     @Log.ToString public double realClawPose = 0;
 
     private final TorqueNEO claw = new TorqueNEO(Ports.HAND_MOTOR);
+    @Config
     public final PIDController clawPoseController =
         new PIDController(0.1, 0, 0);
 
@@ -71,10 +75,6 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
     public final void update(final TorqueMode mode) {
         activeState = desiredState;
 
-        if (currentGamePiece != GamePiece.NONE) {
-            lastHeldPiece = currentGamePiece;
-        }
-
         // realClawPose = claw.getPosition();
 
         final double requestedClawVolts =
@@ -85,13 +85,9 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
 
         if (lastState != activeState) {
             lastState = activeState;
-            if (activeState == State.OPEN) {
-                currentGamePiece = GamePiece.NONE;
+            if (activeState == State.OPEN)
                 if (arm.isAtScoringPose())
                     Input.getInstance().setDriverRumbleFor(1);
-            } else {
-                currentGamePiece = indexer.getLastWantedGamePiece();
-            }
         }
 
 

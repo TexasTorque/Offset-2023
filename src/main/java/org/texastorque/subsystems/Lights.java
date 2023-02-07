@@ -63,10 +63,10 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
         if (dangerMode)
             return blinkYellow;
 
-        if (indexer.isIntaking() || arm.isAtShelf()) {
-            if (indexer.getLastWantedGamePiece() == GamePiece.CUBE)
+        if (indexer.isIntaking() || arm.isAtShelf()) { // might make this a seperate button or the default state
+            if (hand.getGamePieceMode() == GamePiece.CUBE)
                 return solidPurple;
-            if (indexer.getLastWantedGamePiece() == GamePiece.CONE)
+            if (hand.getGamePieceMode() == GamePiece.CONE)
                 return solidYellow;
         }
 
