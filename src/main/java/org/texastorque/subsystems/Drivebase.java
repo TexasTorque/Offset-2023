@@ -6,6 +6,23 @@
  */
 package org.texastorque.subsystems;
 
+import java.util.Optional;
+
+import org.texastorque.Field;
+import org.texastorque.Ports;
+import org.texastorque.Subsystems;
+import org.texastorque.controllers.AutoLevelController;
+import org.texastorque.controllers.PathAlignController;
+import org.texastorque.controllers.PathAlignController.AlignState;
+import org.texastorque.controllers.PathAlignController.GridState;
+import org.texastorque.torquelib.base.TorqueMode;
+import org.texastorque.torquelib.base.TorqueSubsystem;
+import org.texastorque.torquelib.sensors.TorqueNavXGyro;
+import org.texastorque.torquelib.sensors.TorqueVision;
+import org.texastorque.torquelib.swerve.TorqueSwerveModule2022;
+import org.texastorque.torquelib.swerve.TorqueSwerveModule2022.SwerveConfig;
+import org.texastorque.torquelib.swerve.TorqueSwerveSpeeds;
+
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.controller.PIDController;
@@ -24,25 +41,8 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import io.github.oblarg.oblog.annotations.Log;
-import java.util.Optional;
-import org.texastorque.Field;
-import org.texastorque.Ports;
-import org.texastorque.Subsystems;
-import org.texastorque.controllers.AutoLevelController;
-import org.texastorque.controllers.PathAlignController;
-import org.texastorque.controllers.PathAlignController.AlignState;
-import org.texastorque.controllers.PathAlignController.GridState;
-import org.texastorque.torquelib.base.TorqueMode;
-import org.texastorque.torquelib.base.TorqueSubsystem;
-import org.texastorque.torquelib.sensors.TorqueNavXGyro;
-import org.texastorque.torquelib.sensors.TorqueVision;
-import org.texastorque.torquelib.swerve.TorqueSwerveModule2022;
-import org.texastorque.torquelib.swerve.TorqueSwerveModule2022.SwerveConfig;
-import org.texastorque.torquelib.swerve.TorqueSwerveSpeeds;
 
 public final class Drivebase extends TorqueSubsystem implements Subsystems {
-    private static volatile Drivebase instance;
-
     public static enum State {
         FIELD_RELATIVE(null),
         ROBOT_RELATIVE(null),
@@ -55,14 +55,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         private State(final State parent) { this.parent = parent == null ? this : parent; }
     }
 
-    private State state = State.ROBOT_RELATIVE;
-    private State requestedState = State.ROBOT_RELATIVE;
-
-    public void setState(final State state) { this.state = state; }
-
-    public State getState() { return requestedState; }
-
-    public boolean isState(final State state) { return getState() == state; }
+    private static volatile Drivebase instance;
 
     public static final double WIDTH = Units.inchesToMeters(21.745), // m (swerve to swerve)
             LENGTH = Units.inchesToMeters(21.745),                   // m (swerve to swerve)
@@ -74,24 +67,9 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
             WHEEL_DIAMETER = Units.inchesToMeters(4.0), // m
 
             MAGIC_NUMBER = 34;
-
     public static final Pose2d INITIAL_POS = new Pose2d(0, 0, new Rotation2d(0));
 
     private static final double SIZE = Units.inchesToMeters(18);
-
-    private final Translation2d LOC_FL = new Translation2d(SIZE, -SIZE), LOC_FR = new Translation2d(SIZE, SIZE), LOC_BL = new Translation2d(-SIZE, -SIZE),
-                                LOC_BR = new Translation2d(-SIZE, SIZE);
-
-    // This is the kinematics object that calculates the desired wheel speeds
-    private final SwerveDriveKinematics kinematics;
-
-    // PoseEstimator is a more advanced odometry system that uses a Kalman
-    // filter to estimate the robot's position It also encorporates other
-    // measures like April tag positions
-    private final SwerveDrivePoseEstimator poseEstimator;
-
-    // @Log.Field2d(name = "Robot Field")
-    public final Field2d fieldMap = new Field2d();
 
     /**
      * Standard deviations of model states. Increase these numbers to trust your
@@ -107,11 +85,48 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
      */
     private static final Vector<N3> VISION_STDS = VecBuilder.fill(0.1, 0.1, Units.degreesToRadians(5));
 
+    private static final double CAMERA_FORWARD_FROM_CENTER = Units.inchesToMeters((29 * .5) - 8.5625);
+
+    private static final double LEFT_CAMERA_RIGHT_FROM_CENTER = Units.inchesToMeters(29 * .5);
+
+    private static final double RIGHT_CAMERA_RIGHT_FROM_CENTER = -Units.inchesToMeters(29 * .5);
+
+    private static final double CAMERA_UP_FROM_CENTER = Units.inchesToMeters(18);
+
+    private static final Transform3d RIGHT_CAMERA_TO_CENTER =
+            new Transform3d(new Translation3d(CAMERA_FORWARD_FROM_CENTER, RIGHT_CAMERA_RIGHT_FROM_CENTER, CAMERA_UP_FROM_CENTER), new Rotation3d());
+
+    private static final Transform3d LEFT_CAMERA_TO_CENTER =
+            new Transform3d(new Translation3d(CAMERA_FORWARD_FROM_CENTER, LEFT_CAMERA_RIGHT_FROM_CENTER, CAMERA_UP_FROM_CENTER), new Rotation3d());
+
+    public static SwerveModulePosition invertSwerveModuleDistance(final SwerveModulePosition pose) {
+        return new SwerveModulePosition(-pose.distanceMeters, pose.angle);
+    }
+
+    public static synchronized final Drivebase getInstance() { return instance == null ? instance = new Drivebase() : instance; }
+
+    private State state = State.ROBOT_RELATIVE;
+
+    private State requestedState = State.ROBOT_RELATIVE;
+
+    private final Translation2d LOC_FL = new Translation2d(SIZE, -SIZE), LOC_FR = new Translation2d(SIZE, SIZE), LOC_BL = new Translation2d(-SIZE, -SIZE),
+                                LOC_BR = new Translation2d(-SIZE, SIZE);
+
+    // This is the kinematics object that calculates the desired wheel speeds
+    private final SwerveDriveKinematics kinematics;
+    // PoseEstimator is a more advanced odometry system that uses a Kalman
+    // filter to estimate the robot's position It also encorporates other
+    // measures like April tag positions
+    private final SwerveDrivePoseEstimator poseEstimator;
+
+    // @Log.Field2d(name = "Robot Field")
+    public final Field2d fieldMap = new Field2d();
+
     private final TorqueSwerveModule2022 fl, fr, bl, br;
 
     private final TorqueNavXGyro gyro = TorqueNavXGyro.getInstance();
-
     private double lastRotationRadians;
+
     private final PIDController teleopOmegaController = new PIDController(2 * Math.PI, 0, 0);
 
     private SwerveModuleState[] swerveStates;
@@ -120,34 +135,14 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     public TorqueSwerveSpeeds inputSpeeds = new TorqueSwerveSpeeds(0, 0, 0);
 
     public double requestedRotation = 0;
+
     public boolean isRotationLocked = true;
 
     private final PathAlignController alignmentController = new PathAlignController(this::getPose, () -> inputSpeeds);
 
-    public void setAlignState(final AlignState alignment) {
-        state = alignment == AlignState.NONE ? state.parent : State.ALIGN;
-        alignmentController.setAlignment(alignment);
-    }
-
-    public void setGridOverride(final GridState override) { alignmentController.setGridOverride(override); }
-
-    public final boolean isPathAlignDone() { return alignmentController.isDone(); }
-
     private final AutoLevelController autoLevelController = new AutoLevelController(this::getPose);
 
-    public final boolean isAutoLevelDone() { return autoLevelController.isDone(); }
-
     public final TorqueVision cameraLeft, cameraRight;
-
-    private static final double CAMERA_FORWARD_FROM_CENTER = Units.inchesToMeters((29 * .5) - 8.5625);
-    private static final double LEFT_CAMERA_RIGHT_FROM_CENTER = Units.inchesToMeters(29 * .5);
-    private static final double RIGHT_CAMERA_RIGHT_FROM_CENTER = -Units.inchesToMeters(29 * .5);
-    private static final double CAMERA_UP_FROM_CENTER = Units.inchesToMeters(18);
-    private static final Transform3d RIGHT_CAMERA_TO_CENTER =
-            new Transform3d(new Translation3d(CAMERA_FORWARD_FROM_CENTER, RIGHT_CAMERA_RIGHT_FROM_CENTER, CAMERA_UP_FROM_CENTER), new Rotation3d());
-    private static final Transform3d LEFT_CAMERA_TO_CENTER =
-            new Transform3d(new Translation3d(CAMERA_FORWARD_FROM_CENTER, LEFT_CAMERA_RIGHT_FROM_CENTER, CAMERA_UP_FROM_CENTER), new Rotation3d());
-
     /**
      * Constructor called on initialization.
      */
@@ -178,6 +173,19 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         swerveStates = new SwerveModuleState[4];
         for (int i = 0; i < swerveStates.length; i++) swerveStates[i] = new SwerveModuleState();
     }
+    public void setState(final State state) { this.state = state; }
+    public State getState() { return requestedState; }
+    public boolean isState(final State state) { return getState() == state; }
+    public void setAlignState(final AlignState alignment) {
+        state = alignment == AlignState.NONE ? state.parent : State.ALIGN;
+        alignmentController.setAlignment(alignment);
+    }
+
+    public void setGridOverride(final GridState override) { alignmentController.setGridOverride(override); }
+
+    public final boolean isPathAlignDone() { return alignmentController.isDone(); }
+
+    public final boolean isAutoLevelDone() { return autoLevelController.isDone(); } 
 
     @Override
     public final void initialize(final TorqueMode mode) {
@@ -195,47 +203,9 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         cameraRight.setFieldLayout(Field.getCurrentFieldLayout());
     }
 
-    public static SwerveModulePosition invertSwerveModuleDistance(final SwerveModulePosition pose) {
-        return new SwerveModulePosition(-pose.distanceMeters, pose.angle);
-    }
-
     public SwerveModulePosition[] getModulePositions() {
         return new SwerveModulePosition[] {invertSwerveModuleDistance(fl.getPosition()), invertSwerveModuleDistance(fr.getPosition()),
                                            invertSwerveModuleDistance(bl.getPosition()), invertSwerveModuleDistance(br.getPosition())};
-    }
-
-    private void updateFeedback() {
-        cameraLeft.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
-        cameraRight.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
-
-        poseEstimator.update(gyro.getHeadingCCW(), getModulePositions());
-
-        fieldMap.setRobotPose(DriverStation.getAlliance() == DriverStation.Alliance.Blue ? poseEstimator.getEstimatedPosition()
-                                                                                         : Field.reflectPosition(poseEstimator.getEstimatedPosition()));
-    }
-
-    private void zeroModules() {
-        fl.zero();
-        fr.zero();
-        bl.zero();
-        br.zero();
-    }
-
-    private void preseveModulePositions() {
-        fl.setDesiredState(new SwerveModuleState(0, swerveStates[0].angle));
-        fr.setDesiredState(new SwerveModuleState(0, swerveStates[1].angle));
-        bl.setDesiredState(new SwerveModuleState(0, swerveStates[2].angle));
-        br.setDesiredState(new SwerveModuleState(0, swerveStates[3].angle));
-    }
-
-    private void calculateTeleop() {
-        final double realRotationRadians = gyro.getHeadingCCW().getRadians();
-
-        if (isRotationLocked && !inputSpeeds.hasRotationalVelocity() && inputSpeeds.hasTranslationalVelocity()) {
-            final double omega = teleopOmegaController.calculate(realRotationRadians, lastRotationRadians);
-            inputSpeeds.omegaRadiansPerSecond = omega;
-        } else
-            lastRotationRadians = realRotationRadians;
     }
 
     public void convertToFieldRelative() { inputSpeeds = inputSpeeds.toFieldRelativeSpeeds(gyro.getHeadingCCW()); }
@@ -282,7 +252,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         autoLevelController.resetIf(state != State.BALANCE);
 
         state = state.parent;
-    }
+    } 
 
     public void resetPose(final Pose2d pose) {
         gyro.setOffsetCW(pose.getRotation());
@@ -291,7 +261,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
     public void resetPose(final Rotation2d rotation) { resetPose(new Pose2d(getPose().getTranslation(), rotation)); }
 
-    public void setAngle(final Rotation2d rotation) { gyro.setOffsetCW(rotation); }
+    public void setAngle(final Rotation2d rotation) { gyro.setOffsetCW(rotation); } 
 
     public void resetPose(final Translation2d translation) { resetPose(new Pose2d(translation, gyro.getHeadingCCW())); }
 
@@ -303,6 +273,45 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         return poseEstimator.getEstimatedPosition();
     }
 
+    @Log.Dial(name = "Gyro Radians")
+    public double getGyroAngle() {
+        return gyro.getHeadingCCW().getRadians();
+    }
+
+    private void updateFeedback() {
+        cameraLeft.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
+        cameraRight.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
+
+        poseEstimator.update(gyro.getHeadingCCW(), getModulePositions());
+
+        fieldMap.setRobotPose(DriverStation.getAlliance() == DriverStation.Alliance.Blue ? poseEstimator.getEstimatedPosition()
+                                                                                         : Field.reflectPosition(poseEstimator.getEstimatedPosition()));
+    }
+
+    private void zeroModules() {
+        fl.zero();
+        fr.zero();
+        bl.zero();
+        br.zero();
+    }
+
+    private void preseveModulePositions() {
+        fl.setDesiredState(new SwerveModuleState(0, swerveStates[0].angle));
+        fr.setDesiredState(new SwerveModuleState(0, swerveStates[1].angle));
+        bl.setDesiredState(new SwerveModuleState(0, swerveStates[2].angle));
+        br.setDesiredState(new SwerveModuleState(0, swerveStates[3].angle));
+    }
+
+    private void calculateTeleop() {
+        final double realRotationRadians = gyro.getHeadingCCW().getRadians();
+
+        if (isRotationLocked && !inputSpeeds.hasRotationalVelocity() && inputSpeeds.hasTranslationalVelocity()) {
+            final double omega = teleopOmegaController.calculate(realRotationRadians, lastRotationRadians);
+            inputSpeeds.omegaRadiansPerSecond = omega;
+        } else
+            lastRotationRadians = realRotationRadians;
+    }
+
     @Log.ToString(name = "Robot Pose X")
     private double logPoseX() {
         return getPose().getTranslation().getX();
@@ -312,11 +321,4 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     private double logPoseY() {
         return getPose().getTranslation().getY();
     }
-
-    @Log.Dial(name = "Gyro Radians")
-    public double getGyroAngle() {
-        return gyro.getHeadingCCW().getRadians();
-    }
-
-    public static synchronized final Drivebase getInstance() { return instance == null ? instance = new Drivebase() : instance; }
 }

@@ -6,13 +6,15 @@
  */
 package org.texastorque.controllers;
 
+import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
+
+import org.texastorque.torquelib.sensors.TorqueNavXGyro;
+import org.texastorque.torquelib.swerve.TorqueSwerveSpeeds;
+
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import java.util.function.DoubleSupplier;
-import java.util.function.Supplier;
-import org.texastorque.torquelib.sensors.TorqueNavXGyro;
-import org.texastorque.torquelib.swerve.TorqueSwerveSpeeds;
 
 public final class AutoLevelController extends AbstractController<TorqueSwerveSpeeds> {
     private static enum BalanceDirection {
@@ -38,19 +40,19 @@ public final class AutoLevelController extends AbstractController<TorqueSwerveSp
         public double getAngle() { return angleSupplier.getAsDouble(); }
     }
 
+    private static final double TILT_THRESHOLD_DEG = 10, FLAT_THRESHOLD_DEG = 2;
+
     private BalanceDirection balanceDirection = BalanceDirection.POS_X;
 
     private final Supplier<Pose2d> poseSupplier;
 
-    public AutoLevelController(final Supplier<Pose2d> poseSupplier) { this.poseSupplier = poseSupplier; }
-
     private final PIDController controller = new PIDController(.02, 0, .0007);
-
-    public final boolean isDone() { return isFlat && hasTilted; }
 
     private boolean hasTilted = false, isFlat = false;
 
-    private static final double TILT_THRESHOLD_DEG = 10, FLAT_THRESHOLD_DEG = 2;
+    public AutoLevelController(final Supplier<Pose2d> poseSupplier) { this.poseSupplier = poseSupplier; }
+
+    public final boolean isDone() { return isFlat && hasTilted; }
 
     public TorqueSwerveSpeeds calculate() {
 
