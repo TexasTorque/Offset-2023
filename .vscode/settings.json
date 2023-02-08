@@ -25,5 +25,13 @@
       }
     },
   ],
-  "java.test.defaultConfig": "WPIlibUnitTests"
+  "java.test.defaultConfig": "WPIlibUnitTests",
+  "editor.rulers": [
+    120
+  ],
+  "editor.codeActionsOnSave": {
+    "source.sortMembers": true,
+    "source.organizeImports": true,
+    "source.formatDocument": true
+  },
 }

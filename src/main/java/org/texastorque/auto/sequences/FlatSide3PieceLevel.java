@@ -13,14 +13,12 @@ import org.texastorque.torquelib.auto.TorqueSequence;
 import org.texastorque.torquelib.auto.commands.TorqueContinuous;
 import org.texastorque.torquelib.auto.commands.TorqueWaitForSeconds;
 
-public final class FlatSide3PieceLevel
-        extends TorqueSequence implements Subsystems {
+public final class FlatSide3PieceLevel extends TorqueSequence implements Subsystems {
     public FlatSide3PieceLevel() {
         final TorqueWaitForSeconds dropInitialCone = new TorqueWaitForSeconds(.5);
         addBlock(dropInitialCone);
 
-        final FollowEventPath pickUpFirstCube = new FollowEventPath(
-                "flat-side-get-first", 4.5, 4.5); // ends (1.8, 1.05)
+        final FollowEventPath pickUpFirstCube = new FollowEventPath("flat-side-get-first", 4.5, 4.5); // ends (1.8, 1.05)
         addBlock(pickUpFirstCube);
 
         final TorqueWaitForSeconds dropFirstCone = new TorqueWaitForSeconds(.5);
@@ -35,7 +33,6 @@ public final class FlatSide3PieceLevel
         final FollowEventPath goToLevel = new FollowEventPath("flat-side-go-level-fast", 6, 8);
         addBlock(goToLevel);
 
-        addBlock(new TorqueContinuous(
-                () -> drivebase.setState(Drivebase.State.BALANCE)));
+        addBlock(new TorqueContinuous(() -> drivebase.setState(Drivebase.State.BALANCE)));
     }
 }

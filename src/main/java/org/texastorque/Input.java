@@ -19,15 +19,12 @@ import org.texastorque.torquelib.sensors.TorqueController;
 import org.texastorque.torquelib.swerve.TorqueSwerveSpeeds;
 import org.texastorque.torquelib.util.TorqueMath;
 
-public final class Input
-        extends TorqueInput<TorqueController> implements Subsystems {
+public final class Input extends TorqueInput<TorqueController> implements Subsystems {
     private static volatile Input instance;
 
-    private final TorqueBoolSupplier isZeroingWheels, slowModeToggle,
-            alignGridLeft, alignGridCenter, alignGridRight, gridOverrideLeft,
-            gridOverrideRight, gridOverrideCenter, resetGyroClick, resetPoseClick,
-            toggleRotationLock, autoLevel, wantsIntake,gamePieceModeToggle,
-            clawClose, armToHandoff, armToShelf, armToMid, armToTop, dangerMode;
+    private final TorqueBoolSupplier isZeroingWheels, slowModeToggle, alignGridLeft, alignGridCenter, alignGridRight, gridOverrideLeft, gridOverrideRight,
+            gridOverrideCenter, resetGyroClick, resetPoseClick, toggleRotationLock, autoLevel, wantsIntake, gamePieceModeToggle, clawClose, armToHandoff,
+            armToShelf, armToMid, armToTop, dangerMode, showGamePieceColor;
 
     private Input() {
         driver = new TorqueController(0, .001);
@@ -49,10 +46,10 @@ public final class Input
         toggleRotationLock = new TorqueToggleSupplier(() -> driver.isAButtonDown(), true);
         autoLevel = new TorqueBoolSupplier(() -> driver.isYButtonDown());
 
-        wantsIntake = new TorqueBoolSupplier(() -> operator.isLeftTriggerDown());
-
-        clawClose = new TorqueToggleSupplier(() -> operator.isRightTriggerDown(), true);
+        wantsIntake = new TorqueBoolSupplier(() -> operator.isRightTriggerDown());
+        clawClose = new TorqueToggleSupplier(() -> operator.isRightBumperDown(), true);
         gamePieceModeToggle = new TorqueToggleSupplier(() -> operator.isLeftBumperDown());
+        showGamePieceColor = new TorqueBoolSupplier(() -> operator.isLeftTriggerDown());
 
         armToHandoff = new TorqueBoolSupplier(() -> operator.isAButtonDown());
         armToShelf = new TorqueBoolSupplier(() -> operator.isXButtonDown());
@@ -80,28 +77,21 @@ public final class Input
         drivebase.isRotationLocked = toggleRotationLock.get();
 
         alignGridLeft.onTrue(() -> drivebase.setAlignState(AlignState.LEFT));
-        alignGridCenter.onTrue(
-                () -> drivebase.setAlignState(AlignState.CENTER));
+        alignGridCenter.onTrue(() -> drivebase.setAlignState(AlignState.CENTER));
         alignGridRight.onTrue(() -> drivebase.setAlignState(AlignState.RIGHT));
 
-        gridOverrideLeft.onTrue(
-                () -> drivebase.setGridOverride(GridState.LEFT));
-        gridOverrideCenter.onTrue(
-                () -> drivebase.setGridOverride(GridState.CENTER));
-        gridOverrideRight.onTrue(
-                () -> drivebase.setGridOverride(GridState.RIGHT));
+        gridOverrideLeft.onTrue(() -> drivebase.setGridOverride(GridState.LEFT));
+        gridOverrideCenter.onTrue(() -> drivebase.setGridOverride(GridState.CENTER));
+        gridOverrideRight.onTrue(() -> drivebase.setGridOverride(GridState.RIGHT));
 
         autoLevel.onTrue(() -> drivebase.setState(Drivebase.State.BALANCE));
         isZeroingWheels.onTrue(() -> drivebase.setState(Drivebase.State.ZERO));
 
         wantsIntake.onTrue(() -> indexer.setState(Indexer.State.INTAKE));
 
-        clawClose.onTrueOrFalse(() -> hand.setState(Hand.State.CLOSE),
-                () -> hand.setState(Hand.State.OPEN));
+        clawClose.onTrueOrFalse(() -> hand.setState(Hand.State.CLOSE), () -> hand.setState(Hand.State.OPEN));
 
-        gamePieceModeToggle.onTrueOrFalse(
-                () -> hand.setGamePieceMode(GamePiece.CONE),
-                () -> hand.setGamePieceMode(GamePiece.CUBE));
+        gamePieceModeToggle.onTrueOrFalse(() -> hand.setGamePieceMode(GamePiece.CONE), () -> hand.setGamePieceMode(GamePiece.CUBE));
 
         armToHandoff.onTrue(() -> arm.setState(Arm.State.HANDOFF));
         armToShelf.onTrue(() -> arm.setState(Arm.State.SHELF));
@@ -109,6 +99,7 @@ public final class Input
         armToTop.onTrue(() -> arm.setState(Arm.State.TOP));
 
         lights.dangerMode = dangerMode.get();
+        lights.shouldShowGamePieceColor(showGamePieceColor.get());
     }
 
     private final static double DEADBAND = 0.125;
@@ -116,12 +107,9 @@ public final class Input
     private void updateDrivebaseSpeeds() {
         final double speedSetting = slowModeToggle.get() ? 0.2 : 1;
 
-        final double xVelocity = TorqueMath.scaledLinearDeadband(driver.getLeftYAxis(), DEADBAND) *
-                Drivebase.MAX_VELOCITY * speedSetting;
-        final double yVelocity = TorqueMath.scaledLinearDeadband(driver.getLeftXAxis(), DEADBAND) *
-                Drivebase.MAX_VELOCITY * speedSetting;
-        final double rotationVelocity = TorqueMath.scaledLinearDeadband(-driver.getRightXAxis(), DEADBAND) *
-                Drivebase.MAX_ANGULAR_VELOCITY * speedSetting;
+        final double xVelocity = TorqueMath.scaledLinearDeadband(driver.getLeftYAxis(), DEADBAND) * Drivebase.MAX_VELOCITY * speedSetting;
+        final double yVelocity = TorqueMath.scaledLinearDeadband(driver.getLeftXAxis(), DEADBAND) * Drivebase.MAX_VELOCITY * speedSetting;
+        final double rotationVelocity = TorqueMath.scaledLinearDeadband(-driver.getRightXAxis(), DEADBAND) * Drivebase.MAX_ANGULAR_VELOCITY * speedSetting;
 
         drivebase.inputSpeeds = new TorqueSwerveSpeeds(xVelocity, yVelocity, rotationVelocity);
 
@@ -133,17 +121,11 @@ public final class Input
 
     private final TorqueRequestableTimeout driverTimeout = new TorqueRequestableTimeout();
 
-    public void setDriverRumbleFor(final double duration) {
-        driverTimeout.set(duration);
-    }
+    public void setDriverRumbleFor(final double duration) { driverTimeout.set(duration); }
 
     private final TorqueRequestableTimeout operatorTimeout = new TorqueRequestableTimeout();
 
-    public void setOperatorRumbleFor(final double duration) {
-        operatorTimeout.set(duration);
-    }
+    public void setOperatorRumbleFor(final double duration) { operatorTimeout.set(duration); }
 
-    public static final synchronized Input getInstance() {
-        return instance == null ? instance = new Input() : instance;
-    }
+    public static final synchronized Input getInstance() { return instance == null ? instance = new Input() : instance; }
 }

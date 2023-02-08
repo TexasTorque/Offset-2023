@@ -20,7 +20,5 @@ public final class Empty extends TorqueSubsystem {
     @Override
     public final void update(final TorqueMode mode) {}
 
-    public static final synchronized Empty getInstance() {
-        return instance == null ? instance = new Empty() : instance;
-    }
+    public static final synchronized Empty getInstance() { return instance == null ? instance = new Empty() : instance; }
 }

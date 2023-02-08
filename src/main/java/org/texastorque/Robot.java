@@ -6,13 +6,11 @@
  */
 package org.texastorque;
 
-import java.util.Map;
-
-import org.texastorque.auto.AutoManager;
-import org.texastorque.torquelib.base.*;
-
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import java.util.Map;
+import org.texastorque.auto.AutoManager;
+import org.texastorque.torquelib.base.*;
 
 public final class Robot extends TorqueRobotBase implements Subsystems {
     public Robot() {
@@ -29,9 +27,13 @@ public final class Robot extends TorqueRobotBase implements Subsystems {
 
         final ShuffleboardTab dashboard = Shuffleboard.getTab("COMPETITION");
 
-        dashboard.addCamera("LEFT CAMERA", drivebase.cameraLeft.getName(), "http://10.14.77.79:1182/stream.mjpg").withPosition(0, 0).withSize(6, 4)
+        dashboard.addCamera("LEFT CAMERA", drivebase.cameraLeft.getName(), "http://10.14.77.79:1182/stream.mjpg")
+                .withPosition(0, 0)
+                .withSize(6, 4)
                 .withProperties(Map.of("Show crosshair", false, "Show controls", false));
-        dashboard.addCamera("RIGHT CAMERA", drivebase.cameraRight.getName(), "http://10.14.77.105:1182/stream.mjpg").withPosition(6, 0).withSize(6, 4)
+        dashboard.addCamera("RIGHT CAMERA", drivebase.cameraRight.getName(), "http://10.14.77.105:1182/stream.mjpg")
+                .withPosition(6, 0)
+                .withSize(6, 4)
                 .withProperties(Map.of("Show crosshair", false, "Show controls", false));
         dashboard.add("FIELD", drivebase.fieldMap).withPosition(0, 4).withSize(7, 4);
         dashboard.add("AUTO SELECTOR", AutoManager.getInstance().getAutoSelector()).withPosition(7, 4).withSize(4, 2);
