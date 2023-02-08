@@ -6,39 +6,47 @@
  */
 package org.texastorque.subsystems;
 
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import io.github.oblarg.oblog.annotations.Config;
-import io.github.oblarg.oblog.annotations.Log;
 import org.texastorque.Input;
 import org.texastorque.Ports;
 import org.texastorque.Subsystems;
 import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.motors.TorqueNEO;
+import org.texastorque.torquelib.util.TorqueMath;
+
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import io.github.oblarg.oblog.annotations.Config;
+import io.github.oblarg.oblog.annotations.Log;
 
 public final class Hand extends TorqueSubsystem implements Subsystems {
-    private static volatile Hand instance;
-
     public static enum GamePiece {
         CUBE,
         CONE;
     }
 
+    public static enum State {
+        OPEN(30, true), // need to be found
+        CLOSE(MAX_CLAW_VOLTS, false);
+
+        public final double clawSetpoint;
+        public final boolean isPose;
+
+        private State(final double clawSetpoint, final boolean isPose) { 
+            this.clawSetpoint = clawSetpoint;
+            this.isPose = isPose;
+        }
+
+    }
+
+    private static volatile Hand instance;
+
+    private static final double MAX_CLAW_VOLTS = 4;
+    public static final synchronized Hand getInstance() { return instance == null ? instance = new Hand() : instance; }
+
     @Log.ToString
     private GamePiece gamePieceMode = GamePiece.CUBE;
-
-    public GamePiece getGamePieceMode() { return gamePieceMode; }
-    public void setGamePieceMode(final GamePiece gamePieceMode) { this.gamePieceMode = gamePieceMode; }
-
-    public static enum State {
-        OPEN(0),
-        CLOSE(100);
-
-        public final double clawPose;
-
-        private State(final double clawPose) { this.clawPose = clawPose; }
-    }
 
     @Log.ToString
     private State activeState = State.CLOSE;
@@ -46,24 +54,31 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
     private State lastState = State.CLOSE;
     @Log.ToString
     private State desiredState = State.CLOSE;
-    public void setState(final State state) { this.desiredState = state; }
-    public State getState() { return desiredState; }
-    public boolean isState(final State state) { return getState() == state; }
-
     @Log.ToString
     public double realClawPose = 0;
-
     private final TorqueNEO claw = new TorqueNEO(Ports.HAND_MOTOR);
     @Config
     public final PIDController clawPoseController = new PIDController(0.1, 0, 0);
 
+    private final DigitalInput clawSwitch;
+
     private Hand() {
-        // rollers.setConversionFactors();
         claw.setCurrentLimit(20);
         claw.setVoltageCompensation(12.6);
         claw.setBreakMode(true);
         claw.burnFlash();
+
+        clawSwitch = new DigitalInput(0);
     }
+    public GamePiece getGamePieceMode() { return gamePieceMode; }
+
+    public void setGamePieceMode(final GamePiece gamePieceMode) { this.gamePieceMode = gamePieceMode; }
+
+    public void setState(final State state) { this.desiredState = state; }
+
+    public State getState() { return desiredState; }
+
+    public boolean isState(final State state) { return getState() == state; }
 
     @Override
     public final void initialize(final TorqueMode mode) {}
@@ -74,8 +89,11 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
 
         // realClawPose = claw.getPosition();
 
-        final double requestedClawVolts = clawPoseController.calculate(realClawPose, activeState.clawPose);
+        final double requestedClawVolts = TorqueMath.constrain(activeState.isPose
+                ? clawPoseController.calculate(realClawPose, activeState.clawSetpoint)
+                : activeState.clawSetpoint, MAX_CLAW_VOLTS);
         SmartDashboard.putNumber("hand::requestedClawVolts", requestedClawVolts);
+
         // claw.setVolts(requestedClawVolts);
 
         if (lastState != activeState) {
@@ -88,6 +106,4 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
 
         activeState = State.CLOSE;
     }
-
-    public static final synchronized Hand getInstance() { return instance == null ? instance = new Hand() : instance; }
 }
