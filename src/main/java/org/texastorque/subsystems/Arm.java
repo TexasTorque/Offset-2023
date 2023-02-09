@@ -90,14 +90,6 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     private static volatile Arm instance;
     public static final synchronized Arm getInstance() { return instance == null ? instance = new Arm() : instance; }
 
-    public static Rotation2d constrain(final Rotation2d theta) {
-        return Rotation2d.fromRadians((theta.getRadians() + 2 * Math.PI) % (2 * Math.PI));
-    }
-
-    public static double constrain(final double theta) {
-        return (theta + 2 * Math.PI) % (2 * Math.PI);
-    }
-
     @Log.ToString
     private State activeState = State.HANDOFF;
     @Log.ToString
@@ -205,7 +197,9 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     private void updateFeedback() {
         realElevatorPose = elevator.getPosition();
 
-        final double rotaryRadians = constrain(-rotaryEncoder.getPosition() - ROTARY_ENCODER_OFFSET);
+        // Use below for getting offset first.
+        final double rotaryRadians = -rotaryEncoder.getPosition() - ROTARY_ENCODER_OFFSET;
+        // final double rotaryRadians = TorqueMath.constrain0to2PI(-rotaryEncoder.getPosition() - ROTARY_ENCODER_OFFSET);
         realRotaryPose = Rotation2d.fromRadians(rotaryRadians);
     }
 
