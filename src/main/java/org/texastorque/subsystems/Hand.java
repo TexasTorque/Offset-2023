@@ -13,7 +13,6 @@ import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.control.TorqueCurrentSpike;
 import org.texastorque.torquelib.motors.TorqueNEO;
-
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -28,8 +27,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
 
     public static enum State {
         OPEN(MAX_CLAW_VOLTS), // double check negation
-        CLOSE(-MAX_CLAW_VOLTS),
-        OFF(0);
+        CLOSE(-MAX_CLAW_VOLTS);
 
         public final double clawVolts;
 
@@ -68,6 +66,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
     private TorqueCurrentSpike currentDetection = new TorqueCurrentSpike(20);
     private final DigitalInput clawSwitch;
     private final TorqueNEO claw = new TorqueNEO(Ports.HAND_MOTOR);
+    private boolean currentSpike = false;
 
     private Hand() {
         claw.setCurrentLimit(20);
@@ -111,19 +110,18 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
         activeState = desiredState;
         realClawPose = claw.getPosition();
 
-        if (activeState == State.OFF)
+        if (!currentSpike)
             currentDetection.reset();
 
-        if (activeState == State.OPEN) {
-            if (currentDetection.calculate(claw.getCurrent()))
-                activeState = State.OFF;
-        } else
+        if (activeState == State.OPEN)
+            currentSpike = currentDetection.calculate(claw.getCurrent());
+        else
             currentDetection.reset();
 
-        claw.setVolts(activeState.getClawVolts());
+        claw.setVolts(currentSpike ? 0 : activeState.getClawVolts());
 
         if (lastState != activeState) {
-            lastState = activeState;
+            lastState = desiredState;
             if (activeState == State.OPEN)
                 if (arm.isAtScoringPose())
                     Input.getInstance().setDriverRumbleFor(1);
