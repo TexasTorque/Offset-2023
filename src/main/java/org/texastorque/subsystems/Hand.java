@@ -13,6 +13,7 @@ import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.control.TorqueCurrentSpike;
 import org.texastorque.torquelib.motors.TorqueNEO;
+
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -33,7 +34,6 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
 
         private State(final double clawSetpoint) {
             this.clawVolts = clawSetpoint;
-
         }
 
         public double getClawVolts() {
@@ -66,7 +66,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
     private TorqueCurrentSpike currentDetection = new TorqueCurrentSpike(20);
     private final DigitalInput clawSwitch;
     private final TorqueNEO claw = new TorqueNEO(Ports.HAND_MOTOR);
-    private boolean currentSpike = false;
+    private boolean currentSpike = false, switchClicked = false;
 
     private Hand() {
         claw.setCurrentLimit(20);
@@ -107,25 +107,35 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
         SmartDashboard.putNumber("hand::realClawPose", claw.getPosition());
         SmartDashboard.putNumber("hand::realClawVolts", claw.getVolts());
         SmartDashboard.putString("hand::state", activeState.toString());
+
         activeState = desiredState;
         realClawPose = claw.getPosition();
 
-        if (!currentSpike)
-            currentDetection.reset();
+        if (arm.isAtScoringPose()) {
+            if (clawSwitch.get())
+                switchClicked = true;
+        } else
+            switchClicked = false;
+
+        if (switchClicked)
+            activeState = State.OPEN;
 
         if (activeState == State.OPEN)
             currentSpike = currentDetection.calculate(claw.getCurrent());
-        else
+        else {
             currentDetection.reset();
-
+            currentSpike = false;
+        }
+ 
         claw.setVolts(currentSpike ? 0 : activeState.getClawVolts());
 
         if (lastState != activeState) {
-            lastState = desiredState;
             if (activeState == State.OPEN)
                 if (arm.isAtScoringPose())
                     Input.getInstance().setDriverRumbleFor(1);
         }
+
+        lastState = activeState;
 
         if (drivebase.isPathAlignDone() && activeState == State.CLOSE)
             Input.getInstance().setOperatorRumbleFor(0.5);
