@@ -205,8 +205,6 @@ public final class PathAlignController extends AbstractController<Optional<Torqu
 
         trajectory = PathPlanner.generatePath(MAX_PATH_CONSTRAINTS, startPoint, midPoint, endPoint);
         
-        // trajectory = PathPlanner.generatePath(MAX_PATH_CONSTRAINTS, midPoint, endPoint);
-
         timer.reset();
         timer.start();
         return true;

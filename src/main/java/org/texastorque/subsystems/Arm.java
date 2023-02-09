@@ -73,7 +73,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         public ArmPose get() { return hand.getGamePieceMode() == GamePiece.CUBE ? cubePose : conePose; }
     }
 
-    private static final double ARM_ROTARY_ENCODER_OFFSET = 4.279797747731209, 
+    private static final double ROTARY_ENCODER_OFFSET = 0, 
             ELEVATOR_MOTOR_ROT_PER_METER = 1 / 37.5956558484, 
             ELEVATOR_MAX_VOLTS = 12, 
             ROTARY_MAX_VOLTS = 12, 
@@ -94,8 +94,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         return Rotation2d.fromRadians((theta.getRadians() + 2 * Math.PI) % (2 * Math.PI));
     }
 
-    public static Rotation2d reverse(final Rotation2d theta) {
-        return Rotation2d.fromRadians(2 * Math.PI - theta.getRadians());
+    public static double constrain(final double theta) {
+        return (theta + 2 * Math.PI) % (2 * Math.PI);
     }
 
     @Log.ToString
@@ -174,7 +174,6 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     public State getState() { return desiredState; }
     public boolean isState(final State state) { return getState() == state; }
 
-
     @Override
     public final void initialize(final TorqueMode mode) {}
 
@@ -188,8 +187,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
         updateFeedback();
 
-        calculateElevator(false);
-        calculateRotary(false);
+        calculateElevator();
+        calculateRotary();
     }
 
     @Log.BooleanBox
@@ -203,16 +202,14 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         return wantsHandoff;
     }
 
-    private Rotation2d readRotaryPose() {
-        return constrain(Rotation2d.fromRadians(rotaryEncoder.getPosition() - ARM_ROTARY_ENCODER_OFFSET)).unaryMinus();
-    }
-
     private void updateFeedback() {
         realElevatorPose = elevator.getPosition();
-        realRotaryPose = Rotation2d.fromRadians(rotaryEncoder.getPosition());
+
+        final double rotaryRadians = constrain(-rotaryEncoder.getPosition() - ROTARY_ENCODER_OFFSET);
+        realRotaryPose = Rotation2d.fromRadians(rotaryRadians);
     }
 
-    private void calculateElevator(final boolean output) {
+    private void calculateElevator() {
         final double elevatorPIDOutput = elevatorPoseController.calculate(realElevatorPose, activeState.get().elevatorPose);
         SmartDashboard.putNumber("arm::elevatorPIDOutput", elevatorPIDOutput);
 
@@ -225,10 +222,11 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         final double constrainedElevatorVolts = TorqueMath.linearConstraint(requestedElevatorVolts, realElevatorPose, ELEVATOR_MIN, ELEVATOR_MAX); // don't think this will work
         SmartDashboard.putNumber("arm::constrainedElevatorVolts", constrainedElevatorVolts);
 
-        elevator.setVolts(output ? constrainedElevatorVolts : 0);
+        elevator.setVolts(constrainedElevatorVolts);
+        // elevator.setVolts(0);
     }
 
-    private void calculateRotary(final boolean output) {
+    private void calculateRotary() {
         final double adjSetpoint = 0;//activeState.get().rotaryPose;
         SmartDashboard.putNumber("arm::adjSetpoint", adjSetpoint);
 
@@ -239,6 +237,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         final double requestedRotaryVolts = TorqueMath.constrain(rotarayPIDDOutput + rotaryFFOutput, ROTARY_MAX_VOLTS);
         SmartDashboard.putNumber("arm::requestedRotaryVolts", requestedRotaryVolts);
 
-        rotary.setVolts(output ? requestedRotaryVolts : 0);
+        rotary.setVolts(requestedRotaryVolts);
+        // rotary.setVolts(0);
     }
 }
