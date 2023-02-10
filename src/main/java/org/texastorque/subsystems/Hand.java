@@ -63,13 +63,13 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
     public double realClawPose = 0;
     @Config
     public final PIDController clawPoseController = new PIDController(0.1, 0, 0);
-    private TorqueCurrentSpike currentDetection = new TorqueCurrentSpike(20);
+    private TorqueCurrentSpike currentDetection = new TorqueCurrentSpike(10);
     private final DigitalInput clawSwitch;
     private final TorqueNEO claw = new TorqueNEO(Ports.HAND_MOTOR);
     private boolean currentSpike = false, switchClicked = false;
 
     private Hand() {
-        claw.setCurrentLimit(20);
+        claw.setCurrentLimit(10);
         claw.setVoltageCompensation(12.6);
         claw.setBreakMode(true);
         claw.burnFlash();
@@ -107,6 +107,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
         SmartDashboard.putNumber("hand::realClawPose", claw.getPosition());
         SmartDashboard.putNumber("hand::realClawVolts", claw.getVolts());
         SmartDashboard.putString("hand::state", activeState.toString());
+        SmartDashboard.putNumber("hand::current", claw.getCurrent());
 
         activeState = desiredState;
         realClawPose = claw.getPosition();
@@ -127,7 +128,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
             currentSpike = false;
         }
  
-        claw.setVolts(currentSpike ? 0 : activeState.getClawVolts());
+        // claw.setVolts(currentSpike ? 0 : activeState.getClawVolts());
 
         if (lastState != activeState) {
             if (activeState == State.OPEN)
