@@ -237,6 +237,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         final double requestedRotaryVolts = TorqueMath.constrain(rotarayPIDDOutput + rotaryFFOutput, ROTARY_MAX_VOLTS);
         SmartDashboard.putNumber("arm::requestedRotaryVolts", requestedRotaryVolts);
 
-        rotary.setVolts(requestedRotaryVolts);
+        // rotary.setVolts(requestedRotaryVolts);
+        rotary.setVolts(0);
     }
 }
