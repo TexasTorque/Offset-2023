@@ -46,7 +46,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     public static enum State {
-        HANDOFF(new ArmPose(0, Rotation2d.fromRadians(1.5 * Math.PI))),
+        HANDOFF(new ArmPose(0, Rotation2d.fromRadians((4. / 3.) * Math.PI))),
         // Position to grab from indexer (contacts indexer)
         DOWN(new ArmPose(0, Rotation2d.fromRadians((7. / 4.) * Math.PI))),
         // Position to grab from ground (contacts ground)
@@ -213,8 +213,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
         SmartDashboard.putNumber("arm::elevatorCurrent", elevator.getCurrent());
 
-        final double elevatorFFOutput = elevatorPoseFeedForward.calculate(activeState.get().elevatorPose, 0);
-        // final double elevatorFFOutput = 0;
+        // final double elevatorFFOutput = elevatorPoseFeedForward.calculate(activeState.get().elevatorPose, 0);
+        final double elevatorFFOutput = 0;
         SmartDashboard.putNumber("arm::elevatorFFOutput", elevatorFFOutput);
 
         final double requestedElevatorVolts = TorqueMath.constrain(elevatorPIDOutput + elevatorFFOutput, ELEVATOR_MAX_VOLTS);
