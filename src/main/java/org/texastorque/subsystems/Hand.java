@@ -112,14 +112,14 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
         activeState = desiredState;
         realClawPose = claw.getPosition();
 
-        if (arm.isAtScoringPose()) {
-            if (clawSwitch.get())
-                switchClicked = true;
-        } else
-            switchClicked = false;
+        // if (arm.isAtScoringPose()) {
+        //     if (clawSwitch.get())
+        //         switchClicked = true;
+        // } else
+        //     switchClicked = false;
 
-        if (switchClicked)
-            activeState = State.OPEN;
+        // if (switchClicked)
+        //     activeState = State.OPEN;
 
         if (activeState == State.OPEN)
             currentSpike = currentDetection.calculate(claw.getCurrent());
@@ -140,6 +140,8 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
 
         if (drivebase.isPathAlignDone() && activeState == State.CLOSE)
             Input.getInstance().setOperatorRumbleFor(0.5);
+
+        desiredState = State.CLOSE;
 
         // activeState = State.CLOSE; ?
     }

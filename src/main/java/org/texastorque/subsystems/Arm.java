@@ -52,8 +52,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         // Position to grab from ground (contacts ground)
         SHELF(new ArmPose(.5, Rotation2d.fromRadians(0))),                  // Position to grab from shelf (contacts shelf)
         MID(
-                new ArmPose(.5, Rotation2d.fromRadians(0)), 
-                new ArmPose(.5, Rotation2d.fromRadians(0))
+                new ArmPose(.25, Rotation2d.fromRadians(0)), 
+                new ArmPose(.25, Rotation2d.fromRadians(0))
         ), // Position to grab from human player (contacts human player)
         TOP(
                 new ArmPose(.5,  Rotation2d.fromRadians(0)), 
@@ -96,6 +96,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     private State activeState = State.HANDOFF;
     @Log.ToString
     private State desiredState = State.HANDOFF;
+    @Log.ToString
+    private State lastState = State.HANDOFF;
     @Log.ToString
     public double realElevatorPose = 0;
 
@@ -184,6 +186,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
         calculateElevator();
         calculateRotary();
+
+        lastState = activeState;
     }
 
     @Log.BooleanBox
