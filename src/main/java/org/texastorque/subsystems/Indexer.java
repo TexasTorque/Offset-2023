@@ -6,10 +6,6 @@
  */
 package org.texastorque.subsystems;
 
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import io.github.oblarg.oblog.annotations.Config;
-import io.github.oblarg.oblog.annotations.Log;
 import org.texastorque.Ports;
 import org.texastorque.Subsystems;
 import org.texastorque.subsystems.Hand.GamePiece;
@@ -17,11 +13,14 @@ import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.motors.TorqueNEO;
 
-public final class Indexer extends TorqueSubsystem implements Subsystems {
-    private static volatile Indexer instance;
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import io.github.oblarg.oblog.annotations.Config;
+import io.github.oblarg.oblog.annotations.Log;
 
+public final class Indexer extends TorqueSubsystem implements Subsystems {
     public static class IndexerPose {
-        private static final double ROLLER_TOLERANCE = 100, ROTARY_TOLERANCE = 0.1;
+        private static final double ROLLER_TOLERANCE = 1, ROTARY_TOLERANCE = 0.1;
 
         public final double rollerVelo, rotaryPose, spinVolt;
 
@@ -54,15 +53,17 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
         public IndexerPose get() { return hand.getGamePieceMode() == GamePiece.CUBE ? cubePose : conePose; }
     }
 
+    private static volatile Indexer instance;
+
+    public static final double INTAKE_INTERFERE_MIN = 1; // ?
+
+    public static final double INTAKE_INTERFERE_MAX = 1; // ?
+
+    public static final synchronized Indexer getInstance() { return instance == null ? instance = new Indexer() : instance; }
     @Log.ToString
     private State activeState = State.UP;
-
     @Log.ToString
     private State desiredState = State.UP;
-
-    public void setState(final State state) { this.desiredState = state; }
-    public State getState() { return desiredState; }
-    public boolean isState(final State state) { return getState() == state; }
 
     @Log.ToString(name = "Real Roller Velo")
     public double realRollerVelo = 0;
@@ -100,6 +101,11 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
         // spindexer.burnFlash();
     }
 
+    public void setState(final State state) { this.desiredState = state; }
+
+    public State getState() { return desiredState; }
+
+    public boolean isState(final State state) { return getState() == state; }
     @Override
     public final void initialize(final TorqueMode mode) {}
 
@@ -128,9 +134,6 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
         activeState = State.PRIME;
     }
 
-    public static final double INTAKE_INTERFERE_MIN = 1; // ?
-    public static final double INTAKE_INTERFERE_MAX = 1; // ?
-
     @Log.BooleanBox
     public boolean isConflictingWithArm() {
         return INTAKE_INTERFERE_MIN < realRotaryPose && realRotaryPose < INTAKE_INTERFERE_MAX;
@@ -145,6 +148,4 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
     public boolean isIntaking() {
         return activeState == State.INTAKE;
     }
-
-    public static final synchronized Indexer getInstance() { return instance == null ? instance = new Indexer() : instance; }
 }

@@ -196,17 +196,15 @@ public final class PathAlignController extends AbstractController<Optional<Torqu
         final double initialSpeed = speedsSupplier.get().getVelocityMagnitude();
         final Rotation2d initialHeading = speedsSupplier.get().getHeading();
 
-        final PathPoint startPoint = new PathPoint(current.getTranslation(), initialHeading, current.getRotation(), initialSpeed);
-        // final PathPoint startPoint = new PathPoint(current.getTranslation().minus(speedsSupplier.get().getTransformAtTime(0.5).getTranslation()),
-        // initialHeading, current.getRotation(), initialSpeed);
+        // https://github.com/Spectrum3847/2023-X-Ray/blob/78bb093b7675331c04ca4c66c1ebbebec51e0383/src/main/java/frc/robot/trajectories/commands/GeneratePath.java#L58
 
+        final PathPoint startPoint = new PathPoint(current.getTranslation(), initialHeading, current.getRotation());//, initialSpeed);
         final PathPoint midPoint =
-                new PathPoint(new Translation2d(goalPose.getX() + offset, goalPose.getY()), Rotation2d.fromRadians(Math.PI), new Rotation2d(Math.PI), 3);
-        final PathPoint endPoint = new PathPoint(goalPose.getTranslation(), Rotation2d.fromRadians(0), new Rotation2d(Math.PI));
+                new PathPoint(new Translation2d(goalPose.getX() + offset, goalPose.getY()), Rotation2d.fromRadians(Math.PI), new Rotation2d(Math.PI));
+        final PathPoint endPoint = new PathPoint(goalPose.getTranslation(), Rotation2d.fromRadians(0), new Rotation2d(Math.PI), 0);
 
         trajectory = PathPlanner.generatePath(MAX_PATH_CONSTRAINTS, startPoint, midPoint, endPoint);
-        // trajectory = PathPlanner.generatePath(MAX_PATH_CONSTRAINTS, midPoint, endPoint);
-
+        
         timer.reset();
         timer.start();
         return true;

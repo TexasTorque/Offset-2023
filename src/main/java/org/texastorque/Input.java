@@ -8,8 +8,11 @@ package org.texastorque;
 
 import org.texastorque.controllers.PathAlignController.AlignState;
 import org.texastorque.controllers.PathAlignController.GridState;
-import org.texastorque.subsystems.*;
+import org.texastorque.subsystems.Arm;
+import org.texastorque.subsystems.Drivebase;
+import org.texastorque.subsystems.Hand;
 import org.texastorque.subsystems.Hand.GamePiece;
+import org.texastorque.subsystems.Indexer;
 import org.texastorque.torquelib.base.TorqueInput;
 import org.texastorque.torquelib.control.TorqueBoolSupplier;
 import org.texastorque.torquelib.control.TorqueClickSupplier;
@@ -22,9 +25,17 @@ import org.texastorque.torquelib.util.TorqueMath;
 public final class Input extends TorqueInput<TorqueController> implements Subsystems {
     private static volatile Input instance;
 
+    private final static double DEADBAND = 0.125;
+
+    public static final synchronized Input getInstance() { return instance == null ? instance = new Input() : instance; }
+
     private final TorqueBoolSupplier isZeroingWheels, slowModeToggle, alignGridLeft, alignGridCenter, alignGridRight, gridOverrideLeft, gridOverrideRight,
-            gridOverrideCenter, resetGyroClick, resetPoseClick, toggleRotationLock, autoLevel, wantsIntake, gamePieceModeToggle, clawClose, armToHandoff,
+            gridOverrideCenter, resetGyroClick, resetPoseClick, toggleRotationLock, autoLevel, wantsIntake, gamePieceModeToggle, clawClose, armToHandoff, armToBottom,
             armToShelf, armToMid, armToTop, dangerMode, showGamePieceColor;
+
+    private final TorqueRequestableTimeout driverTimeout = new TorqueRequestableTimeout();
+
+    private final TorqueRequestableTimeout operatorTimeout = new TorqueRequestableTimeout();
 
     private Input() {
         driver = new TorqueController(0, .001);
@@ -47,14 +58,15 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         autoLevel = new TorqueBoolSupplier(() -> driver.isYButtonDown());
 
         wantsIntake = new TorqueBoolSupplier(() -> operator.isRightTriggerDown());
-        clawClose = new TorqueToggleSupplier(() -> operator.isRightBumperDown(), true);
+        clawClose = new TorqueToggleSupplier(() -> operator.isRightBumperDown());
         gamePieceModeToggle = new TorqueToggleSupplier(() -> operator.isLeftBumperDown());
         showGamePieceColor = new TorqueBoolSupplier(() -> operator.isLeftTriggerDown());
 
-        armToHandoff = new TorqueBoolSupplier(() -> operator.isAButtonDown());
+        armToHandoff = new TorqueBoolSupplier(() -> operator.isRightCenterButtonDown());
         armToShelf = new TorqueBoolSupplier(() -> operator.isXButtonDown());
         armToMid = new TorqueBoolSupplier(() -> operator.isBButtonDown());
         armToTop = new TorqueBoolSupplier(() -> operator.isYButtonDown());
+        armToBottom = new TorqueBoolSupplier(() -> operator.isAButtonDown());
         dangerMode = new TorqueToggleSupplier(() -> operator.isLeftCenterButtonDown());
     }
 
@@ -62,6 +74,10 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
     public final void update() {
         updateDrivebase();
     }
+
+    public void setDriverRumbleFor(final double duration) { driverTimeout.set(duration); }
+
+    public void setOperatorRumbleFor(final double duration) { operatorTimeout.set(duration); }
 
     private void updateDrivebase() {
         updateDrivebaseSpeeds();
@@ -89,7 +105,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
         wantsIntake.onTrue(() -> indexer.setState(Indexer.State.INTAKE));
 
-        clawClose.onTrueOrFalse(() -> hand.setState(Hand.State.CLOSE), () -> hand.setState(Hand.State.OPEN));
+        clawClose.onTrueOrFalse(() -> hand.setState(Hand.State.OPEN), () -> hand.setState(Hand.State.CLOSE));
 
         gamePieceModeToggle.onTrueOrFalse(() -> hand.setGamePieceMode(GamePiece.CONE), () -> hand.setGamePieceMode(GamePiece.CUBE));
 
@@ -97,12 +113,11 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         armToShelf.onTrue(() -> arm.setState(Arm.State.SHELF));
         armToMid.onTrue(() -> arm.setState(Arm.State.MID));
         armToTop.onTrue(() -> arm.setState(Arm.State.TOP));
+        armToBottom.onTrue(() -> arm.setState(Arm.State.DOWN));
 
         lights.dangerMode = dangerMode.get();
         lights.shouldShowGamePieceColor(showGamePieceColor.get());
     }
-
-    private final static double DEADBAND = 0.125;
 
     private void updateDrivebaseSpeeds() {
         final double speedSetting = slowModeToggle.get() ? 0.2 : 1;
@@ -118,14 +133,4 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         // (drivebase.requestedRotation == Math.PI)
         //     drivebase.requestedRotation = 0;
     }
-
-    private final TorqueRequestableTimeout driverTimeout = new TorqueRequestableTimeout();
-
-    public void setDriverRumbleFor(final double duration) { driverTimeout.set(duration); }
-
-    private final TorqueRequestableTimeout operatorTimeout = new TorqueRequestableTimeout();
-
-    public void setOperatorRumbleFor(final double duration) { operatorTimeout.set(duration); }
-
-    public static final synchronized Input getInstance() { return instance == null ? instance = new Input() : instance; }
 }
