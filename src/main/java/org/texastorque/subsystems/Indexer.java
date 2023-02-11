@@ -12,6 +12,7 @@ import org.texastorque.subsystems.Hand.GamePiece;
 import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.motors.TorqueNEO;
+import org.texastorque.torquelib.util.TorqueMath;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -20,23 +21,23 @@ import io.github.oblarg.oblog.annotations.Log;
 
 public final class Indexer extends TorqueSubsystem implements Subsystems {
     public static class IndexerPose {
-        private static final double ROLLER_TOLERANCE = 1, ROTARY_TOLERANCE = 0.1;
+        private static final double ROTARY_TOLERANCE = 0.1;
 
-        public final double rollerVelo, rotaryPose, spinVolt;
+        public final double rollerVolts, rotaryPose, spinVolt;
 
         public IndexerPose(final double rollerVelo, final double rotaryPose, final double spinVolt) {
-            this.rollerVelo = rollerVelo;
+            this.rollerVolts = rollerVelo;
             this.rotaryPose = rotaryPose;
             this.spinVolt = spinVolt;
         }
 
-        public boolean atPose(final double elevatorReal, final double rotaryReal) {
-            return Math.abs(elevatorReal - rollerVelo) < ROLLER_TOLERANCE && Math.abs(rotaryReal - rotaryPose) < ROTARY_TOLERANCE;
+        public boolean atPose(final double rotaryReal) {
+            return  Math.abs(rotaryReal - rotaryPose) < ROTARY_TOLERANCE;
         }
     }
 
     public static enum State {
-        INTAKE(new IndexerPose(0, 0, 0), new IndexerPose(0, 0, 0)),
+        INTAKE(new IndexerPose(6, 0, 4), new IndexerPose(6, 0, 4)),
         PRIME(new IndexerPose(0, 0, 0)),
         UP(new IndexerPose(0, 0, 0));
 
@@ -55,9 +56,7 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
 
     private static volatile Indexer instance;
 
-    public static final double INTAKE_INTERFERE_MIN = 1; // ?
-
-    public static final double INTAKE_INTERFERE_MAX = 1; // ?
+    public static final double INTAKE_INTERFERE_MIN = 1, INTAKE_INTERFERE_MAX = 1, ROTARY_MAX_VOLTS = 4, ROLLER_MAX_VOLTS = 4;
 
     public static final synchronized Indexer getInstance() { return instance == null ? instance = new Indexer() : instance; }
     @Log.ToString
@@ -65,15 +64,10 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
     @Log.ToString
     private State desiredState = State.UP;
 
-    @Log.ToString(name = "Real Roller Velo")
-    public double realRollerVelo = 0;
-
     @Log.ToString
     public double realRotaryPose = 0;
 
     private final TorqueNEO rollers = new TorqueNEO(Ports.INDEXER_ROLLER_MOTOR);
-    @Config
-    public final PIDController rollerVeloController = new PIDController(0.1, 0, 0);
 
     private final TorqueNEO rotary = new TorqueNEO(Ports.INDEXER_ROTARY_MOTOR);
     @Config
@@ -82,23 +76,21 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
     private final TorqueNEO spindexer = new TorqueNEO(Ports.INDEXER_SPINDEXER_MOTOR);
 
     private Indexer() {
-        // rollers.setConversionFactors();
-        // rollers.setCurrentLimit(20);
-        // rollers.setVoltageCompensation(12.6);
-        // rollers.setBreakMode(true);
-        // rollers.burnFlash();
+        rollers.setCurrentLimit(15);
+        rollers.setVoltageCompensation(12.6);
+        rollers.setBreakMode(true);
+        rollers.burnFlash();
 
-        // rotary.setConversionFactors();
-        // rotary.setCurrentLimit(20);
-        // rotary.setVoltageCompensation(12.6);
-        // rotary.setBreakMode(true);
-        // rotary.burnFlash();
+        // rotary.setPositionConversionFactors();
+        rotary.setCurrentLimit(20);
+        rotary.setVoltageCompensation(12.6);
+        rotary.setBreakMode(true);
+        rotary.burnFlash();
 
-        // spindexer.setConversionFactors();
-        // spindexer.setCurrentLimit(20);
-        // spindexer.setVoltageCompensation(12.6);
-        // spindexer.setBreakMode(true);
-        // spindexer.burnFlash();
+        spindexer.setCurrentLimit(20);
+        spindexer.setVoltageCompensation(12.6);
+        spindexer.setBreakMode(true);
+        spindexer.burnFlash();
     }
 
     public void setState(final State state) { this.desiredState = state; }
@@ -117,19 +109,18 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
         //     if (wantsToConflictWithArm()) activeState = State.PRIME;
         // }
 
-        // realRollerVelo = rollers.getVelocity();
-        // realRotaryPose = rotary.getPosition();
-
-        final double requestedRollerVolts = rollerVeloController.calculate(realRollerVelo, activeState.get().rollerVelo);
-        SmartDashboard.putNumber("indexer::requestedRollerVolts", requestedRollerVolts);
-        // rollers.setVolts(requestedRollerVolts);
+        realRotaryPose = rotary.getPosition();
+            
+        final double rollerVolts = TorqueMath.constrain(activeState.get().rollerVolts, ROLLER_MAX_VOLTS);
+        SmartDashboard.putNumber("indexer::requestedRollerVolts", rollerVolts);
+        rollers.setVolts(rollerVolts);
 
         final double requestedRotaryVolts = rotaryPoseController.calculate(realRotaryPose, activeState.get().rotaryPose);
-        SmartDashboard.putNumber("indexer::requestedRotaryVolts", requestedRotaryVolts);
+        SmartDashboard.putNumber("indexer::requestedRotaryVolts", TorqueMath.constrain(requestedRotaryVolts, ROTARY_MAX_VOLTS));
         // rotary.setVolts(requestedRotaryVolts);
 
         SmartDashboard.putNumber("indexer::requestedSpindexerVolts", activeState.get().spinVolt);
-        // spindexer.setVolts(state.spinVolt);
+        spindexer.setVolts(activeState.get().spinVolt);
 
         activeState = State.PRIME;
     }
