@@ -6,11 +6,13 @@
  */
 package org.texastorque;
 
+import java.util.Map;
+
+import org.texastorque.auto.AutoManager;
+import org.texastorque.torquelib.base.TorqueRobotBase;
+
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
-import java.util.Map;
-import org.texastorque.auto.AutoManager;
-import org.texastorque.torquelib.base.*;
 
 public final class Robot extends TorqueRobotBase implements Subsystems {
     public Robot() {
@@ -36,6 +38,6 @@ public final class Robot extends TorqueRobotBase implements Subsystems {
                 .withSize(6, 4)
                 .withProperties(Map.of("Show crosshair", false, "Show controls", false));
         dashboard.add("FIELD", drivebase.fieldMap).withPosition(0, 4).withSize(7, 4);
-        dashboard.add("AUTO SELECTOR", AutoManager.getInstance().getAutoSelector()).withPosition(7, 4).withSize(4, 2);
+        // dashboard.add("AUTO SELECTOR", AutoManager.getInstance().getAutoSelector()).withPosition(7, 4).withSize(4, 2);
     }
 }

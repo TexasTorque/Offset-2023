@@ -30,12 +30,14 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
     public static final synchronized Input getInstance() { return instance == null ? instance = new Input() : instance; }
 
     private final TorqueBoolSupplier isZeroingWheels, slowModeToggle, alignGridLeft, alignGridCenter, alignGridRight, gridOverrideLeft, gridOverrideRight,
-            gridOverrideCenter, resetGyroClick, resetPoseClick, toggleRotationLock, autoLevel, wantsIntake, gamePieceModeToggle, clawClose, armToHandoff, armToBottom,
+            gridOverrideCenter, resetGyroClick, resetPoseClick, toggleRotationLock, autoLevel, wantsIntake, gamePieceModeToggle, openClaw, armToHandoff, armToBottom,
             armToShelf, armToMid, armToTop, dangerMode, showGamePieceColor;
 
     private final TorqueRequestableTimeout driverTimeout = new TorqueRequestableTimeout();
 
     private final TorqueRequestableTimeout operatorTimeout = new TorqueRequestableTimeout();
+
+    private Arm.State lastSetArmState = arm.getState();
 
     private Input() {
         driver = new TorqueController(0, .001);
@@ -58,7 +60,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         autoLevel = new TorqueBoolSupplier(() -> driver.isYButtonDown());
 
         wantsIntake = new TorqueBoolSupplier(() -> operator.isRightTriggerDown());
-        clawClose = new TorqueToggleSupplier(() -> operator.isRightBumperDown());
+        openClaw = new TorqueBoolSupplier(() -> operator.isRightBumperDown());
         gamePieceModeToggle = new TorqueToggleSupplier(() -> operator.isLeftBumperDown());
         showGamePieceColor = new TorqueBoolSupplier(() -> operator.isLeftTriggerDown());
 
@@ -103,17 +105,24 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         autoLevel.onTrue(() -> drivebase.setState(Drivebase.State.BALANCE));
         isZeroingWheels.onTrue(() -> drivebase.setState(Drivebase.State.ZERO));
 
-        wantsIntake.onTrue(() -> indexer.setState(Indexer.State.INTAKE));
-
-        clawClose.onTrueOrFalse(() -> hand.setState(Hand.State.OPEN), () -> hand.setState(Hand.State.CLOSE));
+        openClaw.onTrue(() -> hand.setState(Hand.State.OPEN));
 
         gamePieceModeToggle.onTrueOrFalse(() -> hand.setGamePieceMode(GamePiece.CONE), () -> hand.setGamePieceMode(GamePiece.CUBE));
 
-        armToHandoff.onTrue(() -> arm.setState(Arm.State.HANDOFF));
-        armToShelf.onTrue(() -> arm.setState(Arm.State.SHELF));
-        armToMid.onTrue(() -> arm.setState(Arm.State.MID));
-        armToTop.onTrue(() -> arm.setState(Arm.State.TOP));
-        armToBottom.onTrue(() -> arm.setState(Arm.State.DOWN));
+        // armToHandoff.onTrue(() -> arm.setState(lastSetArmState = Arm.State.HANDOFF));
+        armToShelf.onTrue(() -> arm.setState(lastSetArmState = Arm.State.SHELF));
+        armToMid.onTrue(() -> arm.setState(lastSetArmState = Arm.State.MID));
+        armToTop.onTrue(() -> arm.setState(lastSetArmState = Arm.State.TOP));
+        armToBottom.onTrue(() -> arm.setState(lastSetArmState = Arm.State.DOWN));
+
+        wantsIntake.onTrueOrFalse(() -> {
+            indexer.setState(Indexer.State.INTAKE);
+            arm.setState(Arm.State.HANDOFF);
+            hand.setState(Hand.State.OPEN);
+        }, () -> {
+            if (arm.isState(Arm.State.HANDOFF)) 
+                arm.setState(lastSetArmState);
+        });
 
         lights.dangerMode = dangerMode.get();
         lights.shouldShowGamePieceColor(showGamePieceColor.get());

@@ -44,7 +44,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
 
     private static volatile Hand instance;
 
-    private static final double MAX_CLAW_VOLTS = 4;
+    private static final double MAX_CLAW_VOLTS = 12;
 
     public static final synchronized Hand getInstance() {
         return instance == null ? instance = new Hand() : instance;
@@ -69,7 +69,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
     private boolean currentSpike = false, switchClicked = false;
 
     private Hand() {
-        claw.setCurrentLimit(10);
+        claw.setCurrentLimit(5);
         claw.setVoltageCompensation(12.6);
         claw.setBreakMode(true);
         claw.burnFlash();
@@ -112,14 +112,14 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
         activeState = desiredState;
         realClawPose = claw.getPosition();
 
-        if (arm.isAtScoringPose()) {
-            if (clawSwitch.get())
-                switchClicked = true;
-        } else
-            switchClicked = false;
+        // if (arm.isAtScoringPose()) {
+        //     if (clawSwitch.get())
+        //         switchClicked = true;
+        // } else
+        //     switchClicked = false;
 
-        if (switchClicked)
-            activeState = State.OPEN;
+        // if (switchClicked)
+        //     activeState = State.OPEN;
 
         if (activeState == State.OPEN)
             currentSpike = currentDetection.calculate(claw.getCurrent());
@@ -128,7 +128,9 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
             currentSpike = false;
         }
  
-        // claw.setVolts(currentSpike ? 0 : activeState.getClawVolts());
+        final double clawRequestedVolts = currentSpike ? 0 : activeState.getClawVolts();
+        // claw.setVolts(clawRequestedVolts);
+        SmartDashboard.putNumber("hand::clawVoltsWanted", clawRequestedVolts);
 
         if (lastState != activeState) {
             if (activeState == State.OPEN)
@@ -140,6 +142,8 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
 
         if (drivebase.isPathAlignDone() && activeState == State.CLOSE)
             Input.getInstance().setOperatorRumbleFor(0.5);
+
+        desiredState = State.CLOSE;
 
         // activeState = State.CLOSE; ?
     }

@@ -6,25 +6,28 @@
  */
 package org.texastorque.auto.commands;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.texastorque.Subsystems;
+import org.texastorque.torquelib.auto.TorqueCommand;
+import org.texastorque.torquelib.swerve.TorqueSwerveSpeeds;
+
 import com.pathplanner.lib.PathPlanner;
 import com.pathplanner.lib.PathPlannerTrajectory;
 import com.pathplanner.lib.PathPlannerTrajectory.EventMarker;
 import com.pathplanner.lib.PathPlannerTrajectory.PathPlannerState;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.server.PathPlannerServer;
+
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import org.texastorque.Subsystems;
-import org.texastorque.torquelib.auto.TorqueCommand;
-import org.texastorque.torquelib.swerve.TorqueSwerveSpeeds;
 
 public final class FollowEventPath extends TorqueCommand implements Subsystems {
     public static final double MAX_VELOCITY_PATH = 3.5, MAX_ACCELERATION_PATH = 3.5;
@@ -43,6 +46,11 @@ public final class FollowEventPath extends TorqueCommand implements Subsystems {
     private final List<TorqueCommand> running;
 
     public FollowEventPath(final String name) { this(name, MAX_VELOCITY_PATH, MAX_ACCELERATION_PATH); }
+
+    public FollowEventPath(final String name, final Map<String, TorqueCommand> commands) {
+        this(name, commands, MAX_VELOCITY_PATH, MAX_ACCELERATION_PATH);
+
+    }
 
     public FollowEventPath(final String name, final double maxSpeed, final double maxAcceleration) {
         this(name, new HashMap<String, TorqueCommand>(), maxSpeed, maxAcceleration);
@@ -65,9 +73,7 @@ public final class FollowEventPath extends TorqueCommand implements Subsystems {
         running = new ArrayList<TorqueCommand>();
     }
 
-    private final PathPlannerState reflect(final Trajectory.State state) {
-        return PathPlannerTrajectory.transformStateForAlliance((PathPlannerState)state, DriverStation.getAlliance());
-    }
+    public void addEvent(final String name, final TorqueCommand command) { commands.put(name, command); }
 
     @Override
     protected final void init() {
@@ -90,7 +96,7 @@ public final class FollowEventPath extends TorqueCommand implements Subsystems {
         final PathPlannerState desired = reflect(trajectory.sample(elapsed));
 
         final TorqueSwerveSpeeds speeds = TorqueSwerveSpeeds.fromChassisSpeeds(controller.calculate(drivebase.getPose(), desired));
-        drivebase.inputSpeeds = speeds.times(-1, -1, 1);
+        // drivebase.inputSpeeds = speeds.times(-1, 1, 1);
 
         if (unpassed.size() > 0 && elapsed >= unpassed.get(0).timeSeconds) {
             final EventMarker marker = unpassed.remove(0);
@@ -120,5 +126,7 @@ public final class FollowEventPath extends TorqueCommand implements Subsystems {
         drivebase.fieldMap.getObject("traj").close();
     }
 
-    public void addEvent(final String name, final TorqueCommand command) { commands.put(name, command); }
+    private final PathPlannerState reflect(final Trajectory.State state) {
+        return PathPlannerTrajectory.transformStateForAlliance((PathPlannerState)state, DriverStation.getAlliance());
+    }
 }
