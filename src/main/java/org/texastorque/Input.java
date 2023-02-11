@@ -109,7 +109,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
         gamePieceModeToggle.onTrueOrFalse(() -> hand.setGamePieceMode(GamePiece.CONE), () -> hand.setGamePieceMode(GamePiece.CUBE));
 
-        armToHandoff.onTrue(() -> arm.setState(lastSetArmState = Arm.State.HANDOFF));
+        // armToHandoff.onTrue(() -> arm.setState(lastSetArmState = Arm.State.HANDOFF));
         armToShelf.onTrue(() -> arm.setState(lastSetArmState = Arm.State.SHELF));
         armToMid.onTrue(() -> arm.setState(lastSetArmState = Arm.State.MID));
         armToTop.onTrue(() -> arm.setState(lastSetArmState = Arm.State.TOP));
@@ -121,7 +121,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
             hand.setState(Hand.State.OPEN);
         }, () -> {
             if (arm.isState(Arm.State.HANDOFF)) 
-                arm.setState(Arm.State.DOWN);
+                arm.setState(lastSetArmState);
         });
 
         lights.dangerMode = dangerMode.get();

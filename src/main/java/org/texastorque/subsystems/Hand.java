@@ -44,7 +44,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
 
     private static volatile Hand instance;
 
-    private static final double MAX_CLAW_VOLTS = 4;
+    private static final double MAX_CLAW_VOLTS = 12;
 
     public static final synchronized Hand getInstance() {
         return instance == null ? instance = new Hand() : instance;
@@ -69,7 +69,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
     private boolean currentSpike = false, switchClicked = false;
 
     private Hand() {
-        claw.setCurrentLimit(10);
+        claw.setCurrentLimit(5);
         claw.setVoltageCompensation(12.6);
         claw.setBreakMode(true);
         claw.burnFlash();
@@ -130,7 +130,6 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
  
         final double clawRequestedVolts = currentSpike ? 0 : activeState.getClawVolts();
         // claw.setVolts(clawRequestedVolts);
-        claw.setVolts(0);
         SmartDashboard.putNumber("hand::clawVoltsWanted", clawRequestedVolts);
 
         if (lastState != activeState) {
