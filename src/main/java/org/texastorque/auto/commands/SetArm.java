@@ -6,8 +6,16 @@ import org.texastorque.torquelib.auto.TorqueCommand;
 
 public final class SetArm extends TorqueCommand implements Subsystems {
     private final Arm.State state;
+    private final boolean ignorePose;
 
-    public SetArm(final Arm.State state) { this.state = state; }
+    public SetArm(final Arm.State state) { 
+        this(state, false);
+    }
+
+    public SetArm(final Arm.State state, final boolean ignorePose) { 
+        this.state = state; 
+        this.ignorePose = ignorePose;
+    }
 
     @Override
     protected final void init() {
@@ -19,7 +27,7 @@ public final class SetArm extends TorqueCommand implements Subsystems {
 
     @Override
     protected final boolean endCondition() {
-        return arm.isAtDesiredPose();
+        return ignorePose || arm.isAtDesiredPose();
     }
 
     @Override

@@ -16,6 +16,6 @@ import org.texastorque.torquelib.auto.TorqueSequence;
 public final class StowElevator extends TorqueSequence implements Subsystems {
     public StowElevator() {
         addBlock(new SetHand(Hand.State.CLOSE));
-        addBlock(new SetArm(Arm.State.DOWN));
+        addBlock(new SetArm(Arm.State.DOWN, true));
     }
 }
