@@ -113,9 +113,9 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
     public final void update(final TorqueMode mode) {
         activeState = desiredState;
 
-        if (arm.wantsToConflictWithIndexer() || arm.isConflictingWithIndexer()) {
-            if (wantsToConflictWithArm()) activeState = State.PRIME;
-        }
+        // if (arm.wantsToConflictWithIndexer() || arm.isConflictingWithIndexer()) {
+        //     if (wantsToConflictWithArm()) activeState = State.PRIME;
+        // }
 
         // realRollerVelo = rollers.getVelocity();
         // realRotaryPose = rotary.getPosition();
