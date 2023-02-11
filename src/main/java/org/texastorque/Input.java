@@ -114,7 +114,6 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
         gamePieceModeToggle.onTrueOrFalse(() -> hand.setGamePieceMode(GamePiece.CONE), () -> hand.setGamePieceMode(GamePiece.CUBE));
 
-        // armToHandoff.onTrue(() -> arm.setState(lastSetArmState = Arm.State.HANDOFF));
         armToShelf.onTrue(() -> arm.setState(lastSetArmState = Arm.State.SHELF));
         armToMid.onTrue(() -> arm.setState(lastSetArmState = Arm.State.MID));
         armToTop.onTrue(() -> arm.setState(lastSetArmState = Arm.State.TOP));
