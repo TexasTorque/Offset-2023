@@ -124,7 +124,8 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
         SmartDashboard.putNumber("indexer::requestedSpindexerVolts", activeState.get().spinVolts);
         spindexer.setVolts(activeState.get().spinVolts);
 
-        activeState = State.PRIME;
+        if (mode.isTeleop())
+            activeState = State.UP;
     }
 
     @Log.BooleanBox

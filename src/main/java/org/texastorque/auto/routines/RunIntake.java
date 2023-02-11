@@ -7,7 +7,6 @@
 package org.texastorque.auto.routines;
 
 import org.texastorque.Subsystems;
-import org.texastorque.auto.commands.SetArm;
 import org.texastorque.subsystems.Arm;
 import org.texastorque.subsystems.Hand.GamePiece;
 import org.texastorque.subsystems.Indexer;
@@ -18,6 +17,6 @@ public final class RunIntake extends TorqueSequence implements Subsystems {
     public RunIntake(final GamePiece piece) {
         addBlock(new TorqueExecute(() -> hand.setGamePieceMode(piece)));
         addBlock(new TorqueExecute(() -> indexer.setState(Indexer.State.INTAKE)));
-        addBlock(new SetArm(Arm.State.HANDOFF));
+        addBlock(new TorqueExecute(() -> arm.setState(Arm.State.HANDOFF)));
     }
 }

@@ -143,6 +143,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
         if (drivebase.isPathAlignDone() && activeState == State.CLOSE)
             Input.getInstance().setOperatorRumbleFor(0.5);
 
-        desiredState = State.CLOSE;
+        if (mode.isTeleop())
+            desiredState = State.CLOSE;
     }
 }
