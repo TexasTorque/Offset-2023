@@ -50,14 +50,14 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         // Position to grab from indexer (contacts indexer)
         DOWN(new ArmPose(0, Rotation2d.fromDegrees(225))),
         // Position to grab from ground (contacts ground)
-        SHELF(new ArmPose(.5, Rotation2d.fromRadians(0))),                  // Position to grab from shelf (contacts shelf)
-        MID(
-                new ArmPose(.6, Rotation2d.fromRadians(10)), 
-                new ArmPose(.6, Rotation2d.fromRadians(10))
+        SHELF(new ArmPose(.5, Rotation2d.fromDegrees(0))),                  // Position to grab from shelf (contacts shelf)
+        MID(//
+                new ArmPose(.6, Rotation2d.fromDegrees(10)), 
+                new ArmPose(.6, Rotation2d.fromDegrees(10))
         ), // Position to grab from human player (contacts human player)
         TOP(
-                new ArmPose(.4,  Rotation2d.fromRadians(0)), 
-                new ArmPose(.4,  Rotation2d.fromRadians(0))
+                new ArmPose(.4,  Rotation2d.fromDegrees(0)), 
+                new ArmPose(.4,  Rotation2d.fromDegrees(0))
         ); // Position to intake (contacts intake)
      
 
@@ -85,10 +85,6 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     public static final double ARM_INTERFERE_MAX = (11. / 6.) * Math.PI;
 
-    public static final double TWO_PI_RAD = Math.PI * 2;
-
-    public static final Rotation2d TWO_PI_R2D = Rotation2d.fromRadians(TWO_PI_RAD);
-
     private static volatile Arm instance;
     public static final synchronized Arm getInstance() { return instance == null ? instance = new Arm() : instance; }
 
@@ -102,7 +98,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     public double realElevatorPose = 0;
 
     @Log.ToString
-    public Rotation2d realRotaryPose = Rotation2d.fromRadians(0);
+    public Rotation2d realRotaryPose = Rotation2d.fromDegrees(0);
     private final TorqueNEO elevator = new TorqueNEO(Ports.ARM_ELEVATOR_MOTOR);
     @Config
     public final PIDController elevatorPoseController = new PIDController(30, 0, 0);
@@ -121,7 +117,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     private final TorqueNEO rotary = new TorqueNEO(Ports.ARM_ROTARY_MOTOR);
 
     @Config
-    public final PIDController rotaryPoseController = new PIDController(.5 * Math.PI, .0 * Math.PI, 0 * Math.PI);
+    public final PIDController rotaryPoseController = new PIDController(.5 * Math.PI, 0 * Math.PI, 0 * Math.PI);
 
     // Unfortunatly these are not sendables
     // Est. from https://www.reca.lc/arm
@@ -155,11 +151,13 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         activeState = State.DOWN;
     }
 
+    // TODO: check if at pose
     @Log.BooleanBox
     public boolean isAtShelf() {
         return activeState == State.SHELF;
     }
 
+    // TODO: check if at pose
     @Log.BooleanBox
     public boolean isAtScoringPose() {
         return activeState == State.MID || activeState == State.TOP;
@@ -202,6 +200,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     private void updateFeedback() {
+        // Can invert the polarity - Jack
         realElevatorPose = -elevator.getPosition();
 
         final double rotaryRadians = TorqueMath.constrain0to2PI(-rotaryEncoder.getPosition() - ROTARY_ENCODER_OFFSET);
@@ -229,16 +228,12 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     private void calculateRotary() {
         final double rotaryFFOutput = (activeState == State.HANDOFF ? 0 :  -rotaryPoseFeedForward.calculate(realRotaryPose.getRadians(), 0)) 
                 + (activeState == State.DOWN ? 1 : 0);
-        // final double rotaryFFOutput = 0;
 
         final double rotarayPIDDOutput = -rotaryPoseController.calculate(realRotaryPose.getRadians(), activeState.get().rotaryPose.getRadians());
             
-        // final double rotarayPIDDOutput = 0;
-
         final double requestedRotaryVolts = TorqueMath.constrain(rotarayPIDDOutput + rotaryFFOutput, ROTARY_MAX_VOLTS);
         SmartDashboard.putNumber("arm::requestedRotaryVolts", requestedRotaryVolts);
 
         rotary.setVolts(requestedRotaryVolts);
-        // rotary.setVolts(0);
     }
 }

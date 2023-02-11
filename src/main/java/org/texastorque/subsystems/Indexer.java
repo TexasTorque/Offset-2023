@@ -23,12 +23,12 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
     public static class IndexerPose {
         private static final double ROTARY_TOLERANCE = 0.1;
 
-        public final double rollerVolts, rotaryPose, spinVolt;
+        public final double rollerVolts, rotaryPose, spinVolts;
 
-        public IndexerPose(final double rollerVelo, final double rotaryPose, final double spinVolt) {
-            this.rollerVolts = rollerVelo;
+        public IndexerPose(final double rollerVolts, final double rotaryPose, final double spinVolts) {
+            this.rollerVolts = rollerVolts;
             this.rotaryPose = rotaryPose;
-            this.spinVolt = spinVolt;
+            this.spinVolts = spinVolts;
         }
 
         public boolean atPose(final double rotaryReal) {
@@ -37,7 +37,7 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
     }
 
     public static enum State {
-        INTAKE(new IndexerPose(6, 0, 4), new IndexerPose(6, 0, 4)),
+        INTAKE(new IndexerPose(6, 0, 0), new IndexerPose(6, 0, 4)),
         PRIME(new IndexerPose(0, 0, 0)),
         UP(new IndexerPose(0, 0, 0));
 
@@ -56,6 +56,7 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
 
     private static volatile Indexer instance;
 
+    // TODO: Find experimentally
     public static final double INTAKE_INTERFERE_MIN = 1, INTAKE_INTERFERE_MAX = 1, ROTARY_MAX_VOLTS = 4, ROLLER_MAX_VOLTS = 4;
 
     public static final synchronized Indexer getInstance() { return instance == null ? instance = new Indexer() : instance; }
@@ -70,6 +71,7 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
     private final TorqueNEO rollers = new TorqueNEO(Ports.INDEXER_ROLLER_MOTOR);
 
     private final TorqueNEO rotary = new TorqueNEO(Ports.INDEXER_ROTARY_MOTOR);
+
     @Config
     public final PIDController rotaryPoseController = new PIDController(0.1, 0, 0);
 
@@ -82,7 +84,7 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
         rollers.burnFlash();
 
         // rotary.setPositionConversionFactors();
-        rotary.setCurrentLimit(20);
+        rotary.setCurrentLimit(60);
         rotary.setVoltageCompensation(12.6);
         rotary.setBreakMode(true);
         rotary.burnFlash();
@@ -115,12 +117,12 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
         SmartDashboard.putNumber("indexer::requestedRollerVolts", rollerVolts);
         rollers.setVolts(rollerVolts);
 
-        final double requestedRotaryVolts = rotaryPoseController.calculate(realRotaryPose, activeState.get().rotaryPose);
-        SmartDashboard.putNumber("indexer::requestedRotaryVolts", TorqueMath.constrain(requestedRotaryVolts, ROTARY_MAX_VOLTS));
+        final double requestedRotaryVolts = TorqueMath.constrain(rotaryPoseController.calculate(realRotaryPose, activeState.get().rotaryPose), ROTARY_MAX_VOLTS);
+        SmartDashboard.putNumber("indexer::requestedRotaryVolts", requestedRotaryVolts);
         // rotary.setVolts(requestedRotaryVolts);
 
-        SmartDashboard.putNumber("indexer::requestedSpindexerVolts", activeState.get().spinVolt);
-        spindexer.setVolts(activeState.get().spinVolt);
+        SmartDashboard.putNumber("indexer::requestedSpindexerVolts", activeState.get().spinVolts);
+        spindexer.setVolts(activeState.get().spinVolts);
 
         activeState = State.PRIME;
     }

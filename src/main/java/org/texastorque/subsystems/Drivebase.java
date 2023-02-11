@@ -64,9 +64,8 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
             MAX_ACCELERATION = 8.958,                   // m/s^2
             MAX_ANGULAR_VELOCITY = 4 * Math.PI,         // rad/s
             MAX_ANGULAR_ACCELERATION = 2 * Math.PI,     // rad/s^2
-            WHEEL_DIAMETER = Units.inchesToMeters(4.0), // m
-
-            MAGIC_NUMBER = 34;
+            WHEEL_DIAMETER = Units.inchesToMeters(4.0); // m
+    
     public static final Pose2d INITIAL_POS = new Pose2d(0, 0, new Rotation2d(0));
 
     private static final double SIZE = Units.inchesToMeters(18);

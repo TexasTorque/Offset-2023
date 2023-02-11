@@ -44,33 +44,33 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         driver = new TorqueController(0, .001);
         operator = new TorqueController(1);
 
-        isZeroingWheels = new TorqueBoolSupplier(() -> driver.isBButtonDown());
-        slowModeToggle = new TorqueToggleSupplier(() -> driver.isLeftBumperDown());
+        isZeroingWheels = new TorqueBoolSupplier(driver::isBButtonDown);
+        slowModeToggle = new TorqueToggleSupplier(driver::isLeftBumperDown);
 
-        alignGridLeft = new TorqueBoolSupplier(() -> driver.isLeftTriggerDown());
-        alignGridCenter = new TorqueBoolSupplier(() -> driver.isRightBumperDown());
-        alignGridRight = new TorqueBoolSupplier(() -> driver.isRightTriggerDown());
+        alignGridLeft = new TorqueBoolSupplier(driver::isLeftTriggerDown);
+        alignGridCenter = new TorqueBoolSupplier(driver::isRightBumperDown);
+        alignGridRight = new TorqueBoolSupplier(driver::isRightTriggerDown);
 
-        gridOverrideLeft = new TorqueBoolSupplier(() -> operator.isDPADLeftDown());
-        gridOverrideRight = new TorqueBoolSupplier(() -> operator.isDPADRightDown());
-        gridOverrideCenter = new TorqueBoolSupplier(() -> operator.isDPADDownDown());
+        gridOverrideLeft = new TorqueBoolSupplier(operator::isDPADLeftDown);
+        gridOverrideRight = new TorqueBoolSupplier(operator::isDPADRightDown);
+        gridOverrideCenter = new TorqueBoolSupplier(operator::isDPADDownDown);
 
-        resetGyroClick = new TorqueClickSupplier(() -> driver.isRightCenterButtonPressed());
-        resetPoseClick = new TorqueClickSupplier(() -> driver.isLeftCenterButtonPressed());
-        toggleRotationLock = new TorqueToggleSupplier(() -> driver.isAButtonDown(), true);
-        autoLevel = new TorqueBoolSupplier(() -> driver.isYButtonDown());
+        resetGyroClick = new TorqueClickSupplier(driver::isRightCenterButtonPressed);
+        resetPoseClick = new TorqueClickSupplier(driver::isLeftCenterButtonPressed);
+        toggleRotationLock = new TorqueToggleSupplier(driver::isAButtonDown, true);
+        autoLevel = new TorqueBoolSupplier(driver::isYButtonDown);
 
-        wantsIntake = new TorqueBoolSupplier(() -> operator.isRightTriggerDown());
-        openClaw = new TorqueBoolSupplier(() -> operator.isRightBumperDown());
-        gamePieceModeToggle = new TorqueToggleSupplier(() -> operator.isLeftBumperDown());
-        showGamePieceColor = new TorqueBoolSupplier(() -> operator.isLeftTriggerDown());
+        wantsIntake = new TorqueBoolSupplier(operator::isRightTriggerDown);
+        openClaw = new TorqueBoolSupplier(operator::isRightBumperDown);
+        gamePieceModeToggle = new TorqueToggleSupplier(operator::isLeftBumperDown);
+        showGamePieceColor = new TorqueBoolSupplier(operator::isLeftTriggerDown);
 
-        armToHandoff = new TorqueBoolSupplier(() -> operator.isRightCenterButtonDown());
-        armToShelf = new TorqueBoolSupplier(() -> operator.isXButtonDown());
-        armToMid = new TorqueBoolSupplier(() -> operator.isBButtonDown());
-        armToTop = new TorqueBoolSupplier(() -> operator.isYButtonDown());
-        armToBottom = new TorqueBoolSupplier(() -> operator.isAButtonDown());
-        dangerMode = new TorqueToggleSupplier(() -> operator.isLeftCenterButtonDown());
+        armToHandoff = new TorqueBoolSupplier(operator::isRightCenterButtonDown);
+        armToShelf = new TorqueBoolSupplier(operator::isXButtonDown);
+        armToMid = new TorqueBoolSupplier(operator::isBButtonDown);
+        armToTop = new TorqueBoolSupplier(operator::isYButtonDown);
+        armToBottom = new TorqueBoolSupplier(operator::isAButtonDown);
+        dangerMode = new TorqueToggleSupplier(operator::isLeftCenterButtonDown);
 
         climberToUp = new TorqueBoolSupplier(() -> driver.isDPADUpDown());
         climberToSide = new TorqueBoolSupplier(() -> driver.isDPADRightDown());

@@ -38,7 +38,4 @@ public final class EventMap {
     private final void addRoutine(final String key, final TorqueSequence routine) {
         map.put(key, new TorqueSequenceRunner(routine));
     }
-
-
-    
 }

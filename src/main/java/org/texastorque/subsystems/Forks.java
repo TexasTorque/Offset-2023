@@ -81,6 +81,5 @@ public final class Forks extends TorqueSubsystem implements Subsystems {
         SmartDashboard.putNumber("arm::requestedRotaryVolts", requestedRotaryVolts);
 
         rotary.setVolts(requestedRotaryVolts);
-        // rotary.setVolts(0);
     }
 }

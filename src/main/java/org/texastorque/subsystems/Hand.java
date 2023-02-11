@@ -144,7 +144,5 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
             Input.getInstance().setOperatorRumbleFor(0.5);
 
         desiredState = State.CLOSE;
-
-        // activeState = State.CLOSE; ?
     }
 }
