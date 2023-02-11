@@ -22,7 +22,9 @@ import io.github.oblarg.oblog.annotations.Log;
 
 public final class Forks extends TorqueSubsystem implements Subsystems {
     public static enum State {
-        UP(Rotation2d.fromDegrees(0));
+        UP(Rotation2d.fromDegrees(0)),
+        SIDE(Rotation2d.fromDegrees(0)),
+        CLIMB(Rotation2d.fromDegrees(0));
 
         public final Rotation2d rotaryPose;
 

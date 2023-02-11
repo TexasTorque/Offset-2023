@@ -10,6 +10,7 @@ import org.texastorque.controllers.PathAlignController.AlignState;
 import org.texastorque.controllers.PathAlignController.GridState;
 import org.texastorque.subsystems.Arm;
 import org.texastorque.subsystems.Drivebase;
+import org.texastorque.subsystems.Forks;
 import org.texastorque.subsystems.Hand;
 import org.texastorque.subsystems.Hand.GamePiece;
 import org.texastorque.subsystems.Indexer;
@@ -31,7 +32,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
     private final TorqueBoolSupplier isZeroingWheels, slowModeToggle, alignGridLeft, alignGridCenter, alignGridRight, gridOverrideLeft, gridOverrideRight,
             gridOverrideCenter, resetGyroClick, resetPoseClick, toggleRotationLock, autoLevel, wantsIntake, gamePieceModeToggle, openClaw, armToHandoff, armToBottom,
-            armToShelf, armToMid, armToTop, dangerMode, showGamePieceColor;
+            armToShelf, armToMid, armToTop, dangerMode, showGamePieceColor, climberToUp, climberToSide, climberToClimb;
 
     private final TorqueRequestableTimeout driverTimeout = new TorqueRequestableTimeout();
 
@@ -70,6 +71,10 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         armToTop = new TorqueBoolSupplier(() -> operator.isYButtonDown());
         armToBottom = new TorqueBoolSupplier(() -> operator.isAButtonDown());
         dangerMode = new TorqueToggleSupplier(() -> operator.isLeftCenterButtonDown());
+
+        climberToUp = new TorqueBoolSupplier(() -> driver.isDPADUpDown());
+        climberToSide = new TorqueBoolSupplier(() -> driver.isDPADRightDown());
+        climberToClimb = new TorqueBoolSupplier(() -> driver.isDPADDownDown());
     }
 
     @Override
@@ -121,8 +126,13 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
             hand.setState(Hand.State.OPEN);
         }, () -> {
             if (arm.isState(Arm.State.HANDOFF)) 
-                arm.setState(lastSetArmState);
+                arm.setState(lastSetArmState = Arm.State.DOWN);
+                // arm.setState(lastSetArmState);
         });
+
+        climberToUp.onTrue(() -> forks.setState(Forks.State.UP));
+        climberToSide.onTrue(() -> forks.setState(Forks.State.SIDE));
+        climberToClimb.onTrue(() -> forks.setState(Forks.State.CLIMB));
 
         lights.dangerMode = dangerMode.get();
         lights.shouldShowGamePieceColor(showGamePieceColor.get());
