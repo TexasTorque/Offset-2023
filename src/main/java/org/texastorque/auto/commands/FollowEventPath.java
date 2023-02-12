@@ -7,11 +7,11 @@
 package org.texastorque.auto.commands;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.texastorque.Subsystems;
+import org.texastorque.auto.EventMap;
 import org.texastorque.torquelib.auto.TorqueCommand;
 import org.texastorque.torquelib.swerve.TorqueSwerveSpeeds;
 
@@ -53,7 +53,7 @@ public final class FollowEventPath extends TorqueCommand implements Subsystems {
     }
 
     public FollowEventPath(final String name, final double maxSpeed, final double maxAcceleration) {
-        this(name, new HashMap<String, TorqueCommand>(), maxSpeed, maxAcceleration);
+        this(name, EventMap.getMap(), maxSpeed, maxAcceleration);
     }
 
     public FollowEventPath(final String name, final Map<String, TorqueCommand> commands, final double maxSpeed, final double maxAcceleration) {

@@ -7,15 +7,14 @@
 package org.texastorque.auto.routines;
 
 import org.texastorque.Subsystems;
-import org.texastorque.auto.commands.SetArm;
-import org.texastorque.auto.commands.SetHand;
 import org.texastorque.subsystems.Arm;
 import org.texastorque.subsystems.Hand;
 import org.texastorque.torquelib.auto.TorqueSequence;
+import org.texastorque.torquelib.auto.commands.TorqueExecute;
 
 public final class StowElevator extends TorqueSequence implements Subsystems {
     public StowElevator() {
-        addBlock(new SetHand(Hand.State.CLOSE));
-        addBlock(new SetArm(Arm.State.DOWN));
+        addBlock(new TorqueExecute(() -> arm.setState(Arm.State.DOWN)));
+        addBlock(new TorqueExecute(() -> hand.setState(Hand.State.CLOSE)));
     }
 }

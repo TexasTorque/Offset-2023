@@ -6,7 +6,12 @@
  */
 package org.texastorque;
 
-import org.texastorque.subsystems.*;
+import org.texastorque.subsystems.Arm;
+import org.texastorque.subsystems.Drivebase;
+import org.texastorque.subsystems.Forks;
+import org.texastorque.subsystems.Hand;
+import org.texastorque.subsystems.Indexer;
+import org.texastorque.subsystems.Lights;
 
 public interface Subsystems {
     public final Drivebase drivebase = Drivebase.getInstance();
@@ -14,4 +19,5 @@ public interface Subsystems {
     public final Indexer indexer = Indexer.getInstance();
     public final Arm arm = Arm.getInstance();
     public final Hand hand = Hand.getInstance();
+    public final Forks forks = Forks.getInstance();
 }

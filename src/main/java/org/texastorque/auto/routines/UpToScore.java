@@ -7,18 +7,20 @@
 package org.texastorque.auto.routines;
 
 import org.texastorque.Subsystems;
-import org.texastorque.auto.commands.SetArm;
-import org.texastorque.auto.commands.SetHand;
 import org.texastorque.subsystems.Arm;
 import org.texastorque.subsystems.Hand;
 import org.texastorque.subsystems.Hand.GamePiece;
 import org.texastorque.torquelib.auto.TorqueSequence;
 import org.texastorque.torquelib.auto.commands.TorqueExecute;
+import org.texastorque.torquelib.auto.commands.TorqueWaitForSeconds;
 
 public final class UpToScore extends TorqueSequence implements Subsystems {
     public UpToScore(final Arm.State armState, final GamePiece piece) {
-        addBlock(new TorqueExecute(() -> hand.setGamePieceMode(piece)));
-        addBlock(new SetHand(Hand.State.CLOSE));
-        addBlock(new SetArm(armState));
+        addBlock(new TorqueExecute(() -> {
+            hand.setGamePieceMode(piece);
+            hand.setState(Hand.State.CLOSE);
+        }));
+        addBlock(new TorqueWaitForSeconds(.25));
+        addBlock(new TorqueExecute(() -> arm.setState(armState)));
     }
 }

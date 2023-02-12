@@ -13,6 +13,7 @@ import org.texastorque.subsystems.Drivebase;
 import org.texastorque.subsystems.Hand;
 import org.texastorque.subsystems.Hand.GamePiece;
 import org.texastorque.subsystems.Indexer;
+import org.texastorque.torquelib.base.TorqueDirection;
 import org.texastorque.torquelib.base.TorqueInput;
 import org.texastorque.torquelib.control.TorqueBoolSupplier;
 import org.texastorque.torquelib.control.TorqueClickSupplier;
@@ -31,7 +32,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
     private final TorqueBoolSupplier isZeroingWheels, slowModeToggle, alignGridLeft, alignGridCenter, alignGridRight, gridOverrideLeft, gridOverrideRight,
             gridOverrideCenter, resetGyroClick, resetPoseClick, toggleRotationLock, autoLevel, wantsIntake, gamePieceModeToggle, openClaw, armToHandoff, armToBottom,
-            armToShelf, armToMid, armToTop, dangerMode, showGamePieceColor;
+            armToShelf, armToMid, armToTop, dangerMode, showGamePieceColor, climberToUp, climberToSide, climberToClimb;
 
     private final TorqueRequestableTimeout driverTimeout = new TorqueRequestableTimeout();
 
@@ -43,33 +44,37 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         driver = new TorqueController(0, .001);
         operator = new TorqueController(1);
 
-        isZeroingWheels = new TorqueBoolSupplier(() -> driver.isBButtonDown());
-        slowModeToggle = new TorqueToggleSupplier(() -> driver.isLeftBumperDown());
+        isZeroingWheels = new TorqueBoolSupplier(driver::isBButtonDown);
+        slowModeToggle = new TorqueToggleSupplier(driver::isLeftBumperDown);
 
-        alignGridLeft = new TorqueBoolSupplier(() -> driver.isLeftTriggerDown());
-        alignGridCenter = new TorqueBoolSupplier(() -> driver.isRightBumperDown());
-        alignGridRight = new TorqueBoolSupplier(() -> driver.isRightTriggerDown());
+        alignGridLeft = new TorqueBoolSupplier(driver::isLeftTriggerDown);
+        alignGridCenter = new TorqueBoolSupplier(driver::isRightBumperDown);
+        alignGridRight = new TorqueBoolSupplier(driver::isRightTriggerDown);
 
-        gridOverrideLeft = new TorqueBoolSupplier(() -> operator.isDPADLeftDown());
-        gridOverrideRight = new TorqueBoolSupplier(() -> operator.isDPADRightDown());
-        gridOverrideCenter = new TorqueBoolSupplier(() -> operator.isDPADDownDown());
+        gridOverrideLeft = new TorqueBoolSupplier(operator::isDPADLeftDown);
+        gridOverrideRight = new TorqueBoolSupplier(operator::isDPADRightDown);
+        gridOverrideCenter = new TorqueBoolSupplier(operator::isDPADDownDown);
 
-        resetGyroClick = new TorqueClickSupplier(() -> driver.isRightCenterButtonPressed());
-        resetPoseClick = new TorqueClickSupplier(() -> driver.isLeftCenterButtonPressed());
-        toggleRotationLock = new TorqueToggleSupplier(() -> driver.isAButtonDown(), true);
-        autoLevel = new TorqueBoolSupplier(() -> driver.isYButtonDown());
+        resetGyroClick = new TorqueClickSupplier(driver::isRightCenterButtonPressed);
+        resetPoseClick = new TorqueClickSupplier(driver::isLeftCenterButtonPressed);
+        toggleRotationLock = new TorqueToggleSupplier(driver::isAButtonDown, true);
+        autoLevel = new TorqueBoolSupplier(driver::isYButtonDown);
 
-        wantsIntake = new TorqueBoolSupplier(() -> operator.isRightTriggerDown());
-        openClaw = new TorqueBoolSupplier(() -> operator.isRightBumperDown());
-        gamePieceModeToggle = new TorqueToggleSupplier(() -> operator.isLeftBumperDown());
-        showGamePieceColor = new TorqueBoolSupplier(() -> operator.isLeftTriggerDown());
+        wantsIntake = new TorqueBoolSupplier(operator::isRightTriggerDown);
+        openClaw = new TorqueBoolSupplier(operator::isLeftTriggerDown);
+        gamePieceModeToggle = new TorqueToggleSupplier(operator::isRightCenterButtonDown);
+        showGamePieceColor = new TorqueBoolSupplier(operator::isLeftTriggerDown); // unused
 
-        armToHandoff = new TorqueBoolSupplier(() -> operator.isRightCenterButtonDown());
-        armToShelf = new TorqueBoolSupplier(() -> operator.isXButtonDown());
-        armToMid = new TorqueBoolSupplier(() -> operator.isBButtonDown());
-        armToTop = new TorqueBoolSupplier(() -> operator.isYButtonDown());
-        armToBottom = new TorqueBoolSupplier(() -> operator.isAButtonDown());
-        dangerMode = new TorqueToggleSupplier(() -> operator.isLeftCenterButtonDown());
+        armToHandoff = new TorqueBoolSupplier(operator::isRightCenterButtonDown); // unused
+        armToShelf = new TorqueBoolSupplier(operator::isXButtonDown);
+        armToMid = new TorqueBoolSupplier(operator::isBButtonDown);
+        armToTop = new TorqueBoolSupplier(operator::isYButtonDown);
+        armToBottom = new TorqueBoolSupplier(operator::isAButtonDown);
+        dangerMode = new TorqueToggleSupplier(operator::isLeftCenterButtonDown);
+
+        climberToUp = new TorqueBoolSupplier(() -> driver.isDPADUpDown());
+        climberToSide = new TorqueBoolSupplier(() -> driver.isDPADRightDown());
+        climberToClimb = new TorqueBoolSupplier(() -> driver.isDPADDownDown());
     }
 
     @Override
@@ -109,7 +114,6 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
         gamePieceModeToggle.onTrueOrFalse(() -> hand.setGamePieceMode(GamePiece.CONE), () -> hand.setGamePieceMode(GamePiece.CUBE));
 
-        // armToHandoff.onTrue(() -> arm.setState(lastSetArmState = Arm.State.HANDOFF));
         armToShelf.onTrue(() -> arm.setState(lastSetArmState = Arm.State.SHELF));
         armToMid.onTrue(() -> arm.setState(lastSetArmState = Arm.State.MID));
         armToTop.onTrue(() -> arm.setState(lastSetArmState = Arm.State.TOP));
@@ -118,14 +122,35 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         wantsIntake.onTrueOrFalse(() -> {
             indexer.setState(Indexer.State.INTAKE);
             arm.setState(Arm.State.HANDOFF);
-            hand.setState(Hand.State.OPEN);
+            // hand.setState(Hand.State.OPEN);
         }, () -> {
             if (arm.isState(Arm.State.HANDOFF)) 
-                arm.setState(lastSetArmState);
+                arm.setState(lastSetArmState = Arm.State.DOWN);
+            indexer.setState(Indexer.State.UP);
         });
 
+        if (operator.isRightBumperDown())
+            indexer.spindexerDirection = TorqueDirection.FORWARD;
+        else if (operator.isLeftBumperDown())
+            indexer.spindexerDirection = TorqueDirection.REVERSE;
+        else
+            indexer.spindexerDirection = TorqueDirection.OFF;
+
+        // climberToUp.onTrue(() -> forks.setState(Forks.State.UP));
+        // climberToSide.onTrue(() -> forks.setState(Forks.State.SIDE));
+        // climberToClimb.onTrue(() -> forks.setState(Forks.State.CLIMB));
+
+        if (driver.isDPADUpDown())
+            forks.direction = TorqueDirection.FORWARD;
+        else if (driver.isDPADDownDown())
+            forks.direction = TorqueDirection.REVERSE;
+        else
+            forks.direction = TorqueDirection.OFF;
+
+
         lights.dangerMode = dangerMode.get();
-        lights.shouldShowGamePieceColor(showGamePieceColor.get());
+        // lights.shouldShowGamePieceColor(showGamePieceColor.get());
+        lights.shouldShowGamePieceColor(true);
     }
 
     private void updateDrivebaseSpeeds() {
