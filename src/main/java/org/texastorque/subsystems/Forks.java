@@ -8,6 +8,7 @@ package org.texastorque.subsystems;
 
 import org.texastorque.Ports;
 import org.texastorque.Subsystems;
+import org.texastorque.torquelib.base.TorqueDirection;
 import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.motors.TorqueNEO;
@@ -23,8 +24,8 @@ import io.github.oblarg.oblog.annotations.Log;
 public final class Forks extends TorqueSubsystem implements Subsystems {
     public static enum State {
         UP(Rotation2d.fromDegrees(0)),
-        SIDE(Rotation2d.fromDegrees(0)),
-        CLIMB(Rotation2d.fromDegrees(0));
+        SIDE(Rotation2d.fromDegrees(-1.703e6)),
+        CLIMB(Rotation2d.fromDegrees(-1.703e6 * .75));
 
         public final Rotation2d rotaryPose;
 
@@ -46,9 +47,12 @@ public final class Forks extends TorqueSubsystem implements Subsystems {
 
     private final TorqueNEO rotary = new TorqueNEO(Ports.CLIMBER_MOTOR);
     @Config
-    public final PIDController rotaryPoseController = new PIDController(0.1, 0, 0);
+    public final PIDController rotaryPoseController = new PIDController(1e-2, 0, 0);
 
     public final ArmFeedforward rotaryPoseFeedForward = new ArmFeedforward(0, 0, 0);
+
+    @Log.ToString
+    public TorqueDirection direction = TorqueDirection.OFF;
 
     private Forks() {
         rotary.setPositionConversionFactor(135.0); // gearing
@@ -61,8 +65,8 @@ public final class Forks extends TorqueSubsystem implements Subsystems {
     public void setState(final State state) { this.desiredState = state; }
 
     public State getState() { return desiredState; }
-
     public boolean isState(final State state) { return getState() == state; }
+
     @Override
     public final void initialize(final TorqueMode mode) {}
 
@@ -74,12 +78,16 @@ public final class Forks extends TorqueSubsystem implements Subsystems {
 
         final double rotaryFFOutput = rotaryPoseFeedForward.calculate(realRotaryPose.getRadians(), 0);
 
-        final double rotarayPIDDOutput = -rotaryPoseController.calculate(realRotaryPose.getRadians(), activeState.rotaryPose.getRadians());
+        final double rotarayPIDDOutput = rotaryPoseController.calculate(realRotaryPose.getRadians(), activeState.rotaryPose.getRadians());
             
 
-        final double requestedRotaryVolts = TorqueMath.constrain(rotarayPIDDOutput + rotaryFFOutput, ROTARY_MAX_VOLTS);
-        SmartDashboard.putNumber("arm::requestedRotaryVolts", requestedRotaryVolts);
+        SmartDashboard.putNumber("forks::rotaryCurrent", rotary.getCurrent());
 
-        rotary.setVolts(requestedRotaryVolts);
+        final double requestedRotaryVolts = TorqueMath.constrain(rotarayPIDDOutput + rotaryFFOutput, ROTARY_MAX_VOLTS);
+        SmartDashboard.putNumber("forks::requestedRotaryVolts", requestedRotaryVolts);
+
+        // rotary.setVolts(requestedRotaryVolts);
+
+        rotary.setVolts(direction.get() * 12);
     }
 }

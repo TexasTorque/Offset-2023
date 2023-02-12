@@ -9,6 +9,7 @@ package org.texastorque.subsystems;
 import org.texastorque.Ports;
 import org.texastorque.Subsystems;
 import org.texastorque.subsystems.Hand.GamePiece;
+import org.texastorque.torquelib.base.TorqueDirection;
 import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.motors.TorqueNEO;
@@ -77,6 +78,8 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
 
     private final TorqueNEO spindexer = new TorqueNEO(Ports.INDEXER_SPINDEXER_MOTOR);
 
+    public TorqueDirection spindexerDirection = TorqueDirection.OFF;
+
     private Indexer() {
         rollers.setCurrentLimit(15);
         rollers.setVoltageCompensation(12.6);
@@ -112,6 +115,9 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
         // }
 
         realRotaryPose = rotary.getPosition();
+
+        SmartDashboard.putNumber("indexer::rotaryPose", rotary.getPosition());
+        SmartDashboard.putNumber("indexer::rollersPose", rollers.getPosition());
             
         final double rollerVolts = TorqueMath.constrain(activeState.get().rollerVolts, ROLLER_MAX_VOLTS);
         SmartDashboard.putNumber("indexer::requestedRollerVolts", rollerVolts);
@@ -121,11 +127,13 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
         SmartDashboard.putNumber("indexer::requestedRotaryVolts", requestedRotaryVolts);
         // rotary.setVolts(requestedRotaryVolts);
 
-        SmartDashboard.putNumber("indexer::requestedSpindexerVolts", activeState.get().spinVolts);
-        spindexer.setVolts(activeState.get().spinVolts);
+        // SmartDashboard.putNumber("indexer::requestedSpindexerVolts", activeState.get().spinVolts);
+        SmartDashboard.putNumber("indexer::requestedSpindexerCurrent", spindexer.getCurrent());
+        // spindexer.setVolts(activeState.get().spinVolts);
+        spindexer.setVolts(spindexerDirection.get() * 6);
 
         if (mode.isTeleop())
-            activeState = State.UP;
+            desiredState = State.UP;
     }
 
     @Log.BooleanBox

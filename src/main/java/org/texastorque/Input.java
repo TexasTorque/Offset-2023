@@ -10,10 +10,10 @@ import org.texastorque.controllers.PathAlignController.AlignState;
 import org.texastorque.controllers.PathAlignController.GridState;
 import org.texastorque.subsystems.Arm;
 import org.texastorque.subsystems.Drivebase;
-import org.texastorque.subsystems.Forks;
 import org.texastorque.subsystems.Hand;
 import org.texastorque.subsystems.Hand.GamePiece;
 import org.texastorque.subsystems.Indexer;
+import org.texastorque.torquelib.base.TorqueDirection;
 import org.texastorque.torquelib.base.TorqueInput;
 import org.texastorque.torquelib.control.TorqueBoolSupplier;
 import org.texastorque.torquelib.control.TorqueClickSupplier;
@@ -61,11 +61,11 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         autoLevel = new TorqueBoolSupplier(driver::isYButtonDown);
 
         wantsIntake = new TorqueBoolSupplier(operator::isRightTriggerDown);
-        openClaw = new TorqueBoolSupplier(operator::isRightBumperDown);
-        gamePieceModeToggle = new TorqueToggleSupplier(operator::isLeftBumperDown);
-        showGamePieceColor = new TorqueBoolSupplier(operator::isLeftTriggerDown);
+        openClaw = new TorqueBoolSupplier(operator::isLeftTriggerDown);
+        gamePieceModeToggle = new TorqueToggleSupplier(operator::isRightCenterButtonDown);
+        showGamePieceColor = new TorqueBoolSupplier(operator::isLeftTriggerDown); // unused
 
-        armToHandoff = new TorqueBoolSupplier(operator::isRightCenterButtonDown);
+        armToHandoff = new TorqueBoolSupplier(operator::isRightCenterButtonDown); // unused
         armToShelf = new TorqueBoolSupplier(operator::isXButtonDown);
         armToMid = new TorqueBoolSupplier(operator::isBButtonDown);
         armToTop = new TorqueBoolSupplier(operator::isYButtonDown);
@@ -122,19 +122,35 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         wantsIntake.onTrueOrFalse(() -> {
             indexer.setState(Indexer.State.INTAKE);
             arm.setState(Arm.State.HANDOFF);
-            hand.setState(Hand.State.OPEN);
+            // hand.setState(Hand.State.OPEN);
         }, () -> {
             if (arm.isState(Arm.State.HANDOFF)) 
                 arm.setState(lastSetArmState = Arm.State.DOWN);
-                // arm.setState(lastSetArmState);
+            indexer.setState(Indexer.State.UP);
         });
 
-        climberToUp.onTrue(() -> forks.setState(Forks.State.UP));
-        climberToSide.onTrue(() -> forks.setState(Forks.State.SIDE));
-        climberToClimb.onTrue(() -> forks.setState(Forks.State.CLIMB));
+        if (operator.isRightBumperDown())
+            indexer.spindexerDirection = TorqueDirection.FORWARD;
+        else if (operator.isLeftBumperDown())
+            indexer.spindexerDirection = TorqueDirection.REVERSE;
+        else
+            indexer.spindexerDirection = TorqueDirection.OFF;
+
+        // climberToUp.onTrue(() -> forks.setState(Forks.State.UP));
+        // climberToSide.onTrue(() -> forks.setState(Forks.State.SIDE));
+        // climberToClimb.onTrue(() -> forks.setState(Forks.State.CLIMB));
+
+        if (driver.isDPADUpDown())
+            forks.direction = TorqueDirection.FORWARD;
+        else if (driver.isDPADDownDown())
+            forks.direction = TorqueDirection.REVERSE;
+        else
+            forks.direction = TorqueDirection.OFF;
+
 
         lights.dangerMode = dangerMode.get();
-        lights.shouldShowGamePieceColor(showGamePieceColor.get());
+        // lights.shouldShowGamePieceColor(showGamePieceColor.get());
+        lights.shouldShowGamePieceColor(true);
     }
 
     private void updateDrivebaseSpeeds() {

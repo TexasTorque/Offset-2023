@@ -46,18 +46,18 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     public static enum State {
-        HANDOFF(new ArmPose(0, Rotation2d.fromDegrees(230))),
+        HANDOFF(new ArmPose(.5, Rotation2d.fromDegrees(255))),
         // Position to grab from indexer (contacts indexer)
-        DOWN(new ArmPose(0, Rotation2d.fromDegrees(225))),
+        DOWN(new ArmPose(.75, Rotation2d.fromDegrees(225))),
         // Position to grab from ground (contacts ground)
-        SHELF(new ArmPose(.5, Rotation2d.fromDegrees(0))),                  // Position to grab from shelf (contacts shelf)
+        SHELF(new ArmPose(1, Rotation2d.fromDegrees(0))),                  // Position to grab from shelf (contacts shelf)
         MID(//
-                new ArmPose(.6, Rotation2d.fromDegrees(10)), 
-                new ArmPose(.6, Rotation2d.fromDegrees(10))
+                new ArmPose(1.5, Rotation2d.fromDegrees(10)), 
+                new ArmPose(1.5, Rotation2d.fromDegrees(10))
         ), // Position to grab from human player (contacts human player)
         TOP(
-                new ArmPose(.4,  Rotation2d.fromDegrees(0)), 
-                new ArmPose(.4,  Rotation2d.fromDegrees(0))
+                new ArmPose(2,  Rotation2d.fromDegrees(0)), 
+                new ArmPose(2,  Rotation2d.fromDegrees(0))
         ); // Position to intake (contacts intake)
      
 
@@ -76,10 +76,11 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     private static final double ROTARY_ENCODER_OFFSET = -4.203098863363266, 
             ELEVATOR_MOTOR_ROT_PER_METER = 1 / 37.5956558484, 
-            ELEVATOR_MAX_VOLTS = 12, 
+            ELEVATOR_MAX_VOLTS = 4,
             ROTARY_MAX_VOLTS = 8, 
             ELEVATOR_MIN = 0, 
-            ELEVATOR_MAX = 0.8334226608276367;
+            // ELEVATOR_MAX = 0.8334226608276367;
+            ELEVATOR_MAX = 2.5;
 
     public static final double ARM_INTERFERE_MIN = (7. / 6.) * Math.PI;
 
@@ -101,10 +102,11 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     public Rotation2d realRotaryPose = Rotation2d.fromDegrees(0);
     private final TorqueNEO elevator = new TorqueNEO(Ports.ARM_ELEVATOR_MOTOR);
     @Config
-    public final PIDController elevatorPoseController = new PIDController(30, 0, 0);
+    public final PIDController elevatorPoseController = new PIDController(15, 0, 0);
 
     // Not using rn
-    private final ElevatorFeedforward elevatorPoseFeedForward = new ElevatorFeedforward(0, .45, 4.6);
+    private final ElevatorFeedforward elevatorPoseFeedForward = new ElevatorFeedforward(0, 0, 0);
+    // private final ElevatorFeedforward elevatorPoseFeedForward = new ElevatorFeedforward(0, .45, 4.6);
     // new ElevatorFeedforward(1.01, 6.14, 0.16);
     /**
      *    π/2
@@ -201,7 +203,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     private void updateFeedback() {
         // Can invert the polarity - Jack
-        realElevatorPose = -elevator.getPosition();
+        realElevatorPose = elevator.getPosition();
 
         final double rotaryRadians = TorqueMath.constrain0to2PI(-rotaryEncoder.getPosition() - ROTARY_ENCODER_OFFSET);
         realRotaryPose = Rotation2d.fromRadians(rotaryRadians);
@@ -219,7 +221,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         final double requestedElevatorVolts = TorqueMath.constrain(elevatorPIDOutput + elevatorFFOutput, ELEVATOR_MAX_VOLTS);
         SmartDashboard.putNumber("arm::requestedElevatorVolts", requestedElevatorVolts);
 
-        final double constrainedElevatorVolts = -TorqueMath.linearConstraint(requestedElevatorVolts, realElevatorPose, ELEVATOR_MIN, ELEVATOR_MAX); // don't think this will work
+        final double constrainedElevatorVolts = TorqueMath.linearConstraint(requestedElevatorVolts, realElevatorPose, ELEVATOR_MIN, ELEVATOR_MAX); // don't think this will work
         SmartDashboard.putNumber("arm::constrainedElevatorVolts", constrainedElevatorVolts);
 
         elevator.setVolts(constrainedElevatorVolts);
