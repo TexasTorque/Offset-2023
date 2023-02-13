@@ -32,7 +32,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
     private final TorqueBoolSupplier isZeroingWheels, slowModeToggle, alignGridLeft, alignGridCenter, alignGridRight, gridOverrideLeft, gridOverrideRight,
             gridOverrideCenter, resetGyroClick, resetPoseClick, toggleRotationLock, autoLevel, wantsIntake, gamePieceModeToggle, openClaw, armToHandoff, armToBottom,
-            armToShelf, armToMid, armToTop, dangerMode, showGamePieceColor, climberToUp, climberToSide, climberToClimb;
+            armToShelf, armToMid, armToTop, dangerMode, showGamePieceColor, forksUp, forksDown;
 
     private final TorqueRequestableTimeout driverTimeout = new TorqueRequestableTimeout();
 
@@ -72,9 +72,8 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         armToBottom = new TorqueBoolSupplier(operator::isAButtonDown);
         dangerMode = new TorqueToggleSupplier(operator::isLeftCenterButtonDown);
 
-        climberToUp = new TorqueBoolSupplier(() -> driver.isDPADUpDown());
-        climberToSide = new TorqueBoolSupplier(() -> driver.isDPADRightDown());
-        climberToClimb = new TorqueBoolSupplier(() -> driver.isDPADDownDown());
+        forksUp = new TorqueBoolSupplier(() -> driver.isDPADUpDown());
+        forksDown = new TorqueBoolSupplier(() -> driver.isDPADDownDown());
     }
 
     @Override
@@ -136,17 +135,8 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         else
             indexer.spindexerDirection = TorqueDirection.OFF;
 
-        // climberToUp.onTrue(() -> forks.setState(Forks.State.UP));
-        // climberToSide.onTrue(() -> forks.setState(Forks.State.SIDE));
-        // climberToClimb.onTrue(() -> forks.setState(Forks.State.CLIMB));
-
-        if (driver.isDPADUpDown())
-            forks.direction = TorqueDirection.FORWARD;
-        else if (driver.isDPADDownDown())
-            forks.direction = TorqueDirection.REVERSE;
-        else
-            forks.direction = TorqueDirection.OFF;
-
+        forksUp.onTrue(() -> forks.setDirection(TorqueDirection.FORWARD));
+        forksDown.onTrue(() -> forks.setDirection(TorqueDirection.REVERSE));
 
         lights.dangerMode = dangerMode.get();
         // lights.shouldShowGamePieceColor(showGamePieceColor.get());
