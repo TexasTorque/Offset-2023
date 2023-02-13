@@ -46,19 +46,18 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     public static enum State {
-        HANDOFF(new ArmPose(.5, Rotation2d.fromDegrees(255))),
-        // Position to grab from indexer (contacts indexer)
-        DOWN(new ArmPose(.75, Rotation2d.fromDegrees(225))),
-        // Position to grab from ground (contacts ground)
-        SHELF(new ArmPose(1, Rotation2d.fromDegrees(0))),                  // Position to grab from shelf (contacts shelf)
-        MID(//
-                new ArmPose(1.5, Rotation2d.fromDegrees(10)), 
-                new ArmPose(1.5, Rotation2d.fromDegrees(10))
-        ), // Position to grab from human player (contacts human player)
+        HANDOFF(new ArmPose(0, Rotation2d.fromDegrees(250))),
+        DOWN(new ArmPose(.5, Rotation2d.fromDegrees(250))),
+        BACK(new ArmPose(.25, Rotation2d.fromDegrees(200))),
+        SHELF(new ArmPose(1, Rotation2d.fromDegrees(0))),            
+        MID(
+                new ArmPose(1.5, Rotation2d.fromDegrees(30)), 
+                new ArmPose(1.5, Rotation2d.fromDegrees(30))
+        ), 
         TOP(
-                new ArmPose(2,  Rotation2d.fromDegrees(0)), 
-                new ArmPose(2,  Rotation2d.fromDegrees(0))
-        ); // Position to intake (contacts intake)
+                new ArmPose(2,  Rotation2d.fromDegrees(30)), 
+                new ArmPose(2,  Rotation2d.fromDegrees(30))
+        );
      
 
         public final ArmPose cubePose;
@@ -90,11 +89,11 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     public static final synchronized Arm getInstance() { return instance == null ? instance = new Arm() : instance; }
 
     @Log.ToString
-    private State activeState = State.HANDOFF;
+    private State activeState = State.DOWN;
     @Log.ToString
-    private State desiredState = State.HANDOFF;
+    private State desiredState = State.DOWN;
     @Log.ToString
-    private State lastState = State.HANDOFF;
+    private State lastState = State.DOWN;
     @Log.ToString
     public double realElevatorPose = 0;
 
@@ -150,7 +149,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         cancoderConfig.initializationStrategy = SensorInitializationStrategy.BootToAbsolutePosition;
         rotaryEncoder.configAllSettings(cancoderConfig);
 
-        activeState = State.DOWN;
+        activeState = State.BACK;
     }
 
     // TODO: check if at pose
@@ -180,6 +179,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     @Override
     public final void update(final TorqueMode mode) {
         activeState = desiredState;
+        if (hand.isState(Hand.State.OPEN) && activeState == State.DOWN)
+            activeState = State.HANDOFF;
         // wantsHandoff = activeState == State.HANDOFF;
         // if (wantsHandoff && indexer.isConflictingWithArm()) activeState = State.DOWN;
 
@@ -202,7 +203,6 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     private void updateFeedback() {
-        // Can invert the polarity - Jack
         realElevatorPose = elevator.getPosition();
 
         final double rotaryRadians = TorqueMath.constrain0to2PI(-rotaryEncoder.getPosition() - ROTARY_ENCODER_OFFSET);
@@ -228,8 +228,10 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     private void calculateRotary() {
-        final double rotaryFFOutput = (activeState == State.HANDOFF ? 0 :  -rotaryPoseFeedForward.calculate(realRotaryPose.getRadians(), 0)) 
-                + (activeState == State.DOWN ? 1 : 0);
+        // final double rotaryFFOutput = (activeState == State.HANDOFF ? 0 :  -rotaryPoseFeedForward.calculate(realRotaryPose.getRadians(), 0)) 
+        //         + (activeState == State.DOWN ? 1 : 0);
+
+        final double rotaryFFOutput = -rotaryPoseFeedForward.calculate(realRotaryPose.getRadians(), 0);
 
         final double rotarayPIDDOutput = -rotaryPoseController.calculate(realRotaryPose.getRadians(), activeState.get().rotaryPose.getRadians());
             

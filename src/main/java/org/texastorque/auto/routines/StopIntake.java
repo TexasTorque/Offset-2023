@@ -16,8 +16,8 @@ public final class StopIntake extends TorqueSequence implements Subsystems {
     public StopIntake() {
         addBlock(new TorqueExecute(() -> intake.setState(Intake.State.PRIME)));
         addBlock(new TorqueExecute(() -> {
-            if (arm.isState(Arm.State.HANDOFF)) 
-                arm.setState(Arm.State.DOWN);
+            if (arm.isState(Arm.State.DOWN)) 
+                arm.setState(Arm.State.BACK);
         }));
     }
 }

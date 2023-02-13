@@ -14,7 +14,7 @@ import org.texastorque.torquelib.auto.commands.TorqueExecute;
 
 public final class StowElevator extends TorqueSequence implements Subsystems {
     public StowElevator() {
-        addBlock(new TorqueExecute(() -> arm.setState(Arm.State.DOWN)));
+        addBlock(new TorqueExecute(() -> arm.setState(Arm.State.BACK)));
         addBlock(new TorqueExecute(() -> hand.setState(Hand.State.CLOSE)));
     }
 }

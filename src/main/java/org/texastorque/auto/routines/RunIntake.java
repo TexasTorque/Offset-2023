@@ -17,6 +17,6 @@ public final class RunIntake extends TorqueSequence implements Subsystems {
     public RunIntake(final GamePiece piece) {
         addBlock(new TorqueExecute(() -> hand.setGamePieceMode(piece)));
         addBlock(new TorqueExecute(() -> intake.setState(Intake.State.INTAKE)));
-        addBlock(new TorqueExecute(() -> arm.setState(Arm.State.HANDOFF)));
+        addBlock(new TorqueExecute(() -> arm.setState(Arm.State.DOWN)));
     }
 }

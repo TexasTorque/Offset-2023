@@ -60,8 +60,8 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         toggleRotationLock = new TorqueToggleSupplier(driver::isAButtonDown, true);
         autoLevel = new TorqueBoolSupplier(driver::isYButtonDown);
 
-        wantsIntake = new TorqueBoolSupplier(operator::isRightTriggerDown);
-        openClaw = new TorqueBoolSupplier(operator::isLeftTriggerDown);
+        wantsIntake = new TorqueBoolSupplier(operator::isLeftTriggerDown);
+        openClaw = new TorqueBoolSupplier(operator::isRightTriggerDown);
         gamePieceModeToggle = new TorqueToggleSupplier(operator::isRightCenterButtonDown);
 
         armToShelf = new TorqueBoolSupplier(operator::isXButtonDown);
@@ -116,15 +116,14 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         armToShelf.onTrue(() -> arm.setState(lastSetArmState = Arm.State.SHELF));
         armToMid.onTrue(() -> arm.setState(lastSetArmState = Arm.State.MID));
         armToTop.onTrue(() -> arm.setState(lastSetArmState = Arm.State.TOP));
-        armToBottom.onTrue(() -> arm.setState(lastSetArmState = Arm.State.DOWN));
+        armToBottom.onTrue(() -> arm.setState(lastSetArmState = Arm.State.BACK));
 
         wantsIntake.onTrueOrFalse(() -> {
             intake.setState(Intake.State.INTAKE);
-            arm.setState(Arm.State.HANDOFF);
-            // hand.setState(Hand.State.OPEN);
+            arm.setState(Arm.State.DOWN);
         }, () -> {
-            if (arm.isState(Arm.State.HANDOFF)) 
-                arm.setState(lastSetArmState = Arm.State.DOWN);
+            if (arm.isState(Arm.State.DOWN)) 
+                arm.setState(lastSetArmState = Arm.State.BACK);
             intake.setState(Intake.State.UP);
         });
 
