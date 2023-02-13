@@ -22,7 +22,7 @@ public final class Forks extends TorqueSubsystem implements Subsystems {
 
     public static final synchronized Forks getInstance() { return instance == null ? instance = new Forks() : instance; }
 
-    private final TorqueNEO rotary = new TorqueNEO(Ports.CLIMBER_MOTOR);
+    private final TorqueNEO rotary = new TorqueNEO(Ports.FORKS_MOTOR);
 
     @Log.ToString
     private TorqueDirection direction = TorqueDirection.OFF;
@@ -45,5 +45,7 @@ public final class Forks extends TorqueSubsystem implements Subsystems {
     @Override
     public final void update(final TorqueMode mode) {
         rotary.setVolts(mode.isTeleop() ? ROTARY_MAX_VOLTS * direction.get() : 0);
+
+        direction = TorqueDirection.OFF;
     }
 }

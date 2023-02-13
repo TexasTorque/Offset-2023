@@ -22,7 +22,7 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
 
     public static final synchronized Spindexer getInstance() { return instance == null ? instance = new Spindexer() : instance; }
 
-    private final TorqueNEO turntable = new TorqueNEO(Ports.INDEXER_SPINDEXER_MOTOR);
+    private final TorqueNEO turntable = new TorqueNEO(Ports.SPINDEXER_MOTOR);
 
     @Log.ToString
     private TorqueDirection direction = TorqueDirection.OFF;
@@ -44,5 +44,7 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
     @Override
     public final void update(final TorqueMode mode) {
         turntable.setVolts(SPINDEXER_MAX_VOLTS * direction.get());
+
+        direction = TorqueDirection.OFF;
     }
 }

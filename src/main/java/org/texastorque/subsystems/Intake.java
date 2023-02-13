@@ -67,9 +67,9 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
     @Log.ToString
     public double realRotaryPose = 0;
 
-    private final TorqueNEO rollers = new TorqueNEO(Ports.INDEXER_ROLLER_MOTOR);
+    private final TorqueNEO rollers = new TorqueNEO(Ports.INTAKE_ROLLER_MOTOR);
 
-    private final TorqueNEO rotary = new TorqueNEO(Ports.INDEXER_ROTARY_MOTOR);
+    private final TorqueNEO rotary = new TorqueNEO(Ports.INTAKE_ROTARY_MOTOR);
 
     @Config
     public final PIDController rotaryPoseController = new PIDController(0.1, 0, 0);
