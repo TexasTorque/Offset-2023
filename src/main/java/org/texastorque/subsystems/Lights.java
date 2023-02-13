@@ -105,7 +105,7 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
         // if (dangerMode)
         //     return blinkYellow;
 
-        if (indexer.isIntaking() || arm.isAtShelf() || showGamePieceColor) {
+        if (intake.isIntaking() || arm.isAtShelf() || showGamePieceColor) {
             if (hand.getGamePieceMode() == GamePiece.CUBE) return solidPurple;
             if (hand.getGamePieceMode() == GamePiece.CONE) return solidYellow;
         }

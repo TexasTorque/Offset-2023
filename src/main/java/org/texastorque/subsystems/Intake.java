@@ -9,7 +9,6 @@ package org.texastorque.subsystems;
 import org.texastorque.Ports;
 import org.texastorque.Subsystems;
 import org.texastorque.subsystems.Hand.GamePiece;
-import org.texastorque.torquelib.base.TorqueDirection;
 import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.motors.TorqueNEO;
@@ -20,16 +19,15 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
 
-public final class Indexer extends TorqueSubsystem implements Subsystems {
+public final class Intake extends TorqueSubsystem implements Subsystems {
     public static class IndexerPose {
         private static final double ROTARY_TOLERANCE = 0.1;
 
-        public final double rollerVolts, rotaryPose, spinVolts;
+        public final double rollerVolts, rotaryPose;
 
-        public IndexerPose(final double rollerVolts, final double rotaryPose, final double spinVolts) {
+        public IndexerPose(final double rollerVolts, final double rotaryPose) {
             this.rollerVolts = rollerVolts;
             this.rotaryPose = rotaryPose;
-            this.spinVolts = spinVolts;
         }
 
         public boolean atPose(final double rotaryReal) {
@@ -38,9 +36,9 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
     }
 
     public static enum State {
-        INTAKE(new IndexerPose(6, 0, 0), new IndexerPose(6, 0, 4)),
-        PRIME(new IndexerPose(0, 0, 0)),
-        UP(new IndexerPose(0, 0, 0));
+        INTAKE(new IndexerPose(6, 0), new IndexerPose(6, 0)),
+        PRIME(new IndexerPose(0, 0)),
+        UP(new IndexerPose(0, 0));
 
         public final IndexerPose cubePose;
         public final IndexerPose conePose;
@@ -55,12 +53,12 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
         public IndexerPose get() { return hand.getGamePieceMode() == GamePiece.CUBE ? cubePose : conePose; }
     }
 
-    private static volatile Indexer instance;
+    private static volatile Intake instance;
 
     // TODO: Find experimentally
     public static final double INTAKE_INTERFERE_MIN = 1, INTAKE_INTERFERE_MAX = 1, ROTARY_MAX_VOLTS = 4, ROLLER_MAX_VOLTS = 4;
 
-    public static final synchronized Indexer getInstance() { return instance == null ? instance = new Indexer() : instance; }
+    public static final synchronized Intake getInstance() { return instance == null ? instance = new Intake() : instance; }
     @Log.ToString
     private State activeState = State.UP;
     @Log.ToString
@@ -76,11 +74,7 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
     @Config
     public final PIDController rotaryPoseController = new PIDController(0.1, 0, 0);
 
-    private final TorqueNEO spindexer = new TorqueNEO(Ports.INDEXER_SPINDEXER_MOTOR);
-
-    public TorqueDirection spindexerDirection = TorqueDirection.OFF;
-
-    private Indexer() {
+    private Intake() {
         rollers.setCurrentLimit(15);
         rollers.setVoltageCompensation(12.6);
         rollers.setBreakMode(true);
@@ -91,11 +85,6 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
         rotary.setVoltageCompensation(12.6);
         rotary.setBreakMode(true);
         rotary.burnFlash();
-
-        spindexer.setCurrentLimit(20);
-        spindexer.setVoltageCompensation(12.6);
-        spindexer.setBreakMode(true);
-        spindexer.burnFlash();
     }
 
     public void setState(final State state) { this.desiredState = state; }
@@ -126,11 +115,6 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
         final double requestedRotaryVolts = TorqueMath.constrain(rotaryPoseController.calculate(realRotaryPose, activeState.get().rotaryPose), ROTARY_MAX_VOLTS);
         SmartDashboard.putNumber("indexer::requestedRotaryVolts", requestedRotaryVolts);
         // rotary.setVolts(requestedRotaryVolts);
-
-        // SmartDashboard.putNumber("indexer::requestedSpindexerVolts", activeState.get().spinVolts);
-        SmartDashboard.putNumber("indexer::requestedSpindexerCurrent", spindexer.getCurrent());
-        // spindexer.setVolts(activeState.get().spinVolts);
-        spindexer.setVolts(spindexerDirection.get() * 6);
 
         if (mode.isTeleop())
             desiredState = State.UP;

@@ -12,7 +12,7 @@ import org.texastorque.subsystems.Arm;
 import org.texastorque.subsystems.Drivebase;
 import org.texastorque.subsystems.Hand;
 import org.texastorque.subsystems.Hand.GamePiece;
-import org.texastorque.subsystems.Indexer;
+import org.texastorque.subsystems.Intake;
 import org.texastorque.torquelib.base.TorqueDirection;
 import org.texastorque.torquelib.base.TorqueInput;
 import org.texastorque.torquelib.control.TorqueBoolSupplier;
@@ -31,8 +31,8 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
     public static final synchronized Input getInstance() { return instance == null ? instance = new Input() : instance; }
 
     private final TorqueBoolSupplier isZeroingWheels, slowModeToggle, alignGridLeft, alignGridCenter, alignGridRight, gridOverrideLeft, gridOverrideRight,
-            gridOverrideCenter, resetGyroClick, resetPoseClick, toggleRotationLock, autoLevel, wantsIntake, gamePieceModeToggle, openClaw, armToHandoff, armToBottom,
-            armToShelf, armToMid, armToTop, dangerMode, showGamePieceColor, forksUp, forksDown;
+            gridOverrideCenter, resetGyroClick, resetPoseClick, toggleRotationLock, autoLevel, wantsIntake, gamePieceModeToggle, openClaw, armToBottom,
+            armToShelf, armToMid, armToTop, forksUp, forksDown, spindexerRight, spindexerLeft;
 
     private final TorqueRequestableTimeout driverTimeout = new TorqueRequestableTimeout();
 
@@ -63,17 +63,17 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         wantsIntake = new TorqueBoolSupplier(operator::isRightTriggerDown);
         openClaw = new TorqueBoolSupplier(operator::isLeftTriggerDown);
         gamePieceModeToggle = new TorqueToggleSupplier(operator::isRightCenterButtonDown);
-        showGamePieceColor = new TorqueBoolSupplier(operator::isLeftTriggerDown); // unused
 
-        armToHandoff = new TorqueBoolSupplier(operator::isRightCenterButtonDown); // unused
         armToShelf = new TorqueBoolSupplier(operator::isXButtonDown);
         armToMid = new TorqueBoolSupplier(operator::isBButtonDown);
         armToTop = new TorqueBoolSupplier(operator::isYButtonDown);
         armToBottom = new TorqueBoolSupplier(operator::isAButtonDown);
-        dangerMode = new TorqueToggleSupplier(operator::isLeftCenterButtonDown);
 
-        forksUp = new TorqueBoolSupplier(() -> driver.isDPADUpDown());
-        forksDown = new TorqueBoolSupplier(() -> driver.isDPADDownDown());
+        forksUp = new TorqueBoolSupplier(driver::isDPADUpDown);
+        forksDown = new TorqueBoolSupplier(driver::isDPADDownDown);
+
+        spindexerRight = new TorqueBoolSupplier(operator::isRightBumperDown);
+        spindexerLeft = new TorqueBoolSupplier(operator::isLeftBumperDown);
     }
 
     @Override
@@ -119,27 +119,21 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         armToBottom.onTrue(() -> arm.setState(lastSetArmState = Arm.State.DOWN));
 
         wantsIntake.onTrueOrFalse(() -> {
-            indexer.setState(Indexer.State.INTAKE);
+            intake.setState(Intake.State.INTAKE);
             arm.setState(Arm.State.HANDOFF);
             // hand.setState(Hand.State.OPEN);
         }, () -> {
             if (arm.isState(Arm.State.HANDOFF)) 
                 arm.setState(lastSetArmState = Arm.State.DOWN);
-            indexer.setState(Indexer.State.UP);
+            intake.setState(Intake.State.UP);
         });
 
-        if (operator.isRightBumperDown())
-            indexer.spindexerDirection = TorqueDirection.FORWARD;
-        else if (operator.isLeftBumperDown())
-            indexer.spindexerDirection = TorqueDirection.REVERSE;
-        else
-            indexer.spindexerDirection = TorqueDirection.OFF;
+        spindexerRight.onTrue(() -> spindexer.setDirection(TorqueDirection.FORWARD));
+        spindexerLeft.onTrue(() -> spindexer.setDirection(TorqueDirection.REVERSE));
 
         forksUp.onTrue(() -> forks.setDirection(TorqueDirection.FORWARD));
         forksDown.onTrue(() -> forks.setDirection(TorqueDirection.REVERSE));
 
-        lights.dangerMode = dangerMode.get();
-        // lights.shouldShowGamePieceColor(showGamePieceColor.get());
         lights.shouldShowGamePieceColor(true);
     }
 
