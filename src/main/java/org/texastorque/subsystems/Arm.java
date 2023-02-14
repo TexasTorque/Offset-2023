@@ -46,17 +46,17 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     public static enum State {
-        HANDOFF(new ArmPose(0, Rotation2d.fromDegrees(250))),
-        DOWN(new ArmPose(.5, Rotation2d.fromDegrees(250))),
+        HANDOFF(new ArmPose(0, Rotation2d.fromDegrees(270))),
+        DOWN(new ArmPose(.5, Rotation2d.fromDegrees(260))),
         BACK(new ArmPose(.25, Rotation2d.fromDegrees(200))),
         SHELF(new ArmPose(1, Rotation2d.fromDegrees(0))),            
         MID(
-                new ArmPose(1.5, Rotation2d.fromDegrees(30)), 
-                new ArmPose(1.5, Rotation2d.fromDegrees(30))
+                new ArmPose(1.136, Rotation2d.fromDegrees(24)), 
+                new ArmPose(1.136, Rotation2d.fromDegrees(24))
         ), 
         TOP(
-                new ArmPose(2,  Rotation2d.fromDegrees(30)), 
-                new ArmPose(2,  Rotation2d.fromDegrees(30))
+                new ArmPose(1.5,  Rotation2d.fromDegrees(30)), 
+                new ArmPose(1.5,  Rotation2d.fromDegrees(30))
         );
      
 
@@ -132,7 +132,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     private Arm() {
         elevator.setPositionConversionFactor(ELEVATOR_MOTOR_ROT_PER_METER);
-        elevator.setCurrentLimit(60);
+        elevator.setCurrentLimit(15);
         elevator.setVoltageCompensation(12.6);
         elevator.setBreakMode(true);
         elevator.burnFlash();

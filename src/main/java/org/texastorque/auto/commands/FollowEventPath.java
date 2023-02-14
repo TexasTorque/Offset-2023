@@ -96,7 +96,7 @@ public final class FollowEventPath extends TorqueCommand implements Subsystems {
         final PathPlannerState desired = reflect(trajectory.sample(elapsed));
 
         final TorqueSwerveSpeeds speeds = TorqueSwerveSpeeds.fromChassisSpeeds(controller.calculate(drivebase.getPose(), desired));
-        // drivebase.inputSpeeds = speeds.times(-1, 1, 1);
+        drivebase.inputSpeeds = speeds.times(-1, -1, 1);
 
         if (unpassed.size() > 0 && elapsed >= unpassed.get(0).timeSeconds) {
             final EventMarker marker = unpassed.remove(0);

@@ -36,8 +36,8 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
     }
 
     public static enum State {
-        INTAKE(new IndexerPose(6, 0), new IndexerPose(6, 0)),
-        PRIME(new IndexerPose(0, 0)),
+        INTAKE(new IndexerPose(6, -6.04762 - .3095), new IndexerPose(6, -6.04762 - .3095)),
+        PRIME(new IndexerPose(0, -2.1428 - .3095)),
         UP(new IndexerPose(0, 0));
 
         public final IndexerPose cubePose;
@@ -56,7 +56,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
     private static volatile Intake instance;
 
     // TODO: Find experimentally
-    public static final double INTAKE_INTERFERE_MIN = 1, INTAKE_INTERFERE_MAX = 1, ROTARY_MAX_VOLTS = 4, ROLLER_MAX_VOLTS = 4;
+    public static final double INTAKE_INTERFERE_MIN = 1, INTAKE_INTERFERE_MAX = 1, ROTARY_MAX_VOLTS = 12, ROLLER_MAX_VOLTS = 6;
 
     public static final synchronized Intake getInstance() { return instance == null ? instance = new Intake() : instance; }
     @Log.ToString
@@ -72,7 +72,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
     private final TorqueNEO rotary = new TorqueNEO(Ports.INTAKE_ROTARY_MOTOR);
 
     @Config
-    public final PIDController rotaryPoseController = new PIDController(0.1, 0, 0);
+    public final PIDController rotaryPoseController = new PIDController(25, 0, 0);
 
     private Intake() {
         rollers.setCurrentLimit(15);
@@ -81,7 +81,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
         rollers.burnFlash();
 
         // rotary.setPositionConversionFactors();
-        rotary.setCurrentLimit(60);
+        rotary.setCurrentLimit(80);
         rotary.setVoltageCompensation(12.6);
         rotary.setBreakMode(true);
         rotary.burnFlash();
@@ -109,11 +109,12 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
         SmartDashboard.putNumber("indexer::rollersPose", rollers.getPosition());
             
         final double rollerVolts = TorqueMath.constrain(activeState.get().rollerVolts, ROLLER_MAX_VOLTS);
-        SmartDashboard.putNumber("indexer::requestedRollerVolts", rollerVolts);
+        SmartDashboard.putNumber("intake::requestedRollerVolts", rollerVolts);
         rollers.setVolts(rollerVolts);
 
         final double requestedRotaryVolts = TorqueMath.constrain(rotaryPoseController.calculate(realRotaryPose, activeState.get().rotaryPose), ROTARY_MAX_VOLTS);
-        SmartDashboard.putNumber("indexer::requestedRotaryVolts", requestedRotaryVolts);
+        SmartDashboard.putNumber("intake::requestedRotaryVolts", requestedRotaryVolts);
+        SmartDashboard.putNumber("intake::rotaryCurrent", rotary.getCurrent());
         // rotary.setVolts(requestedRotaryVolts);
 
         if (mode.isTeleop())
