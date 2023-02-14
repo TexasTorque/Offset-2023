@@ -35,9 +35,13 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
         }
     }
 
+    // Reduction probably changes!
     public static enum State {
-        INTAKE(new IndexerPose(6, -6.04762 - .3095), new IndexerPose(6, -6.04762 - .3095)),
-        PRIME(new IndexerPose(0, -2.1428 - .3095)),
+        // INTAKE(new IndexerPose(6, -6.04762 - .3095), new IndexerPose(6, -6.04762 - .3095)),
+        // PRIME(new IndexerPose(0, -2.1428 - .3095)),
+
+        INTAKE(new IndexerPose(6, 0), new IndexerPose(6, 0)),
+        PRIME(new IndexerPose(0, 0)),
         UP(new IndexerPose(0, 0));
 
         public final IndexerPose cubePose;
@@ -55,8 +59,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
 
     private static volatile Intake instance;
 
-    // TODO: Find experimentally
-    public static final double INTAKE_INTERFERE_MIN = 1, INTAKE_INTERFERE_MAX = 1, ROTARY_MAX_VOLTS = 12, ROLLER_MAX_VOLTS = 6;
+    public static final double ROTARY_MAX_VOLTS = 6, ROLLER_MAX_VOLTS = 6;
 
     public static final synchronized Intake getInstance() { return instance == null ? instance = new Intake() : instance; }
     @Log.ToString
@@ -81,7 +84,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
         rollers.burnFlash();
 
         // rotary.setPositionConversionFactors();
-        rotary.setCurrentLimit(80);
+        rotary.setCurrentLimit(60);
         rotary.setVoltageCompensation(12.6);
         rotary.setBreakMode(true);
         rotary.burnFlash();
@@ -99,10 +102,6 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
     public final void update(final TorqueMode mode) {
         activeState = desiredState;
 
-        // if (arm.wantsToConflictWithIndexer() || arm.isConflictingWithIndexer()) {
-        //     if (wantsToConflictWithArm()) activeState = State.PRIME;
-        // }
-
         realRotaryPose = rotary.getPosition();
 
         SmartDashboard.putNumber("indexer::rotaryPose", rotary.getPosition());
@@ -119,16 +118,6 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
 
         if (mode.isTeleop())
             desiredState = State.UP;
-    }
-
-    @Log.BooleanBox
-    public boolean isConflictingWithArm() {
-        return INTAKE_INTERFERE_MIN < realRotaryPose && realRotaryPose < INTAKE_INTERFERE_MAX;
-    }
-
-    @Log.BooleanBox
-    public boolean wantsToConflictWithArm() {
-        return activeState == State.UP;
     }
 
     @Log.BooleanBox

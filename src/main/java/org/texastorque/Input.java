@@ -132,8 +132,6 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
         forksUp.onTrue(() -> forks.setDirection(TorqueDirection.FORWARD));
         forksDown.onTrue(() -> forks.setDirection(TorqueDirection.REVERSE));
-
-        lights.shouldShowGamePieceColor(true);
     }
 
     private void updateDrivebaseSpeeds() {

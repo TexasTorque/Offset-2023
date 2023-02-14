@@ -47,16 +47,16 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     public static enum State {
         HANDOFF(new ArmPose(0, Rotation2d.fromDegrees(270))),
-        DOWN(new ArmPose(.5, Rotation2d.fromDegrees(260))),
-        BACK(new ArmPose(.25, Rotation2d.fromDegrees(200))),
-        SHELF(new ArmPose(1, Rotation2d.fromDegrees(0))),            
+        DOWN(new ArmPose(0, Rotation2d.fromDegrees(260))),
+        BACK(new ArmPose(0, Rotation2d.fromDegrees(200))),
+        SHELF(new ArmPose(0, Rotation2d.fromDegrees(0))),            
         MID(
-                new ArmPose(1.136, Rotation2d.fromDegrees(24)), 
-                new ArmPose(1.136, Rotation2d.fromDegrees(24))
+                new ArmPose(0, Rotation2d.fromDegrees(24)), 
+                new ArmPose(0, Rotation2d.fromDegrees(24))
         ), 
         TOP(
-                new ArmPose(1.5,  Rotation2d.fromDegrees(30)), 
-                new ArmPose(1.5,  Rotation2d.fromDegrees(30))
+                new ArmPose(0,  Rotation2d.fromDegrees(30)), 
+                new ArmPose(0,  Rotation2d.fromDegrees(30))
         );
      
 
@@ -74,16 +74,10 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     private static final double ROTARY_ENCODER_OFFSET = -4.203098863363266, 
-            ELEVATOR_MOTOR_ROT_PER_METER = 1 / 37.5956558484, 
             ELEVATOR_MAX_VOLTS = 4,
             ROTARY_MAX_VOLTS = 8, 
             ELEVATOR_MIN = 0, 
-            // ELEVATOR_MAX = 0.8334226608276367;
             ELEVATOR_MAX = 2.5;
-
-    public static final double ARM_INTERFERE_MIN = (7. / 6.) * Math.PI;
-
-    public static final double ARM_INTERFERE_MAX = (11. / 6.) * Math.PI;
 
     private static volatile Arm instance;
     public static final synchronized Arm getInstance() { return instance == null ? instance = new Arm() : instance; }
@@ -105,8 +99,6 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     // Not using rn
     private final ElevatorFeedforward elevatorPoseFeedForward = new ElevatorFeedforward(0, 0, 0);
-    // private final ElevatorFeedforward elevatorPoseFeedForward = new ElevatorFeedforward(0, .45, 4.6);
-    // new ElevatorFeedforward(1.01, 6.14, 0.16);
     /**
      *    π/2
      *     |
@@ -131,7 +123,6 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     private boolean wantsHandoff = false;
 
     private Arm() {
-        elevator.setPositionConversionFactor(ELEVATOR_MOTOR_ROT_PER_METER);
         elevator.setCurrentLimit(15);
         elevator.setVoltageCompensation(12.6);
         elevator.setBreakMode(true);
@@ -181,8 +172,6 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         activeState = desiredState;
         if (hand.isState(Hand.State.OPEN) && activeState == State.DOWN)
             activeState = State.HANDOFF;
-        // wantsHandoff = activeState == State.HANDOFF;
-        // if (wantsHandoff && indexer.isConflictingWithArm()) activeState = State.DOWN;
 
         updateFeedback();
 
@@ -192,15 +181,6 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         lastState = activeState;
     }
 
-    @Log.BooleanBox
-    public final boolean isConflictingWithIndexer() {
-        return ARM_INTERFERE_MIN < realRotaryPose.getRadians() && realRotaryPose.getRadians() < ARM_INTERFERE_MAX;
-    }
-
-    @Log.BooleanBox
-    public final boolean wantsToConflictWithIndexer() {
-        return wantsHandoff;
-    }
 
     private void updateFeedback() {
         realElevatorPose = elevator.getPosition();
@@ -228,9 +208,6 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     private void calculateRotary() {
-        // final double rotaryFFOutput = (activeState == State.HANDOFF ? 0 :  -rotaryPoseFeedForward.calculate(realRotaryPose.getRadians(), 0)) 
-        //         + (activeState == State.DOWN ? 1 : 0);
-
         final double rotaryFFOutput = -rotaryPoseFeedForward.calculate(realRotaryPose.getRadians(), 0);
 
         final double rotarayPIDDOutput = -rotaryPoseController.calculate(realRotaryPose.getRadians(), activeState.get().rotaryPose.getRadians());

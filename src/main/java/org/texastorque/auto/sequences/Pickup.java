@@ -4,23 +4,25 @@
  * This file is part of Torque-2023, which is not licensed for distribution.
  * For more details, see ./license.txt or write <jus@justusl.com>.
  */
-package org.texastorque.auto.routines;
+package org.texastorque.auto.sequences;
 
 import org.texastorque.Subsystems;
 import org.texastorque.subsystems.Arm;
 import org.texastorque.subsystems.Hand;
-import org.texastorque.subsystems.Hand.GamePiece;
+import org.texastorque.subsystems.Intake;
 import org.texastorque.torquelib.auto.TorqueSequence;
 import org.texastorque.torquelib.auto.commands.TorqueExecute;
 import org.texastorque.torquelib.auto.commands.TorqueWaitForSeconds;
 
-public final class UpToScore extends TorqueSequence implements Subsystems {
-    public UpToScore(final Arm.State armState, final GamePiece piece) {
+public final class Pickup extends TorqueSequence implements Subsystems {
+    public Pickup() {
+        addBlock(new TorqueExecute(() -> arm.setState(Arm.State.HANDOFF)));
+        addBlock(new TorqueWaitForSeconds(.5));
         addBlock(new TorqueExecute(() -> {
-            hand.setGamePieceMode(piece);
             hand.setState(Hand.State.CLOSE);
+            arm.setState(Arm.State.BACK);
         }));
-        addBlock(new TorqueWaitForSeconds(.25));
-        addBlock(new TorqueExecute(() -> arm.setState(armState)));
+        addBlock(new TorqueWaitForSeconds(.5));
+        addBlock(new TorqueExecute(() -> intake.setState(Intake.State.UP)));
     }
 }
