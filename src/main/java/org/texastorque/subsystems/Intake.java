@@ -40,7 +40,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
         // INTAKE(new IndexerPose(6, -6.04762 - .3095), new IndexerPose(6, -6.04762 - .3095)),
         // PRIME(new IndexerPose(0, -2.1428 - .3095)),
 
-        INTAKE(new IndexerPose(6, 0), new IndexerPose(6, 0)),
+        INTAKE(new IndexerPose(6, 6.35), new IndexerPose(6, 0)),
         PRIME(new IndexerPose(0, 0)),
         UP(new IndexerPose(0, 0));
 
@@ -59,7 +59,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
 
     private static volatile Intake instance;
 
-    public static final double ROTARY_MAX_VOLTS = 6, ROLLER_MAX_VOLTS = 6;
+    public static final double ROTARY_MAX_VOLTS = 12, ROLLER_MAX_VOLTS = 6;
 
     public static final synchronized Intake getInstance() { return instance == null ? instance = new Intake() : instance; }
     @Log.ToString
@@ -75,7 +75,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
     private final TorqueNEO rotary = new TorqueNEO(Ports.INTAKE_ROTARY_MOTOR);
 
     @Config
-    public final PIDController rotaryPoseController = new PIDController(25, 0, 0);
+    public final PIDController rotaryPoseController = new PIDController(10, 0, 0);
 
     private Intake() {
         rollers.setCurrentLimit(15);
@@ -114,7 +114,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
         final double requestedRotaryVolts = TorqueMath.constrain(rotaryPoseController.calculate(realRotaryPose, activeState.get().rotaryPose), ROTARY_MAX_VOLTS);
         SmartDashboard.putNumber("intake::requestedRotaryVolts", requestedRotaryVolts);
         SmartDashboard.putNumber("intake::rotaryCurrent", rotary.getCurrent());
-        // rotary.setVolts(requestedRotaryVolts);
+        rotary.setVolts(requestedRotaryVolts);
 
         if (mode.isTeleop())
             desiredState = State.UP;

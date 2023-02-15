@@ -46,17 +46,17 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     public static enum State {
-        HANDOFF(new ArmPose(0, Rotation2d.fromDegrees(270))),
-        DOWN(new ArmPose(0, Rotation2d.fromDegrees(260))),
+        HANDOFF(new ArmPose(0, Rotation2d.fromDegrees(260))),
+        DOWN(new ArmPose(0.25, Rotation2d.fromDegrees(235))),
         BACK(new ArmPose(0, Rotation2d.fromDegrees(200))),
         SHELF(new ArmPose(0, Rotation2d.fromDegrees(0))),            
         MID(
-                new ArmPose(0, Rotation2d.fromDegrees(24)), 
-                new ArmPose(0, Rotation2d.fromDegrees(24))
+                new ArmPose(0, Rotation2d.fromDegrees(0)), 
+                new ArmPose(.175, Rotation2d.fromDegrees(25))
         ), 
         TOP(
-                new ArmPose(0,  Rotation2d.fromDegrees(30)), 
-                new ArmPose(0,  Rotation2d.fromDegrees(30))
+                new ArmPose(1,  Rotation2d.fromDegrees(0)), 
+                new ArmPose(1.1,  Rotation2d.fromDegrees(20))
         );
      
 
@@ -74,10 +74,10 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     private static final double ROTARY_ENCODER_OFFSET = -4.203098863363266, 
-            ELEVATOR_MAX_VOLTS = 4,
+            ELEVATOR_MAX_VOLTS = 12,
             ROTARY_MAX_VOLTS = 8, 
             ELEVATOR_MIN = 0, 
-            ELEVATOR_MAX = 2.5;
+            ELEVATOR_MAX = 1.3;
 
     private static volatile Arm instance;
     public static final synchronized Arm getInstance() { return instance == null ? instance = new Arm() : instance; }
@@ -123,7 +123,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     private boolean wantsHandoff = false;
 
     private Arm() {
-        elevator.setCurrentLimit(15);
+        elevator.setCurrentLimit(30);
         elevator.setVoltageCompensation(12.6);
         elevator.setBreakMode(true);
         elevator.burnFlash();
