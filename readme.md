@@ -10,10 +10,11 @@ The codebase is actually for the two versions of the robot:
 ## Subsystems
 
 - Drivebase: custom swerve drive.
-- Indexer: and intake and "spindexer" which pull gamepieces into the robot and indexes them.
+- Intake: and intake which pull gamepieces into the robot.
+- Spindexer: a turntable which orients cones.
 - Arm: an elevator with a static rotary arm to move the hand.
 - Hand: a claw on the end of the arm to grab the gamepeices.
-- Climber: Rotary forks that slide under another robot for a tripple balance.
+- Forks: Rotary forks that slide under another robot for a tripple balance.
 
 ## Contributors
 

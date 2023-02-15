@@ -129,7 +129,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
         // }
  
         final double clawRequestedVolts = currentSpike ? 0 : activeState.getClawVolts();
-        claw.setVolts(clawRequestedVolts);
+        // claw.setVolts(clawRequestedVolts);
         SmartDashboard.putNumber("hand::clawVoltsWanted", clawRequestedVolts);
 
         if (lastState != activeState) {

@@ -23,10 +23,11 @@ public final class Robot extends TorqueRobotBase implements Subsystems {
         // Configure Subsystems
         addSubsystem(drivebase);
         addSubsystem(lights);
-        addSubsystem(indexer);
+        addSubsystem(intake);
+        addSubsystem(spindexer);
         addSubsystem(arm);
         addSubsystem(hand);
-        addSubsystem(forks);
+        // addSubsystem(forks);
 
         final ShuffleboardTab dashboard = Shuffleboard.getTab("COMPETITION");
 

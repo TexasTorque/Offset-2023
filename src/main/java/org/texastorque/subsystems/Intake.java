@@ -9,7 +9,6 @@ package org.texastorque.subsystems;
 import org.texastorque.Ports;
 import org.texastorque.Subsystems;
 import org.texastorque.subsystems.Hand.GamePiece;
-import org.texastorque.torquelib.base.TorqueDirection;
 import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.motors.TorqueNEO;
@@ -20,16 +19,15 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
 
-public final class Indexer extends TorqueSubsystem implements Subsystems {
+public final class Intake extends TorqueSubsystem implements Subsystems {
     public static class IndexerPose {
         private static final double ROTARY_TOLERANCE = 0.1;
 
-        public final double rollerVolts, rotaryPose, spinVolts;
+        public final double rollerVolts, rotaryPose;
 
-        public IndexerPose(final double rollerVolts, final double rotaryPose, final double spinVolts) {
+        public IndexerPose(final double rollerVolts, final double rotaryPose) {
             this.rollerVolts = rollerVolts;
             this.rotaryPose = rotaryPose;
-            this.spinVolts = spinVolts;
         }
 
         public boolean atPose(final double rotaryReal) {
@@ -37,10 +35,14 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
         }
     }
 
+    // Reduction probably changes!
     public static enum State {
-        INTAKE(new IndexerPose(6, 0, 0), new IndexerPose(6, 0, 4)),
-        PRIME(new IndexerPose(0, 0, 0)),
-        UP(new IndexerPose(0, 0, 0));
+        // INTAKE(new IndexerPose(6, -6.04762 - .3095), new IndexerPose(6, -6.04762 - .3095)),
+        // PRIME(new IndexerPose(0, -2.1428 - .3095)),
+
+        INTAKE(new IndexerPose(6, 6.35), new IndexerPose(6, 0)),
+        PRIME(new IndexerPose(0, 0)),
+        UP(new IndexerPose(0, 0));
 
         public final IndexerPose cubePose;
         public final IndexerPose conePose;
@@ -55,12 +57,11 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
         public IndexerPose get() { return hand.getGamePieceMode() == GamePiece.CUBE ? cubePose : conePose; }
     }
 
-    private static volatile Indexer instance;
+    private static volatile Intake instance;
 
-    // TODO: Find experimentally
-    public static final double INTAKE_INTERFERE_MIN = 1, INTAKE_INTERFERE_MAX = 1, ROTARY_MAX_VOLTS = 4, ROLLER_MAX_VOLTS = 4;
+    public static final double ROTARY_MAX_VOLTS = 12, ROLLER_MAX_VOLTS = 6;
 
-    public static final synchronized Indexer getInstance() { return instance == null ? instance = new Indexer() : instance; }
+    public static final synchronized Intake getInstance() { return instance == null ? instance = new Intake() : instance; }
     @Log.ToString
     private State activeState = State.UP;
     @Log.ToString
@@ -69,18 +70,14 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
     @Log.ToString
     public double realRotaryPose = 0;
 
-    private final TorqueNEO rollers = new TorqueNEO(Ports.INDEXER_ROLLER_MOTOR);
+    private final TorqueNEO rollers = new TorqueNEO(Ports.INTAKE_ROLLER_MOTOR);
 
-    private final TorqueNEO rotary = new TorqueNEO(Ports.INDEXER_ROTARY_MOTOR);
+    private final TorqueNEO rotary = new TorqueNEO(Ports.INTAKE_ROTARY_MOTOR);
 
     @Config
-    public final PIDController rotaryPoseController = new PIDController(0.1, 0, 0);
+    public final PIDController rotaryPoseController = new PIDController(10, 0, 0);
 
-    private final TorqueNEO spindexer = new TorqueNEO(Ports.INDEXER_SPINDEXER_MOTOR);
-
-    public TorqueDirection spindexerDirection = TorqueDirection.OFF;
-
-    private Indexer() {
+    private Intake() {
         rollers.setCurrentLimit(15);
         rollers.setVoltageCompensation(12.6);
         rollers.setBreakMode(true);
@@ -91,11 +88,6 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
         rotary.setVoltageCompensation(12.6);
         rotary.setBreakMode(true);
         rotary.burnFlash();
-
-        spindexer.setCurrentLimit(20);
-        spindexer.setVoltageCompensation(12.6);
-        spindexer.setBreakMode(true);
-        spindexer.burnFlash();
     }
 
     public void setState(final State state) { this.desiredState = state; }
@@ -110,40 +102,22 @@ public final class Indexer extends TorqueSubsystem implements Subsystems {
     public final void update(final TorqueMode mode) {
         activeState = desiredState;
 
-        // if (arm.wantsToConflictWithIndexer() || arm.isConflictingWithIndexer()) {
-        //     if (wantsToConflictWithArm()) activeState = State.PRIME;
-        // }
-
         realRotaryPose = rotary.getPosition();
 
         SmartDashboard.putNumber("indexer::rotaryPose", rotary.getPosition());
         SmartDashboard.putNumber("indexer::rollersPose", rollers.getPosition());
             
         final double rollerVolts = TorqueMath.constrain(activeState.get().rollerVolts, ROLLER_MAX_VOLTS);
-        SmartDashboard.putNumber("indexer::requestedRollerVolts", rollerVolts);
+        SmartDashboard.putNumber("intake::requestedRollerVolts", rollerVolts);
         rollers.setVolts(rollerVolts);
 
         final double requestedRotaryVolts = TorqueMath.constrain(rotaryPoseController.calculate(realRotaryPose, activeState.get().rotaryPose), ROTARY_MAX_VOLTS);
-        SmartDashboard.putNumber("indexer::requestedRotaryVolts", requestedRotaryVolts);
-        // rotary.setVolts(requestedRotaryVolts);
-
-        // SmartDashboard.putNumber("indexer::requestedSpindexerVolts", activeState.get().spinVolts);
-        SmartDashboard.putNumber("indexer::requestedSpindexerCurrent", spindexer.getCurrent());
-        // spindexer.setVolts(activeState.get().spinVolts);
-        spindexer.setVolts(spindexerDirection.get() * 6);
+        SmartDashboard.putNumber("intake::requestedRotaryVolts", requestedRotaryVolts);
+        SmartDashboard.putNumber("intake::rotaryCurrent", rotary.getCurrent());
+        rotary.setVolts(requestedRotaryVolts);
 
         if (mode.isTeleop())
             desiredState = State.UP;
-    }
-
-    @Log.BooleanBox
-    public boolean isConflictingWithArm() {
-        return INTAKE_INTERFERE_MIN < realRotaryPose && realRotaryPose < INTAKE_INTERFERE_MAX;
-    }
-
-    @Log.BooleanBox
-    public boolean wantsToConflictWithArm() {
-        return activeState == State.UP;
     }
 
     @Log.BooleanBox

@@ -81,8 +81,6 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
 
     private final AddressableLEDBuffer buff;
 
-    public boolean dangerMode = false, showGamePieceColor = false;
-
     private LightAction solidGreen = new Solid(() -> Color.kGreen), solidAlliance = new Solid(() -> getAllianceColor()),
                         blinkGreen = new Blink(() -> Color.kGreen, 6), blinkAlliance = new Blink(() -> getAllianceColor(), 6),
                         solidPurple = new Solid(() -> Color.kPurple), solidYellow = new Solid(() -> Color.kYellow),
@@ -94,22 +92,12 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
         buff = new AddressableLEDBuffer(LENGTH);
     }
 
-    public void shouldShowGamePieceColor(final boolean showGamePieceColor) { this.showGamePieceColor = showGamePieceColor; }
-
     @Override
     public final void initialize(final TorqueMode mode) {
         leds.start();
     }
 
     public final LightAction getColor(final TorqueMode mode) {
-        // if (dangerMode)
-        //     return blinkYellow;
-
-        if (indexer.isIntaking() || arm.isAtShelf() || showGamePieceColor) {
-            if (hand.getGamePieceMode() == GamePiece.CUBE) return solidPurple;
-            if (hand.getGamePieceMode() == GamePiece.CONE) return solidYellow;
-        }
-
         if (drivebase.isState(Drivebase.State.ALIGN)) {
             if (drivebase.isPathAlignDone()) return blinkGreen;
             return solidGreen;
@@ -122,6 +110,9 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
             }
             return solidGreen;
         }
+
+        if (hand.getGamePieceMode() == GamePiece.CUBE) return solidPurple;
+        else if (hand.getGamePieceMode() == GamePiece.CONE) return solidYellow;
 
         return solidAlliance;
     }

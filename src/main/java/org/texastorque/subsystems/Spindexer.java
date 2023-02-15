@@ -15,23 +15,22 @@ import org.texastorque.torquelib.motors.TorqueNEO;
 
 import io.github.oblarg.oblog.annotations.Log;
 
-public final class Forks extends TorqueSubsystem implements Subsystems {
-    private static volatile Forks instance;
+public final class Spindexer extends TorqueSubsystem implements Subsystems {
+    private static volatile Spindexer instance;
 
-    public static final double ROTARY_MAX_VOLTS = 6;
+    public static final double SPINDEXER_MAX_VOLTS = 8;
 
-    public static final synchronized Forks getInstance() { return instance == null ? instance = new Forks() : instance; }
+    public static final synchronized Spindexer getInstance() { return instance == null ? instance = new Spindexer() : instance; }
 
-    private final TorqueNEO rotary = new TorqueNEO(Ports.FORKS_MOTOR);
+    private final TorqueNEO turntable = new TorqueNEO(Ports.SPINDEXER_MOTOR);
 
     @Log.ToString
     private TorqueDirection direction = TorqueDirection.OFF;
-    private Forks() {
-        // rotary.setPositionConversionFactor(135.0);
-        rotary.setCurrentLimit(40);
-        rotary.setVoltageCompensation(12.6);
-        rotary.setBreakMode(true);
-        rotary.burnFlash();
+    private Spindexer() {
+        turntable.setCurrentLimit(20);
+        turntable.setVoltageCompensation(12.6);
+        turntable.setBreakMode(true);
+        turntable.burnFlash();
     }
 
     public final void setDirection(final TorqueDirection direction) {
@@ -44,7 +43,7 @@ public final class Forks extends TorqueSubsystem implements Subsystems {
     
     @Override
     public final void update(final TorqueMode mode) {
-        rotary.setVolts(mode.isTeleop() ? ROTARY_MAX_VOLTS * direction.get() : 0);
+        turntable.setVolts(SPINDEXER_MAX_VOLTS * direction.get());
 
         direction = TorqueDirection.OFF;
     }

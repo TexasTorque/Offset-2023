@@ -8,19 +8,38 @@ package org.texastorque.auto.sequences;
 
 import org.texastorque.Subsystems;
 import org.texastorque.auto.commands.FollowEventPath;
-import org.texastorque.subsystems.Drivebase;
+import org.texastorque.subsystems.Arm;
+import org.texastorque.subsystems.Hand;
+import org.texastorque.subsystems.Hand.GamePiece;
+import org.texastorque.subsystems.Intake;
 import org.texastorque.torquelib.auto.TorqueSequence;
-import org.texastorque.torquelib.auto.commands.TorqueContinuous;
-import org.texastorque.torquelib.auto.commands.TorqueWaitForSeconds;
+import org.texastorque.torquelib.auto.commands.TorqueExecute;
+import org.texastorque.torquelib.auto.commands.TorqueSequenceRunner;
 
 public final class Tester extends TorqueSequence implements Subsystems {
     public Tester() {
-        final TorqueWaitForSeconds dropInitialCone = new TorqueWaitForSeconds(.5);
-        addBlock(dropInitialCone);
 
-        final FollowEventPath test = new FollowEventPath("test", 2, 2); // ends (1.8, 1.05)
-        addBlock(test);
+        addBlock(new TorqueExecute(() -> {
+            hand.setState(Hand.State.CLOSE); 
+            hand.setGamePieceMode(GamePiece.CONE);
+        }));
+        
+        addBlock(new TorqueSequenceRunner(new ArmGoTo(Arm.State.TOP)));
 
-        addBlock(new TorqueContinuous(() -> drivebase.setState(Drivebase.State.BALANCE)));
+        final FollowEventPath path = new FollowEventPath("test", 2, 2); // ends (1.8, 1.05)
+
+        path.addEvent("intake-down", new TorqueExecute(() -> {
+            intake.setState(Intake.State.INTAKE);
+            arm.setState(Arm.State.DOWN);
+            hand.setState(Hand.State.OPEN);
+        }));
+
+        path.addEvent("pickup", new TorqueSequenceRunner(new Pickup()));
+
+        path.addEvent("arm-ready", new TorqueExecute(() -> arm.setState(Arm.State.TOP)));
+
+        addBlock(path);
+
+        addBlock(new TorqueSequenceRunner(new ArmGoTo(Arm.State.TOP)));
     }
 }

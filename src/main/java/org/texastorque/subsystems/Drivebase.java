@@ -160,10 +160,17 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         config.maxAngularVelocity = MAX_ANGULAR_VELOCITY;
         config.maxAngularAcceleration = MAX_ANGULAR_ACCELERATION;
 
-        fl = new TorqueSwerveModule2022("Front Left", Ports.FL_MOD, 5.769290082156658, config);
-        fr = new TorqueSwerveModule2022("Front Right", Ports.FR_MOD, 4.312011279165745, config);
+        // fl = new TorqueSwerveModule2022("Front Left", Ports.FL_MOD, 5.769290082156658, config);
+        // fr = new TorqueSwerveModule2022("Front Right", Ports.FR_MOD, 4.312011279165745, config);
+        // bl = new TorqueSwerveModule2022("Back Left", Ports.BL_MOD, 1.135143488645554, config);
+        // br = new TorqueSwerveModule2022("Back Right", Ports.BR_MOD, 5.186378560960293, config);
+
+        fl = new TorqueSwerveModule2022("Front Left", Ports.FL_MOD, -0.535358212888241, config);
+        fr = new TorqueSwerveModule2022("Front Right", Ports.FR_MOD, 1.365240141749382 + Math.PI, config);
         bl = new TorqueSwerveModule2022("Back Left", Ports.BL_MOD, 1.135143488645554, config);
-        br = new TorqueSwerveModule2022("Back Right", Ports.BR_MOD, 5.186378560960293, config);
+        br = new TorqueSwerveModule2022("Back Right", Ports.BR_MOD, 2.069323200489386 + Math.PI, config);
+
+
 
         kinematics = new SwerveDriveKinematics(LOC_BL, LOC_BR, LOC_FL, LOC_FR);
 
@@ -240,10 +247,10 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
             if (inputSpeeds.hasZeroVelocity()) {
                 preseveModulePositions();
             } else {
-                // fl.setDesiredState(swerveStates[0]);
-                // fr.setDesiredState(swerveStates[1]);
-                // bl.setDesiredState(swerveStates[2]);
-                // br.setDesiredState(swerveStates[3]);
+                fl.setDesiredState(swerveStates[0]);
+                fr.setDesiredState(swerveStates[1]);
+                bl.setDesiredState(swerveStates[2]);
+                br.setDesiredState(swerveStates[3]);
             }
         }
 
@@ -295,10 +302,10 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     }
 
     private void preseveModulePositions() {
-        // fl.setDesiredState(new SwerveModuleState(0, swerveStates[0].angle));
-        // fr.setDesiredState(new SwerveModuleState(0, swerveStates[1].angle));
-        // bl.setDesiredState(new SwerveModuleState(0, swerveStates[2].angle));
-        // br.setDesiredState(new SwerveModuleState(0, swerveStates[3].angle));
+        fl.setDesiredState(new SwerveModuleState(0, swerveStates[0].angle));
+        fr.setDesiredState(new SwerveModuleState(0, swerveStates[1].angle));
+        bl.setDesiredState(new SwerveModuleState(0, swerveStates[2].angle));
+        br.setDesiredState(new SwerveModuleState(0, swerveStates[3].angle));
     }
 
     private void calculateTeleop() {
