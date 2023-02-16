@@ -12,9 +12,9 @@ import org.texastorque.subsystems.Hand.GamePiece;
 import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.motors.TorqueNEO;
+import org.texastorque.torquelib.sensors.TorqueCANCoder;
 import org.texastorque.torquelib.util.TorqueMath;
 
-import com.ctre.phoenix.sensors.CANCoder;
 import com.ctre.phoenix.sensors.CANCoderConfiguration;
 import com.ctre.phoenix.sensors.SensorInitializationStrategy;
 import com.ctre.phoenix.sensors.SensorTimeBase;
@@ -59,7 +59,6 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
                 new ArmPose(1.1,  Rotation2d.fromDegrees(20))
         );
      
-
         public final ArmPose cubePose;
         public final ArmPose conePose;
 
@@ -117,7 +116,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     public final ArmFeedforward rotaryPoseFeedForward = new ArmFeedforward(0, .75, .5);
     // public final ArmFeedforward rotaryPoseFeedForward = new ArmFeedforward(0, 1.5, .5);
 
-    private final CANCoder rotaryEncoder = new CANCoder(Ports.ARM_ROTARY_ENCODER);
+    private final TorqueCANCoder rotaryEncoder = new TorqueCANCoder(Ports.ARM_ROTARY_ENCODER);
 
     @Log.BooleanBox
     private boolean wantsHandoff = false;
@@ -215,6 +214,6 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         final double requestedRotaryVolts = TorqueMath.constrain(rotarayPIDDOutput + rotaryFFOutput, ROTARY_MAX_VOLTS);
         SmartDashboard.putNumber("arm::requestedRotaryVolts", requestedRotaryVolts);
 
-        rotary.setVolts(requestedRotaryVolts);
+        rotary.setVolts(rotaryEncoder.isCANResponsive() ? requestedRotaryVolts : 0);
     }
 }
