@@ -9,27 +9,17 @@ package org.texastorque.auto.routines;
 import org.texastorque.Subsystems;
 import org.texastorque.subsystems.Arm;
 import org.texastorque.subsystems.Hand;
-import org.texastorque.subsystems.Hand.GamePiece;
 import org.texastorque.torquelib.auto.TorqueSequence;
-import org.texastorque.torquelib.auto.commands.TorqueExecute;
 import org.texastorque.torquelib.auto.commands.TorqueWaitForSeconds;
 import org.texastorque.torquelib.auto.commands.TorqueWaitUntil;
 
 public final class ArmTo extends TorqueSequence implements Subsystems {
     public ArmTo(final Arm.State armState) {
-        addBlock(new TorqueExecute(() -> arm.setState(armState)));
-     
+        addBlock(arm.setStateCommand(armState));
         addBlock(new TorqueWaitUntil(() -> arm.isAtDesiredPose()));
-
-        addBlock(new TorqueExecute(() -> hand.setState(Hand.State.OPEN)));
-
+        addBlock(hand.setStateCommand(Hand.State.OPEN));
         addBlock(new TorqueWaitForSeconds(.31));
-
-        addBlock(new TorqueExecute(() -> {
-            arm.setState(Arm.State.BACK);
-            hand.setState(Hand.State.CLOSE);
-            hand.setGamePieceMode(GamePiece.CUBE);
-        }));
+        addBlock(arm.setStateCommand(Arm.State.BACK), hand.setStateCommand(Hand.State.CLOSE));
 
     }
 }

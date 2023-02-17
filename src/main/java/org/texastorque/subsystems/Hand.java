@@ -9,6 +9,8 @@ package org.texastorque.subsystems;
 import org.texastorque.Input;
 import org.texastorque.Ports;
 import org.texastorque.Subsystems;
+import org.texastorque.torquelib.auto.TorqueCommand;
+import org.texastorque.torquelib.auto.commands.TorqueExecute;
 import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.control.TorqueCurrentSpike;
@@ -107,6 +109,14 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
 
     public boolean isState(final State state) {
         return getState() == state;
+    }
+
+    public TorqueCommand setStateCommand(final State state) {
+        return new TorqueExecute(() -> setState(state));
+    }
+
+    public TorqueCommand setGamePieceModeCommand(final GamePiece gamePieceMode) {
+        return new TorqueExecute(() -> setGamePieceMode(gamePieceMode));
     }
 
     @Override

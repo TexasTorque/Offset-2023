@@ -15,6 +15,8 @@ import org.texastorque.controllers.AutoLevelController;
 import org.texastorque.controllers.PathAlignController;
 import org.texastorque.controllers.PathAlignController.AlignState;
 import org.texastorque.controllers.PathAlignController.GridState;
+import org.texastorque.torquelib.auto.TorqueCommand;
+import org.texastorque.torquelib.auto.commands.TorqueContinuous;
 import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.sensors.TorqueNavXGyro;
@@ -282,6 +284,10 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     @Log.Dial(name = "Gyro Radians")
     public double getGyroAngle() {
         return gyro.getHeadingCCW().getRadians();
+    }
+
+    public TorqueCommand setStateCommand(final State state) {
+        return new TorqueContinuous(() -> setState(state));
     }
 
     private void updateFeedback() {

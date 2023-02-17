@@ -11,18 +11,14 @@ import org.texastorque.subsystems.Arm;
 import org.texastorque.subsystems.Hand;
 import org.texastorque.subsystems.Intake;
 import org.texastorque.torquelib.auto.TorqueSequence;
-import org.texastorque.torquelib.auto.commands.TorqueExecute;
 import org.texastorque.torquelib.auto.commands.TorqueWaitForSeconds;
 
 public final class PickUp extends TorqueSequence implements Subsystems {
     public PickUp() {
-        addBlock(new TorqueExecute(() -> arm.setState(Arm.State.HANDOFF)));
+        addBlock(arm.setStateCommand(Arm.State.HANDOFF));
         addBlock(new TorqueWaitForSeconds(.5));
-        addBlock(new TorqueExecute(() -> {
-            hand.setState(Hand.State.CLOSE);
-            arm.setState(Arm.State.BACK);
-        }));
+        addBlock(hand.setStateCommand(Hand.State.CLOSE), arm.setStateCommand(Arm.State.BACK));
         addBlock(new TorqueWaitForSeconds(.5));
-        addBlock(new TorqueExecute(() -> intake.setState(Intake.State.UP)));
+        addBlock(intake.setStateCommand(Intake.State.UP));
     }
 }

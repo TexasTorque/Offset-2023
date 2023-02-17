@@ -8,6 +8,8 @@ package org.texastorque.subsystems;
 
 import org.texastorque.Ports;
 import org.texastorque.Subsystems;
+import org.texastorque.torquelib.auto.TorqueCommand;
+import org.texastorque.torquelib.auto.commands.TorqueExecute;
 import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.motors.TorqueNEO;
@@ -172,7 +174,12 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     public void setState(final State state) { this.desiredState = state; }
 
     public State getState() { return desiredState; }
+    
     public boolean isState(final State state) { return getState() == state; }
+
+    public TorqueCommand setStateCommand(final State state) {
+        return new TorqueExecute(() -> setState(state));
+    }
 
     @Override
     public final void initialize(final TorqueMode mode) {
