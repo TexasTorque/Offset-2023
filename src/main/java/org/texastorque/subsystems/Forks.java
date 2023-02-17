@@ -13,12 +13,14 @@ import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.motors.TorqueNEO;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import io.github.oblarg.oblog.annotations.Log;
 
 public final class Forks extends TorqueSubsystem implements Subsystems {
     private static volatile Forks instance;
 
     public static final double ROTARY_MAX_VOLTS = 6;
+    
 
     public static final synchronized Forks getInstance() { return instance == null ? instance = new Forks() : instance; }
 
@@ -26,6 +28,7 @@ public final class Forks extends TorqueSubsystem implements Subsystems {
 
     @Log.ToString
     private TorqueDirection direction = TorqueDirection.OFF;
+
     private Forks() {
         // rotary.setPositionConversionFactor(135.0);
         rotary.setCurrentLimit(40);
@@ -44,8 +47,10 @@ public final class Forks extends TorqueSubsystem implements Subsystems {
     
     @Override
     public final void update(final TorqueMode mode) {
-        rotary.setVolts(mode.isTeleop() ? ROTARY_MAX_VOLTS * direction.get() : 0);
+    rotary.setVolts(ROTARY_MAX_VOLTS * direction.get());
+    SmartDashboard.putNumber("forks::current", rotary.getCurrent());
+    SmartDashboard.putNumber("forks::volts", ROTARY_MAX_VOLTS * direction.get());
 
-        direction = TorqueDirection.OFF;
+    // direction = TorqueDirection.OFF;
     }
 }

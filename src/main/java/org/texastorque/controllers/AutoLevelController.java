@@ -46,7 +46,7 @@ public final class AutoLevelController extends AbstractController<TorqueSwerveSp
 
     private final Supplier<Pose2d> poseSupplier;
 
-    private final PIDController controller = new PIDController(.02, 0, .0007);
+    private final PIDController controller = new PIDController(.0175, 0, .005);
 
     private boolean hasTilted = false, isFlat = false;
 

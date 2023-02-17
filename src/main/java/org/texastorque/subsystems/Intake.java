@@ -40,7 +40,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
         // INTAKE(new IndexerPose(6, -6.04762 - .3095), new IndexerPose(6, -6.04762 - .3095)),
         // PRIME(new IndexerPose(0, -2.1428 - .3095)),
 
-        INTAKE(new IndexerPose(6, 6.35), new IndexerPose(6, 0)),
+        INTAKE(new IndexerPose(6, -15.5), new IndexerPose(6, 0)),
         PRIME(new IndexerPose(0, 0)),
         UP(new IndexerPose(0, 0));
 
@@ -59,7 +59,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
 
     private static volatile Intake instance;
 
-    public static final double ROTARY_MAX_VOLTS = 12, ROLLER_MAX_VOLTS = 6;
+    public static final double ROTARY_MAX_VOLTS = 6, ROLLER_MAX_VOLTS = 6;
 
     public static final synchronized Intake getInstance() { return instance == null ? instance = new Intake() : instance; }
     @Log.ToString
@@ -70,21 +70,22 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
     @Log.ToString
     public double realRotaryPose = 0;
 
-    private final TorqueNEO rollers = new TorqueNEO(Ports.INTAKE_ROLLER_MOTOR);
+    private final TorqueNEO topRollers = new TorqueNEO(Ports.INTAKE_ROLLER_MOTOR_TOP);
+    private final TorqueNEO bottomRollers = new TorqueNEO(Ports.INTAKE_ROLLER_MOTOR_BOTTOM);
 
     private final TorqueNEO rotary = new TorqueNEO(Ports.INTAKE_ROTARY_MOTOR);
 
     @Config
-    public final PIDController rotaryPoseController = new PIDController(10, 0, 0);
+    public final PIDController rotaryPoseController = new PIDController(1, 0, 0);
 
     private Intake() {
-        rollers.setCurrentLimit(15);
-        rollers.setVoltageCompensation(12.6);
-        rollers.setBreakMode(true);
-        rollers.burnFlash();
+        topRollers.setCurrentLimit(15);
+        topRollers.setVoltageCompensation(12.6);
+        topRollers.setBreakMode(true);
+        topRollers.burnFlash();
 
         // rotary.setPositionConversionFactors();
-        rotary.setCurrentLimit(60);
+        rotary.setCurrentLimit(30);
         rotary.setVoltageCompensation(12.6);
         rotary.setBreakMode(true);
         rotary.burnFlash();
@@ -105,16 +106,16 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
         realRotaryPose = rotary.getPosition();
 
         SmartDashboard.putNumber("indexer::rotaryPose", rotary.getPosition());
-        SmartDashboard.putNumber("indexer::rollersPose", rollers.getPosition());
+        SmartDashboard.putNumber("indexer::rollersPose", topRollers.getPosition());
             
         final double rollerVolts = TorqueMath.constrain(activeState.get().rollerVolts, ROLLER_MAX_VOLTS);
         SmartDashboard.putNumber("intake::requestedRollerVolts", rollerVolts);
-        rollers.setVolts(rollerVolts);
+        topRollers.setVolts(rollerVolts);
 
         final double requestedRotaryVolts = TorqueMath.constrain(rotaryPoseController.calculate(realRotaryPose, activeState.get().rotaryPose), ROTARY_MAX_VOLTS);
         SmartDashboard.putNumber("intake::requestedRotaryVolts", requestedRotaryVolts);
         SmartDashboard.putNumber("intake::rotaryCurrent", rotary.getCurrent());
-        rotary.setVolts(requestedRotaryVolts);
+        // rotary.setVolts(requestedRotaryVolts);
 
         if (mode.isTeleop())
             desiredState = State.UP;

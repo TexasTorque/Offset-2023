@@ -120,5 +120,24 @@
       }
     }
   ],
-  "markers": []
+  "markers": [
+    {
+      "position": 1.4493918678977271,
+      "names": [
+        "intake-down"
+      ]
+    },
+    {
+      "position": 3.3114746093749883,
+      "names": [
+        "pickup"
+      ]
+    },
+    {
+      "position": 3.6034312855113617,
+      "names": [
+        "arm-ready"
+      ]
+    }
+  ]
 }

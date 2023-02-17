@@ -60,9 +60,9 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         toggleRotationLock = new TorqueToggleSupplier(driver::isAButtonDown, true);
         autoLevel = new TorqueBoolSupplier(driver::isYButtonDown);
 
-        wantsIntake = new TorqueBoolSupplier(operator::isLeftTriggerDown);
-        openClaw = new TorqueBoolSupplier(operator::isRightTriggerDown);
-        gamePieceModeToggle = new TorqueToggleSupplier(operator::isRightCenterButtonDown);
+        wantsIntake = new TorqueBoolSupplier(operator::isRightTriggerDown);
+        openClaw = new TorqueBoolSupplier(operator::isLeftTriggerDown);
+        gamePieceModeToggle = new TorqueToggleSupplier(operator::isLeftCenterButtonDown);
 
         armToShelf = new TorqueBoolSupplier(operator::isXButtonDown);
         armToMid = new TorqueBoolSupplier(operator::isBButtonDown);
@@ -132,6 +132,14 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
         forksUp.onTrue(() -> forks.setDirection(TorqueDirection.FORWARD));
         forksDown.onTrue(() -> forks.setDirection(TorqueDirection.REVERSE));
+
+        if (driver.isDPADDownDown())
+            forks.setDirection(TorqueDirection.FORWARD);
+        else if (driver.isDPADUpDown())
+            forks.setDirection(TorqueDirection.REVERSE);
+        else 
+            forks.setDirection(TorqueDirection.OFF);
+        
     }
 
     private void updateDrivebaseSpeeds() {

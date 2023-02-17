@@ -7,16 +7,22 @@
 package org.texastorque.auto.sequences;
 
 import org.texastorque.Subsystems;
-import org.texastorque.auto.commands.*;
+import org.texastorque.auto.commands.FollowEventPath;
 import org.texastorque.subsystems.Drivebase;
 import org.texastorque.torquelib.auto.TorqueSequence;
 import org.texastorque.torquelib.auto.commands.TorqueContinuous;
 import org.texastorque.torquelib.auto.commands.TorqueWaitForSeconds;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+
 public final class MiddleSide1PieceLevel extends TorqueSequence implements Subsystems {
     public MiddleSide1PieceLevel() {
         final TorqueWaitForSeconds dropInitialCone = new TorqueWaitForSeconds(.5);
         addBlock(dropInitialCone);
+
+
+        drivebase.resetPose(new Pose2d(2, 2.74, Rotation2d.fromRadians(Math.PI)));
 
         final FollowEventPath goOverChargeStation = new FollowEventPath("middle-over-and-back", 1.5, 3.5);
         addBlock(goOverChargeStation);
