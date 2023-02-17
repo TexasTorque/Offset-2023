@@ -7,26 +7,39 @@
 package org.texastorque.auto.sequences;
 
 import org.texastorque.Subsystems;
-import org.texastorque.auto.commands.*;
+import org.texastorque.auto.commands.FollowEventPath;
+import org.texastorque.auto.routines.Score;
+import org.texastorque.subsystems.Arm;
 import org.texastorque.subsystems.Drivebase;
+import org.texastorque.subsystems.Hand;
+import org.texastorque.subsystems.Hand.GamePiece;
 import org.texastorque.torquelib.auto.TorqueSequence;
-import org.texastorque.torquelib.auto.commands.TorqueContinuous;
-import org.texastorque.torquelib.auto.commands.TorqueWaitForSeconds;
+import org.texastorque.torquelib.auto.commands.TorqueSequenceRunner;
+
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 
 public final class BumpySide2PieceLevel extends TorqueSequence implements Subsystems {
     public BumpySide2PieceLevel() {
-        final TorqueWaitForSeconds dropInitialCone = new TorqueWaitForSeconds(.5);
-        addBlock(dropInitialCone);
 
-        final FollowEventPath pickUpFirstCube = new FollowEventPath("bumpy-side-get-first"); // ends (1.8, 1.05)
-        addBlock(pickUpFirstCube);
+        drivebase.resetPose(new Pose2d(1.8, .51, Rotation2d.fromRadians(Math.PI)));
 
-        final TorqueWaitForSeconds dropFirstCone = new TorqueWaitForSeconds(.5);
-        addBlock(dropFirstCone);
+        addBlock(hand.setStateCommand(Hand.State.CLOSE), hand.setGamePieceModeCommand(GamePiece.CONE));
 
-        final FollowEventPath goToLevel = new FollowEventPath("bumpy-side-go-level");
-        addBlock(goToLevel);
+        addBlock(new TorqueSequenceRunner(new Score(Arm.State.TOP)));
 
-        addBlock(new TorqueContinuous(() -> drivebase.setState(Drivebase.State.BALANCE)));
+        addBlock(hand.setGamePieceModeCommand(GamePiece.CUBE));
+
+        addBlock(new FollowEventPath("bumpy-side-get-first", 4.5, 4.5)); 
+
+        addBlock(new TorqueSequenceRunner(new Score(Arm.State.TOP)));
+
+        addBlock(new FollowEventPath("bumpy-side-get-second", 4.5, 4.5));
+
+        addBlock(new TorqueSequenceRunner(new Score(Arm.State.MID))); 
+
+        addBlock(new FollowEventPath("bumpy-side-go-level"));
+
+        addBlock(drivebase.setStateCommand(Drivebase.State.BALANCE));
     }
 }

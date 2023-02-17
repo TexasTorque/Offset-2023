@@ -8,7 +8,7 @@ package org.texastorque.auto.sequences;
 
 import org.texastorque.Subsystems;
 import org.texastorque.auto.commands.FollowEventPath;
-import org.texastorque.auto.routines.ArmTo;
+import org.texastorque.auto.routines.Score;
 import org.texastorque.subsystems.Arm;
 import org.texastorque.subsystems.Drivebase;
 import org.texastorque.subsystems.Hand;
@@ -27,13 +27,13 @@ public final class FlatSide2PieceLevel extends TorqueSequence implements Subsyst
 
         addBlock(hand.setStateCommand(Hand.State.CLOSE), hand.setGamePieceModeCommand(GamePiece.CONE));
 
-        addBlock(new TorqueSequenceRunner(new ArmTo(Arm.State.TOP)));
+        addBlock(new TorqueSequenceRunner(new Score(Arm.State.TOP)));
 
         addBlock(hand.setGamePieceModeCommand(GamePiece.CUBE));
 
         addBlock(new FollowEventPath("flat-side-get-first"));
 
-        addBlock(new TorqueSequenceRunner(new ArmTo(Arm.State.TOP)));
+        addBlock(new TorqueSequenceRunner(new Score(Arm.State.TOP)));
 
         addBlock(new FollowEventPath("flat-side-go-level"));
 

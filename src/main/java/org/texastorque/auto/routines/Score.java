@@ -13,8 +13,8 @@ import org.texastorque.torquelib.auto.TorqueSequence;
 import org.texastorque.torquelib.auto.commands.TorqueWaitForSeconds;
 import org.texastorque.torquelib.auto.commands.TorqueWaitUntil;
 
-public final class ArmTo extends TorqueSequence implements Subsystems {
-    public ArmTo(final Arm.State armState) {
+public final class Score extends TorqueSequence implements Subsystems {
+    public Score(final Arm.State armState) {
         addBlock(arm.setStateCommand(armState));
         addBlock(new TorqueWaitUntil(() -> arm.isAtDesiredPose()));
         addBlock(hand.setStateCommand(Hand.State.OPEN));

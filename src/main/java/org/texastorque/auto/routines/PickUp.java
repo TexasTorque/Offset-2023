@@ -13,8 +13,8 @@ import org.texastorque.subsystems.Intake;
 import org.texastorque.torquelib.auto.TorqueSequence;
 import org.texastorque.torquelib.auto.commands.TorqueWaitForSeconds;
 
-public final class PickUp extends TorqueSequence implements Subsystems {
-    public PickUp() {
+public final class Pickup extends TorqueSequence implements Subsystems {
+    public Pickup() {
         addBlock(arm.setStateCommand(Arm.State.HANDOFF));
         addBlock(new TorqueWaitForSeconds(.5));
         addBlock(hand.setStateCommand(Hand.State.CLOSE), arm.setStateCommand(Arm.State.BACK));
