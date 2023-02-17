@@ -8,7 +8,6 @@ package org.texastorque.auto;
 
 import org.texastorque.auto.sequences.FlatSide2PieceLevel;
 import org.texastorque.auto.sequences.MiddleSide1PieceLevel;
-import org.texastorque.auto.sequences.Tester;
 import org.texastorque.torquelib.auto.TorqueAutoManager;
 
 public final class AutoManager extends TorqueAutoManager {
@@ -31,6 +30,5 @@ public final class AutoManager extends TorqueAutoManager {
         // addSequence(new FlatSide3Piece());
         addSequence(new MiddleSide1PieceLevel());
         // addSequence(new FlatSide3PieceLevel());
-        addSequence(new Tester());
     }
 }
