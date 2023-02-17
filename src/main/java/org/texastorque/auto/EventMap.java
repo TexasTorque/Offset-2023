@@ -3,11 +3,16 @@ package org.texastorque.auto;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.texastorque.Subsystems;
+import org.texastorque.auto.routines.PickUp;
+import org.texastorque.subsystems.Arm;
+import org.texastorque.subsystems.Hand;
+import org.texastorque.subsystems.Intake;
 import org.texastorque.torquelib.auto.TorqueCommand;
-import org.texastorque.torquelib.auto.TorqueSequence;
+import org.texastorque.torquelib.auto.commands.TorqueExecute;
 import org.texastorque.torquelib.auto.commands.TorqueSequenceRunner;
 
-public final class EventMap {
+public final class EventMap implements Subsystems {
 
     public static final Map<String, TorqueCommand> getMap() {
         return (new EventMap()).map;
@@ -16,9 +21,18 @@ public final class EventMap {
     private final Map<String, TorqueCommand> map = new HashMap<String, TorqueCommand>();
 
     private EventMap() {
-    }
+        map.put("intake-down", new TorqueExecute(() -> {
+            intake.setState(Intake.State.INTAKE);
+            arm.setState(Arm.State.DOWN);
+            hand.setState(Hand.State.OPEN);
+        }));
 
-    private final void addRoutine(final String key, final TorqueSequence routine) {
-        map.put(key, new TorqueSequenceRunner(routine));
+        map.put("pickup", new TorqueSequenceRunner(new PickUp()));
+
+        // Legacy
+        map.put("arm-ready", new TorqueExecute(() -> arm.setState(Arm.State.TOP)));
+
+        map.put("arm-ready-top", new TorqueExecute(() -> arm.setState(Arm.State.TOP)));
+        map.put("arm-ready-mid", new TorqueExecute(() -> arm.setState(Arm.State.MID)));
     }
 }

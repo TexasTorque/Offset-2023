@@ -4,7 +4,7 @@
  * This file is part of Torque-2023, which is not licensed for distribution.
  * For more details, see ./license.txt or write <jus@justusl.com>.
  */
-package org.texastorque.auto.sequences;
+package org.texastorque.auto.routines;
 
 import org.texastorque.Subsystems;
 import org.texastorque.subsystems.Arm;
@@ -15,8 +15,8 @@ import org.texastorque.torquelib.auto.commands.TorqueExecute;
 import org.texastorque.torquelib.auto.commands.TorqueWaitForSeconds;
 import org.texastorque.torquelib.auto.commands.TorqueWaitUntil;
 
-public final class ArmGoTo extends TorqueSequence implements Subsystems {
-    public ArmGoTo(final Arm.State armState) {
+public final class ArmTo extends TorqueSequence implements Subsystems {
+    public ArmTo(final Arm.State armState) {
         addBlock(new TorqueExecute(() -> arm.setState(armState)));
      
         addBlock(new TorqueWaitUntil(() -> arm.isAtDesiredPose()));
