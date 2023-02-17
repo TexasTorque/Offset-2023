@@ -132,6 +132,14 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
         forksUp.onTrue(() -> forks.setDirection(TorqueDirection.FORWARD));
         forksDown.onTrue(() -> forks.setDirection(TorqueDirection.REVERSE));
+
+        if (driver.isDPADDownDown())
+            forks.setDirection(TorqueDirection.FORWARD);
+        else if (driver.isDPADUpDown())
+            forks.setDirection(TorqueDirection.REVERSE);
+        else 
+            forks.setDirection(TorqueDirection.OFF);
+        
     }
 
     private void updateDrivebaseSpeeds() {

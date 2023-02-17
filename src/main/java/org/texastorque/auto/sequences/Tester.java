@@ -16,8 +16,12 @@ import org.texastorque.torquelib.auto.TorqueSequence;
 import org.texastorque.torquelib.auto.commands.TorqueExecute;
 import org.texastorque.torquelib.auto.commands.TorqueSequenceRunner;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+
 public final class Tester extends TorqueSequence implements Subsystems {
     public Tester() {
+
 
         addBlock(new TorqueExecute(() -> {
             hand.setState(Hand.State.CLOSE); 

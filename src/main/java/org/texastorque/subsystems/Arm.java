@@ -29,7 +29,7 @@ import io.github.oblarg.oblog.annotations.Log;
 
 public final class Arm extends TorqueSubsystem implements Subsystems {
     public static class ArmPose {
-        private static final double ELEVATOR_TOLERANCE = 1, ROTARY_TOLERANCE = (1. / 12.) * Math.PI;
+        private static final double ELEVATOR_TOLERANCE = .1, ROTARY_TOLERANCE = (1. / 12.) * Math.PI;
 
         public final double elevatorPose;
         public final Rotation2d rotaryPose;
@@ -47,16 +47,16 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     public static enum State {
         HANDOFF(new ArmPose(0, Rotation2d.fromDegrees(260))),
-        DOWN(new ArmPose(0.25, Rotation2d.fromDegrees(235))),
-        BACK(new ArmPose(0, Rotation2d.fromDegrees(200))),
-        SHELF(new ArmPose(0, Rotation2d.fromDegrees(0))),            
+        DOWN(new ArmPose(0.35, Rotation2d.fromDegrees(250))),
+        BACK(new ArmPose(.3, Rotation2d.fromDegrees(200))),
+        SHELF(new ArmPose(.65, Rotation2d.fromDegrees(0))),            
         MID(
-                new ArmPose(0, Rotation2d.fromDegrees(0)), 
-                new ArmPose(.175, Rotation2d.fromDegrees(25))
+                new ArmPose(.1, Rotation2d.fromDegrees(0)), 
+                new ArmPose(.275, Rotation2d.fromDegrees(25))
         ), 
         TOP(
-                new ArmPose(1,  Rotation2d.fromDegrees(0)), 
-                new ArmPose(1.1,  Rotation2d.fromDegrees(20))
+                new ArmPose(1.1,  Rotation2d.fromDegrees(0)), 
+                new ArmPose(1.2,  Rotation2d.fromDegrees(20))
         );
      
         public final ArmPose cubePose;
@@ -113,7 +113,9 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     // Unfortunatly these are not sendables
     // Est. from https://www.reca.lc/arm
-    public final ArmFeedforward rotaryPoseFeedForward = new ArmFeedforward(0, .75, .5);
+    public final ArmFeedforward ROT_FF_UP = new ArmFeedforward(0, 1.25, 1);
+    public final ArmFeedforward ROT_FF_DOWN = new ArmFeedforward(0, .75, .5);
+    public ArmFeedforward rotaryPoseFeedForward;
     // public final ArmFeedforward rotaryPoseFeedForward = new ArmFeedforward(0, 1.5, .5);
 
     private final TorqueCANCoder rotaryEncoder = new TorqueCANCoder(Ports.ARM_ROTARY_ENCODER);
@@ -122,6 +124,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     private boolean wantsHandoff = false;
 
     private Arm() {
+        rotaryPoseFeedForward = ROT_FF_DOWN;
+
         elevator.setCurrentLimit(30);
         elevator.setVoltageCompensation(12.6);
         elevator.setBreakMode(true);
@@ -175,7 +179,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         updateFeedback();
 
         calculateElevator();
-        calculateRotary();
+        calculateRotary(activeState);
 
         lastState = activeState;
     }
@@ -206,7 +210,12 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         elevator.setVolts(constrainedElevatorVolts);
     }
 
-    private void calculateRotary() {
+    private void calculateRotary(final State state) {
+        if (hand.getGamePieceMode() == GamePiece.CONE && (state == State.SHELF || state == State.TOP || state == State.MID))
+            rotaryPoseFeedForward = ROT_FF_UP;
+        else
+            rotaryPoseFeedForward = ROT_FF_DOWN;
+
         final double rotaryFFOutput = -rotaryPoseFeedForward.calculate(realRotaryPose.getRadians(), 0);
 
         final double rotarayPIDDOutput = -rotaryPoseController.calculate(realRotaryPose.getRadians(), activeState.get().rotaryPose.getRadians());
@@ -214,6 +223,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         final double requestedRotaryVolts = TorqueMath.constrain(rotarayPIDDOutput + rotaryFFOutput, ROTARY_MAX_VOLTS);
         SmartDashboard.putNumber("arm::requestedRotaryVolts", requestedRotaryVolts);
 
-        rotary.setVolts(rotaryEncoder.isCANResponsive() ? requestedRotaryVolts : 0);
+        rotary.setVolts(requestedRotaryVolts);
+        // rotary.setVolts(rotaryEncoder.isCANResponsive() ? requestedRotaryVolts : 0);
     }
 }
