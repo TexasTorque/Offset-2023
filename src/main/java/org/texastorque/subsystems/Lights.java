@@ -9,7 +9,6 @@ package org.texastorque.subsystems;
 import java.util.function.Supplier;
 
 import org.texastorque.Subsystems;
-import org.texastorque.subsystems.Hand.GamePiece;
 import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.util.TorqueUtil;
@@ -111,8 +110,8 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
             return solidGreen;
         }
 
-        if (hand.getGamePieceMode() == GamePiece.CUBE) return solidPurple;
-        else if (hand.getGamePieceMode() == GamePiece.CONE) return solidYellow;
+        if (hand.isCubeMode()) return solidPurple;
+        else if (hand.isConeMode()) return solidYellow;
 
         return solidAlliance;
     }

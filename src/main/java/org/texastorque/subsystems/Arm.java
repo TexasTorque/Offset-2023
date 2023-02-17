@@ -8,7 +8,6 @@ package org.texastorque.subsystems;
 
 import org.texastorque.Ports;
 import org.texastorque.Subsystems;
-import org.texastorque.subsystems.Hand.GamePiece;
 import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.motors.TorqueNEO;
@@ -69,7 +68,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
             this.conePose = conePose;
         }
 
-        public ArmPose get() { return hand.getGamePieceMode() == GamePiece.CUBE ? cubePose : conePose; }
+        public ArmPose get() { return hand.isCubeMode() ? cubePose : conePose; }
     }
 
     private static final double ROTARY_ENCODER_OFFSET = -4.203098863363266, 
@@ -96,27 +95,16 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     @Config
     public final PIDController elevatorPoseController = new PIDController(15, 0, 0);
 
-    // Not using rn
     private final ElevatorFeedforward elevatorPoseFeedForward = new ElevatorFeedforward(0, 0, 0);
-    /**
-     *    π/2
-     *     |
-     * π --+-- 0 (towards goal)
-     *     |
-     *   3π/2
-     */
 
     private final TorqueNEO rotary = new TorqueNEO(Ports.ARM_ROTARY_MOTOR);
 
     @Config
     public final PIDController rotaryPoseController = new PIDController(.5 * Math.PI, 0 * Math.PI, 0 * Math.PI);
 
-    // Unfortunatly these are not sendables
-    // Est. from https://www.reca.lc/arm
-    public final ArmFeedforward ROT_FF_UP = new ArmFeedforward(0, 1.25, 1);
-    public final ArmFeedforward ROT_FF_DOWN = new ArmFeedforward(0, .75, .5);
-    public ArmFeedforward rotaryPoseFeedForward;
-    // public final ArmFeedforward rotaryPoseFeedForward = new ArmFeedforward(0, 1.5, .5);
+    public final ArmFeedforward HIGH_COG_ROTARY_POSE_FEEDFORWARD = new ArmFeedforward(0, 1.25, 1);
+    public final ArmFeedforward STANDARD_ROTARY_POSE_FEEDFORWARD = new ArmFeedforward(0, .75, .5);
+    public ArmFeedforward currentRotaryPoseFeedForward;
 
     private final TorqueCANCoder rotaryEncoder = new TorqueCANCoder(Ports.ARM_ROTARY_ENCODER);
 
@@ -124,7 +112,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     private boolean wantsHandoff = false;
 
     private Arm() {
-        rotaryPoseFeedForward = ROT_FF_DOWN;
+        currentRotaryPoseFeedForward = STANDARD_ROTARY_POSE_FEEDFORWARD;
 
         elevator.setCurrentLimit(30);
         elevator.setVoltageCompensation(12.6);
@@ -146,17 +134,41 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         activeState = State.BACK;
     }
 
-    // TODO: check if at pose
     @Log.BooleanBox
-    public boolean isAtShelf() {
+    public boolean isWantingShelf() {
         return activeState == State.SHELF;
     }
 
-    // TODO: check if at pose
     @Log.BooleanBox
-    public boolean isAtScoringPose() {
+    public boolean isWantingScoringPose() {
         return activeState == State.MID || activeState == State.TOP;
     }
+
+    @Log.BooleanBox
+    public boolean isWantingHighCOG() {
+        return isWantingScoringPose() || isWantingShelf();
+    }
+
+    @Log.BooleanBox
+    public boolean isAtState(final State state) {
+        return activeState.get().atPose(realElevatorPose, realRotaryPose);
+    }
+
+    @Log.BooleanBox
+    public boolean isAtScoringPose() {
+        return isAtState(State.MID) || isAtState(State.TOP);
+    }
+
+    @Log.BooleanBox
+    public boolean isAtShelf() {
+        return isAtState(State.SHELF);
+    }
+
+    @Log.BooleanBox
+    public boolean hasHighCOG() {
+        return isAtScoringPose() || isAtShelf();
+    }
+
     public void setState(final State state) { this.desiredState = state; }
 
     public State getState() { return desiredState; }
@@ -179,11 +191,10 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         updateFeedback();
 
         calculateElevator();
-        calculateRotary(activeState);
+        calculateRotary();
 
         lastState = activeState;
     }
-
 
     private void updateFeedback() {
         realElevatorPose = elevator.getPosition();
@@ -204,26 +215,22 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         final double requestedElevatorVolts = TorqueMath.constrain(elevatorPIDOutput + elevatorFFOutput, ELEVATOR_MAX_VOLTS);
         SmartDashboard.putNumber("arm::requestedElevatorVolts", requestedElevatorVolts);
 
-        final double constrainedElevatorVolts = TorqueMath.linearConstraint(requestedElevatorVolts, realElevatorPose, ELEVATOR_MIN, ELEVATOR_MAX); // don't think this will work
+        final double constrainedElevatorVolts = TorqueMath.linearConstraint(requestedElevatorVolts, realElevatorPose, ELEVATOR_MIN, ELEVATOR_MAX); 
         SmartDashboard.putNumber("arm::constrainedElevatorVolts", constrainedElevatorVolts);
 
         elevator.setVolts(constrainedElevatorVolts);
     }
 
-    private void calculateRotary(final State state) {
-        if (hand.getGamePieceMode() == GamePiece.CONE && (state == State.SHELF || state == State.TOP || state == State.MID))
-            rotaryPoseFeedForward = ROT_FF_UP;
-        else
-            rotaryPoseFeedForward = ROT_FF_DOWN;
+    private void calculateRotary() {
+        currentRotaryPoseFeedForward = hand.isConeMode() && isWantingHighCOG() ? HIGH_COG_ROTARY_POSE_FEEDFORWARD : STANDARD_ROTARY_POSE_FEEDFORWARD;
 
-        final double rotaryFFOutput = -rotaryPoseFeedForward.calculate(realRotaryPose.getRadians(), 0);
+        final double rotaryFFOutput = -currentRotaryPoseFeedForward.calculate(realRotaryPose.getRadians(), 0);
 
         final double rotarayPIDDOutput = -rotaryPoseController.calculate(realRotaryPose.getRadians(), activeState.get().rotaryPose.getRadians());
             
         final double requestedRotaryVolts = TorqueMath.constrain(rotarayPIDDOutput + rotaryFFOutput, ROTARY_MAX_VOLTS);
         SmartDashboard.putNumber("arm::requestedRotaryVolts", requestedRotaryVolts);
 
-        rotary.setVolts(requestedRotaryVolts);
-        // rotary.setVolts(rotaryEncoder.isCANResponsive() ? requestedRotaryVolts : 0);
+        rotary.setVolts(rotaryEncoder.isCANResponsive() ? requestedRotaryVolts : 0);
     }
 }

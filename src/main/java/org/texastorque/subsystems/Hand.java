@@ -85,6 +85,18 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
         this.gamePieceMode = gamePieceMode;
     }
 
+    public boolean isGamePieceMode(final GamePiece gamePieceMode) {
+        return this.gamePieceMode == gamePieceMode;
+    }
+
+    public boolean isCubeMode() {
+        return isGamePieceMode(GamePiece.CUBE);
+    }
+
+    public boolean isConeMode() {
+        return isGamePieceMode(GamePiece.CONE);
+    }
+
     public void setState(final State state) {
         this.desiredState = state;
     }
@@ -99,6 +111,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
 
     @Override
     public final void initialize(final TorqueMode mode) {
+        gamePieceMode = GamePiece.CONE;
     }
 
     @Override
@@ -134,7 +147,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
 
         if (lastState != activeState) {
             if (activeState == State.OPEN)
-                if (arm.isAtScoringPose())
+                if (arm.isWantingScoringPose())
                     Input.getInstance().setDriverRumbleFor(1);
         }
 

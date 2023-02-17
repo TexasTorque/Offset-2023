@@ -54,7 +54,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
             this.conePose = conePose;
         }
 
-        public IndexerPose get() { return hand.getGamePieceMode() == GamePiece.CUBE ? cubePose : conePose; }
+        public IndexerPose get() { return hand.isCubeMode() ? cubePose : conePose; }
     }
 
     private static volatile Intake instance;
