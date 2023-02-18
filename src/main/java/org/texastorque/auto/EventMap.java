@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.texastorque.Subsystems;
-import org.texastorque.auto.routines.Pickup;
+import org.texastorque.auto.routines.Handoff;
 import org.texastorque.subsystems.Arm;
 import org.texastorque.subsystems.Hand;
 import org.texastorque.subsystems.Intake;
@@ -27,7 +27,7 @@ public final class EventMap implements Subsystems {
             hand.setState(Hand.State.OPEN);
         }));
 
-        map.put("pickup", new TorqueSequenceRunner(new Pickup()));
+        map.put("pickup", new TorqueSequenceRunner(new Handoff()));
 
         // Legacy
         map.put("arm-ready", new TorqueExecute(() -> arm.setState(Arm.State.TOP)));
