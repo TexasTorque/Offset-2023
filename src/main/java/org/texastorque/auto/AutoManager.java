@@ -6,6 +6,7 @@
  */
 package org.texastorque.auto;
 
+import org.texastorque.auto.sequences.AnySideOnePieceTaxi;
 import org.texastorque.auto.sequences.BumpySide2PieceLevel;
 import org.texastorque.auto.sequences.BumpySide3Piece;
 import org.texastorque.auto.sequences.FlatSide2PieceLevel;
@@ -32,6 +33,6 @@ public final class AutoManager extends TorqueAutoManager {
         addSequence(new FlatSide2PieceLevel());
         addSequence(new FlatSide3Piece());
         addSequence(new MiddleSide1PieceLevel());
-        // addSequence(new FlatSide3PieceLevel());
+         addSequence(new AnySideOnePieceTaxi());
     }
 }

@@ -23,7 +23,7 @@ public final class EventMap implements Subsystems {
     private EventMap() {
         map.put("intake-down", new TorqueExecute(() -> {
             intake.setState(Intake.State.INTAKE);
-            arm.setState(Arm.State.BACK);
+            arm.setState(Arm.State.BOTTOM);
             hand.setState(Hand.State.OPEN);
         }));
 
