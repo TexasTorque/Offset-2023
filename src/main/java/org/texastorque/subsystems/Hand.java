@@ -138,9 +138,8 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
         activeState = desiredState;
         realClawPose = claw.getPosition();
 
-        if (arm.isState(Arm.State.HANDOFF)) {
+        if (arm.isGrabby())
             activeState = State.OPEN;
-        }
 
         if (!clawCloseEmptySwitch.get())
             clawCloseEmpty = true;

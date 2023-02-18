@@ -77,16 +77,11 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         spindexerLeft = new TorqueBoolSupplier(operator::isLeftBumperDown);
     }
 
-    @Override
-    public final void update() {
-        updateDrivebase();
-    }
-
     public void setDriverRumbleFor(final double duration) { driverTimeout.set(duration); }
 
     public void setOperatorRumbleFor(final double duration) { operatorTimeout.set(duration); }
 
-    private void updateDrivebase() {
+    public void update() {
         updateDrivebaseSpeeds();
 
         driver.setRumble(driverTimeout.calculate());
@@ -122,28 +117,15 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
         armDoHandoff.onTrueOrFalse(() -> {
             arm.setState(Arm.State.HANDOFF);
-            intake.setState(Intake.State.PRIME);
         }, () -> {
             if (arm.wasInSpindexer())
                 arm.setState(Arm.State.READY);
         });
 
-        wantsIntake.onTrueOrFalse(() -> {
-            intake.setState(Intake.State.INTAKE);
-        }, () -> {
-            if (!armDoHandoff.get())
-                intake.setState(Intake.State.UP);
-        });
+        intake.setState(wantsIntake.get() ? Intake.State.INTAKE : Intake.State.UP);
 
         forksUp.onTrue(() -> forks.setDirection(TorqueDirection.FORWARD));
         forksDown.onTrue(() -> forks.setDirection(TorqueDirection.REVERSE));
-
-        // if (driver.isDPADDownDown())
-        //     forks.setDirection(TorqueDirection.FORWARD);
-        // else if (driver.isDPADUpDown())
-        //     forks.setDirection(TorqueDirection.REVERSE);
-        // else 
-        //     forks.setDirection(TorqueDirection.OFF);
 
         updateSpindexer();
         

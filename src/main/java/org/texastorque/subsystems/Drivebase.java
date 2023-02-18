@@ -95,19 +95,13 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
      */
     private static final Vector<N3> VISION_STDS = VecBuilder.fill(0.1, 0.1, Units.degreesToRadians(5));
 
-    private static final double CAMERA_FORWARD_FROM_CENTER = Units.inchesToMeters((29 * .5) - 8.5625);
+    private static final Transform3d BACK_CAMERA_TO_CENTER =
+            new Transform3d(new Translation3d(Units.inchesToMeters(0), Units.inchesToMeters(32.5625), -Units.inchesToMeters(12.25)), 
+                    new Rotation3d(0, 0, Math.PI));
 
-    private static final double LEFT_CAMERA_RIGHT_FROM_CENTER = Units.inchesToMeters(29 * .5);
-
-    private static final double RIGHT_CAMERA_RIGHT_FROM_CENTER = -Units.inchesToMeters(29 * .5);
-
-    private static final double CAMERA_UP_FROM_CENTER = Units.inchesToMeters(18);
-
-    private static final Transform3d RIGHT_CAMERA_TO_CENTER =
-            new Transform3d(new Translation3d(CAMERA_FORWARD_FROM_CENTER, RIGHT_CAMERA_RIGHT_FROM_CENTER, CAMERA_UP_FROM_CENTER), new Rotation3d());
-
-    private static final Transform3d LEFT_CAMERA_TO_CENTER =
-            new Transform3d(new Translation3d(CAMERA_FORWARD_FROM_CENTER, LEFT_CAMERA_RIGHT_FROM_CENTER, CAMERA_UP_FROM_CENTER), new Rotation3d());
+    private static final Transform3d FRONT_CAMERA_TO_CENTER =
+            new Transform3d(new Translation3d(Units.inchesToMeters(3.125), Units.inchesToMeters(32.5625), -Units.inchesToMeters(12.25)), 
+                    new Rotation3d(0, 0, 0));
 
     public static SwerveModulePosition invertSwerveModuleDistance(final SwerveModulePosition pose) {
         return new SwerveModulePosition(-pose.distanceMeters, pose.angle);
@@ -154,14 +148,14 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
     private final AutoLevelController autoLevelController = new AutoLevelController(this::getPose);
 
-    public final TorqueVision cameraLeft, cameraRight;
+    public final TorqueVision cameraFront, cameraBack;
     /**
      * Constructor called on initialization.
      */
     private Drivebase() {
         // Do this for each camera
-        cameraLeft = new TorqueVision("camera_left", Field.getCurrentFieldLayout(), LEFT_CAMERA_TO_CENTER);
-        cameraRight = new TorqueVision("camera_right", Field.getCurrentFieldLayout(), RIGHT_CAMERA_TO_CENTER);
+        cameraFront = new TorqueVision("camera_left", Field.getCurrentFieldLayout(), FRONT_CAMERA_TO_CENTER);
+        cameraBack = new TorqueVision("camera_right", Field.getCurrentFieldLayout(), BACK_CAMERA_TO_CENTER);
 
         teleopOmegaController.enableContinuousInput(-Math.PI, Math.PI);
         lastRotationRadians = gyro.getRotation2d().getRadians();
@@ -216,8 +210,8 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
             state = State.FIELD_RELATIVE;
         });
 
-        cameraLeft.setFieldLayout(Field.getCurrentFieldLayout());
-        cameraRight.setFieldLayout(Field.getCurrentFieldLayout());
+        cameraFront.setFieldLayout(Field.getCurrentFieldLayout());
+        cameraBack.setFieldLayout(Field.getCurrentFieldLayout());
     }
 
     public SwerveModulePosition[] getModulePositions() {
@@ -306,8 +300,8 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     }
 
     private void updateFeedback() {
-        cameraLeft.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
-        cameraRight.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
+        cameraFront.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
+        cameraBack.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
 
         poseEstimator.update(gyro.getHeadingCCW(), getModulePositions());
 

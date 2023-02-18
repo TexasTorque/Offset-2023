@@ -227,6 +227,10 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         return lastState == State.GRAB || lastState == State.HANDOFF;
     }
 
+    public boolean isGrabby() {
+        return activeState == State.GRAB;
+    }
+
     private void updateFeedback() {
         realElevatorPose = elevator.getPosition();
 
