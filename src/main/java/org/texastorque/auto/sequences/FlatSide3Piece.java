@@ -7,25 +7,34 @@
 package org.texastorque.auto.sequences;
 
 import org.texastorque.Subsystems;
-import org.texastorque.auto.commands.*;
+import org.texastorque.auto.commands.FollowEventPath;
+import org.texastorque.auto.routines.Score;
+import org.texastorque.subsystems.Arm;
+import org.texastorque.subsystems.Hand;
+import org.texastorque.subsystems.Hand.GamePiece;
 import org.texastorque.torquelib.auto.TorqueSequence;
-import org.texastorque.torquelib.auto.commands.TorqueWaitForSeconds;
+import org.texastorque.torquelib.auto.commands.TorqueSequenceRunner;
+
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 
 public final class FlatSide3Piece extends TorqueSequence implements Subsystems {
     public FlatSide3Piece() {
-        final TorqueWaitForSeconds dropInitialCone = new TorqueWaitForSeconds(.5);
-        addBlock(dropInitialCone);
+       // Hack - not needed w/ april tags
+       drivebase.resetPose(new Pose2d(1.8, 4.96, Rotation2d.fromRadians(Math.PI)));
 
-        final FollowEventPath pickUpFirstCube = new FollowEventPath("flat-side-get-first"); // ends (1.8, 1.05)
-        addBlock(pickUpFirstCube);
+       addBlock(hand.setStateCommand(Hand.State.CLOSE), hand.setGamePieceModeCommand(GamePiece.CONE));
 
-        final TorqueWaitForSeconds dropFirstCone = new TorqueWaitForSeconds(.5);
-        addBlock(dropFirstCone);
+       addBlock(new TorqueSequenceRunner(new Score(Arm.State.TOP)));
 
-        final FollowEventPath pickUpSecondCube = new FollowEventPath("flat-side-get-second");
-        addBlock(pickUpSecondCube);
+       addBlock(hand.setGamePieceModeCommand(GamePiece.CUBE));
 
-        final TorqueWaitForSeconds dropSecondCube = new TorqueWaitForSeconds(.5);
-        addBlock(dropSecondCube);
+       addBlock(new FollowEventPath("flat-side-get-first", 4.5, 4.5)); 
+
+       addBlock(new TorqueSequenceRunner(new Score(Arm.State.TOP)));
+
+       addBlock(new FollowEventPath("flat-side-get-second", 4.5, 4.5));
+
+       addBlock(new TorqueSequenceRunner(new Score(Arm.State.MID)));
     }
 }

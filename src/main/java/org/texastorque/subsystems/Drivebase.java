@@ -15,6 +15,8 @@ import org.texastorque.controllers.AutoLevelController;
 import org.texastorque.controllers.PathAlignController;
 import org.texastorque.controllers.PathAlignController.AlignState;
 import org.texastorque.controllers.PathAlignController.GridState;
+import org.texastorque.torquelib.auto.TorqueCommand;
+import org.texastorque.torquelib.auto.commands.TorqueContinuous;
 import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.sensors.TorqueNavXGyro;
@@ -55,8 +57,17 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         private State(final State parent) { this.parent = parent == null ? this : parent; }
     }
 
-    private static volatile Drivebase instance;
+    public enum SpeedSetting {
+        FAST(1), SLOW(.35);
 
+        public final double speed;
+        private SpeedSetting(final double speed) {
+            this.speed = speed;
+        }
+    }
+
+    private static volatile Drivebase instance;
+    
     public static final double WIDTH = Units.inchesToMeters(21.745), // m (swerve to swerve)
             LENGTH = Units.inchesToMeters(21.745),                   // m (swerve to swerve)
 
@@ -65,7 +76,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
             MAX_ANGULAR_VELOCITY = 4 * Math.PI,         // rad/s
             MAX_ANGULAR_ACCELERATION = 2 * Math.PI,     // rad/s^2
             WHEEL_DIAMETER = Units.inchesToMeters(4.0); // m
-    
+
     public static final Pose2d INITIAL_POS = new Pose2d(0, 0, new Rotation2d(0));
 
     private static final double SIZE = Units.inchesToMeters(18);
@@ -104,15 +115,17 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
     public static synchronized final Drivebase getInstance() { return instance == null ? instance = new Drivebase() : instance; }
 
+    public SpeedSetting speedSetting = SpeedSetting.FAST;
+
     private State state = State.ROBOT_RELATIVE;
 
     private State requestedState = State.ROBOT_RELATIVE;
 
     private final Translation2d LOC_FL = new Translation2d(SIZE, -SIZE), LOC_FR = new Translation2d(SIZE, SIZE), LOC_BL = new Translation2d(-SIZE, -SIZE),
                                 LOC_BR = new Translation2d(-SIZE, SIZE);
-
     // This is the kinematics object that calculates the desired wheel speeds
     private final SwerveDriveKinematics kinematics;
+
     // PoseEstimator is a more advanced odometry system that uses a Kalman
     // filter to estimate the robot's position It also encorporates other
     // measures like April tag positions
@@ -122,8 +135,8 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     public final Field2d fieldMap = new Field2d();
 
     private final TorqueSwerveModule2022 fl, fr, bl, br;
-
     private final TorqueNavXGyro gyro = TorqueNavXGyro.getInstance();
+
     private double lastRotationRadians;
 
     private final PIDController teleopOmegaController = new PIDController(2 * Math.PI, 0, 0);
@@ -165,12 +178,10 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         // bl = new TorqueSwerveModule2022("Back Left", Ports.BL_MOD, 1.135143488645554, config);
         // br = new TorqueSwerveModule2022("Back Right", Ports.BR_MOD, 5.186378560960293, config);
 
-        fl = new TorqueSwerveModule2022("Front Left", Ports.FL_MOD, -0.535358212888241, config);
+        fl = new TorqueSwerveModule2022("Front Left", Ports.FL_MOD, .53686679, config);
         fr = new TorqueSwerveModule2022("Front Right", Ports.FR_MOD, 1.365240141749382 + Math.PI, config);
         bl = new TorqueSwerveModule2022("Back Left", Ports.BL_MOD, 1.135143488645554, config);
         br = new TorqueSwerveModule2022("Back Right", Ports.BR_MOD, 2.069323200489386 + Math.PI, config);
-
-
 
         kinematics = new SwerveDriveKinematics(LOC_BL, LOC_BR, LOC_FL, LOC_FR);
 
@@ -224,6 +235,9 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         if (state == State.ZERO) {
             zeroModules();
         } else {
+            if (arm.isWantingHighCOG())
+                speedSetting = SpeedSetting.SLOW;
+
             if (state == State.ALIGN) {
                 final Optional<TorqueSwerveSpeeds> speedsWrapper = alignmentController.calculate();
                 if (speedsWrapper.isPresent()) inputSpeeds = speedsWrapper.get();
@@ -232,6 +246,8 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
                 inputSpeeds = autoLevelController.calculate();
                 convertToFieldRelative();
             }
+
+            inputSpeeds = inputSpeeds.times(speedSetting.speed);
 
             if (state == State.FIELD_RELATIVE) {
                 calculateTeleop();
@@ -247,6 +263,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
             if (inputSpeeds.hasZeroVelocity()) {
                 preseveModulePositions();
             } else {
+
                 fl.setDesiredState(swerveStates[0]);
                 fr.setDesiredState(swerveStates[1]);
                 bl.setDesiredState(swerveStates[2]);
@@ -282,6 +299,10 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     @Log.Dial(name = "Gyro Radians")
     public double getGyroAngle() {
         return gyro.getHeadingCCW().getRadians();
+    }
+
+    public TorqueCommand setStateCommand(final State state) {
+        return new TorqueContinuous(() -> setState(state));
     }
 
     private void updateFeedback() {

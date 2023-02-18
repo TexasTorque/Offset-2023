@@ -9,6 +9,8 @@ package org.texastorque.subsystems;
 import org.texastorque.Input;
 import org.texastorque.Ports;
 import org.texastorque.Subsystems;
+import org.texastorque.torquelib.auto.TorqueCommand;
+import org.texastorque.torquelib.auto.commands.TorqueExecute;
 import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.control.TorqueCurrentSpike;
@@ -64,9 +66,9 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
     @Config
     public final PIDController clawPoseController = new PIDController(0.1, 0, 0);
     private TorqueCurrentSpike currentDetection = new TorqueCurrentSpike(10);
-    private final DigitalInput clawSwitch;
+    private final DigitalInput clawCloseEmptySwitch;
     private final TorqueNEO claw = new TorqueNEO(Ports.HAND_MOTOR);
-    private boolean currentSpike = false, switchClicked = false;
+    private boolean currentSpike = false, clawCloseEmpty = false;
 
     private Hand() {
         claw.setCurrentLimit(5);
@@ -74,7 +76,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
         claw.setBreakMode(true);
         claw.burnFlash();
 
-        clawSwitch = new DigitalInput(0);
+        clawCloseEmptySwitch = new DigitalInput(0);
     }
 
     public GamePiece getGamePieceMode() {
@@ -83,6 +85,18 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
 
     public void setGamePieceMode(final GamePiece gamePieceMode) {
         this.gamePieceMode = gamePieceMode;
+    }
+
+    public boolean isGamePieceMode(final GamePiece gamePieceMode) {
+        return this.gamePieceMode == gamePieceMode;
+    }
+
+    public boolean isCubeMode() {
+        return isGamePieceMode(GamePiece.CUBE);
+    }
+
+    public boolean isConeMode() {
+        return isGamePieceMode(GamePiece.CONE);
     }
 
     public void setState(final State state) {
@@ -97,8 +111,17 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
         return getState() == state;
     }
 
+    public TorqueCommand setStateCommand(final State state) {
+        return new TorqueExecute(() -> setState(state));
+    }
+
+    public TorqueCommand setGamePieceModeCommand(final GamePiece gamePieceMode) {
+        return new TorqueExecute(() -> setGamePieceMode(gamePieceMode));
+    }
+
     @Override
     public final void initialize(final TorqueMode mode) {
+        gamePieceMode = GamePiece.CONE;
     }
 
     @Override
@@ -108,33 +131,24 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
         SmartDashboard.putNumber("hand::realClawVolts", claw.getVolts());
         SmartDashboard.putString("hand::state", activeState.toString());
         SmartDashboard.putNumber("hand::current", claw.getCurrent());
+        SmartDashboard.putBoolean("hand::clawSwitch", clawCloseEmptySwitch.get());
 
         activeState = desiredState;
         realClawPose = claw.getPosition();
 
-        // if (arm.isAtScoringPose()) {
-        //     if (clawSwitch.get())
-        //         switchClicked = true;
-        // } else
-        //     switchClicked = false;
+        if (!clawCloseEmptySwitch.get())
+            clawCloseEmpty = true;
 
-        // if (switchClicked)
-        //     activeState = State.OPEN;
+        if (desiredState == State.OPEN)
+            clawCloseEmpty = false;
 
-        // if (activeState == State.OPEN)
-        //     currentSpike = currentDetection.calculate(claw.getCurrent());
-        // else {
-        //     currentDetection.reset();
-        //     currentSpike = false;
-        // }
- 
-        final double clawRequestedVolts = currentSpike ? 0 : activeState.getClawVolts();
-        // claw.setVolts(clawRequestedVolts);
+        final double clawRequestedVolts = clawCloseEmpty ? 0 : activeState.getClawVolts();
+        claw.setVolts(clawRequestedVolts);
         SmartDashboard.putNumber("hand::clawVoltsWanted", clawRequestedVolts);
 
         if (lastState != activeState) {
             if (activeState == State.OPEN)
-                if (arm.isAtScoringPose())
+                if (arm.isWantingScoringPose())
                     Input.getInstance().setDriverRumbleFor(1);
         }
 

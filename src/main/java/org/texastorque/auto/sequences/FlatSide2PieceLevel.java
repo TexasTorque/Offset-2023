@@ -8,14 +8,12 @@ package org.texastorque.auto.sequences;
 
 import org.texastorque.Subsystems;
 import org.texastorque.auto.commands.FollowEventPath;
+import org.texastorque.auto.routines.Score;
 import org.texastorque.subsystems.Arm;
 import org.texastorque.subsystems.Drivebase;
 import org.texastorque.subsystems.Hand;
 import org.texastorque.subsystems.Hand.GamePiece;
-import org.texastorque.subsystems.Intake;
 import org.texastorque.torquelib.auto.TorqueSequence;
-import org.texastorque.torquelib.auto.commands.TorqueContinuous;
-import org.texastorque.torquelib.auto.commands.TorqueExecute;
 import org.texastorque.torquelib.auto.commands.TorqueSequenceRunner;
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -27,32 +25,18 @@ public final class FlatSide2PieceLevel extends TorqueSequence implements Subsyst
         // Hack - not needed w/ april tags
         drivebase.resetPose(new Pose2d(1.8, 4.96, Rotation2d.fromRadians(Math.PI)));
 
-        addBlock(new TorqueExecute(() -> {
-            hand.setState(Hand.State.CLOSE); 
-            hand.setGamePieceMode(GamePiece.CONE);
-        }));
+        addBlock(hand.setStateCommand(Hand.State.CLOSE), hand.setGamePieceModeCommand(GamePiece.CONE));
 
-        addBlock(new TorqueSequenceRunner(new ArmGoTo(Arm.State.TOP)));
+        addBlock(new TorqueSequenceRunner(new Score(Arm.State.TOP)));
 
-        final FollowEventPath pickUpFirstCube = new FollowEventPath("flat-side-get-first"); // ends (1.8, 1.05)
+        addBlock(hand.setGamePieceModeCommand(GamePiece.CUBE));
 
-        pickUpFirstCube.addEvent("intake-down", new TorqueExecute(() -> {
-            intake.setState(Intake.State.INTAKE);
-            arm.setState(Arm.State.DOWN);
-            hand.setState(Hand.State.OPEN);
-        }));
+        addBlock(new FollowEventPath("flat-side-get-first"));
 
-        pickUpFirstCube.addEvent("pickup", new TorqueSequenceRunner(new Pickup()));
+        addBlock(new TorqueSequenceRunner(new Score(Arm.State.TOP)));
 
-        pickUpFirstCube.addEvent("arm-ready", new TorqueExecute(() -> arm.setState(Arm.State.TOP)));
+        addBlock(new FollowEventPath("flat-side-go-level"));
 
-        addBlock(pickUpFirstCube);
-
-        addBlock(new TorqueSequenceRunner(new ArmGoTo(Arm.State.TOP)));
-
-        final FollowEventPath goToLevel = new FollowEventPath("flat-side-go-level");
-        addBlock(goToLevel);
-
-        addBlock(new TorqueContinuous(() -> drivebase.setState(Drivebase.State.BALANCE)));
+        addBlock(drivebase.setStateCommand(Drivebase.State.BALANCE));
     }
 }
