@@ -131,25 +131,32 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         wantsIntake.onTrueOrFalse(() -> {
             intake.setState(Intake.State.INTAKE);
         }, () -> {
-            intake.setState(Intake.State.UP);
+            if (!armDoHandoff.get())
+                intake.setState(Intake.State.UP);
         });
 
         forksUp.onTrue(() -> forks.setDirection(TorqueDirection.FORWARD));
         forksDown.onTrue(() -> forks.setDirection(TorqueDirection.REVERSE));
 
-        if (driver.isDPADDownDown())
-            forks.setDirection(TorqueDirection.FORWARD);
-        else if (driver.isDPADUpDown())
-            forks.setDirection(TorqueDirection.REVERSE);
-        else 
-            forks.setDirection(TorqueDirection.OFF);
+        // if (driver.isDPADDownDown())
+        //     forks.setDirection(TorqueDirection.FORWARD);
+        // else if (driver.isDPADUpDown())
+        //     forks.setDirection(TorqueDirection.REVERSE);
+        // else 
+        //     forks.setDirection(TorqueDirection.OFF);
+
+        updateSpindexer();
         
     }
 
     private void updateSpindexer() {
-
-
-
+        final double input = operator.getLeftYAxis();
+        if (Math.abs(input) < .1)
+            spindexer.setDirection(TorqueDirection.NEUTRAL);
+        else if (input > 0)
+            spindexer.setDirection(TorqueDirection.FORWARD);
+        else 
+            spindexer.setDirection(TorqueDirection.REVERSE);
     }
 
     private void updateDrivebaseSpeeds() {
