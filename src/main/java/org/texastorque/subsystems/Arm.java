@@ -47,9 +47,10 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     public static enum State {
-        HANDOFF(new ArmPose(0, Rotation2d.fromDegrees(260))),
-        DOWN(new ArmPose(0.35, Rotation2d.fromDegrees(250))),
-        BACK(new ArmPose(.3, Rotation2d.fromDegrees(200))),
+        GRAB(new ArmPose(0, Rotation2d.fromDegrees(260))),
+        HANDOFF(new ArmPose(0.35, Rotation2d.fromDegrees(250))),
+
+        BACK(new ArmPose(.3, Rotation2d.fromDegrees(230))),
         SHELF(new ArmPose(.65, Rotation2d.fromDegrees(0))),            
         MID(
                 new ArmPose(.1, Rotation2d.fromDegrees(0)), 
@@ -83,11 +84,11 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     public static final synchronized Arm getInstance() { return instance == null ? instance = new Arm() : instance; }
 
     @Log.ToString
-    private State activeState = State.DOWN;
+    private State activeState = State.BACK;
     @Log.ToString
-    private State desiredState = State.DOWN;
+    private State desiredState = State.BACK;
     @Log.ToString
-    private State lastState = State.DOWN;
+    private State lastState = State.BACK;
     @Log.ToString
     public double realElevatorPose = 0;
 
@@ -192,8 +193,6 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     @Override
     public final void update(final TorqueMode mode) {
         activeState = desiredState;
-        if (hand.isState(Hand.State.OPEN) && activeState == State.DOWN)
-            activeState = State.HANDOFF;
 
         updateFeedback();
 

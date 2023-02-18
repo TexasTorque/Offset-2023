@@ -33,7 +33,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
     private final TorqueBoolSupplier isZeroingWheels, slowModeToggle, alignGridLeft, alignGridCenter, alignGridRight, gridOverrideLeft, gridOverrideRight,
             gridOverrideCenter, resetGyroClick, resetPoseClick, toggleRotationLock, autoLevel, wantsIntake, gamePieceModeToggle, openClaw, armToBottom,
-            armToShelf, armToMid, armToTop, forksUp, forksDown, spindexerRight, spindexerLeft;
+            armToShelf, armToMid, armToTop, forksUp, forksDown, spindexerRight, spindexerLeft, armDoHandoff;
 
     private final TorqueRequestableTimeout driverTimeout = new TorqueRequestableTimeout();
 
@@ -65,6 +65,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         openClaw = new TorqueBoolSupplier(operator::isLeftTriggerDown);
         gamePieceModeToggle = new TorqueToggleSupplier(operator::isLeftCenterButtonDown);
 
+        armDoHandoff = new TorqueToggleSupplier(operator::isRightCenterButtonDown);
         armToShelf = new TorqueBoolSupplier(operator::isXButtonDown);
         armToMid = new TorqueBoolSupplier(operator::isBButtonDown);
         armToTop = new TorqueBoolSupplier(operator::isYButtonDown);
@@ -119,17 +120,19 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         armToTop.onTrue(() -> arm.setState(lastSetArmState = Arm.State.TOP));
         armToBottom.onTrue(() -> arm.setState(lastSetArmState = Arm.State.BACK));
 
-        wantsIntake.onTrueOrFalse(() -> {
-            intake.setState(Intake.State.INTAKE);
-            arm.setState(Arm.State.DOWN);
+        armDoHandoff.onTrueOrFalse(() -> {
+            arm.setState(lastSetArmState = Arm.State.HANDOFF);
+            intake.setState(Intake.State.PRIME);
         }, () -> {
-            if (arm.isState(Arm.State.DOWN)) 
+            if (arm.isState(Arm.State.HANDOFF)) 
                 arm.setState(lastSetArmState = Arm.State.BACK);
-            intake.setState(Intake.State.UP);
         });
 
-        spindexerRight.onTrue(() -> spindexer.setDirection(TorqueDirection.FORWARD));
-        spindexerLeft.onTrue(() -> spindexer.setDirection(TorqueDirection.REVERSE));
+        wantsIntake.onTrueOrFalse(() -> {
+            intake.setState(Intake.State.INTAKE);
+        }, () -> {
+            intake.setState(Intake.State.UP);
+        });
 
         forksUp.onTrue(() -> forks.setDirection(TorqueDirection.FORWARD));
         forksDown.onTrue(() -> forks.setDirection(TorqueDirection.REVERSE));
@@ -141,6 +144,12 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         else 
             forks.setDirection(TorqueDirection.OFF);
         
+    }
+
+    private void updateSpindexer() {
+
+
+
     }
 
     private void updateDrivebaseSpeeds() {
