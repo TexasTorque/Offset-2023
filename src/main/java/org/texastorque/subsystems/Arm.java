@@ -138,12 +138,12 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     @Log.BooleanBox
     public boolean isWantingShelf() {
-        return activeState == State.SHELF;
+        return desiredState == State.SHELF;
     }
 
     @Log.BooleanBox
     public boolean isWantingScoringPose() {
-        return activeState == State.MID || activeState == State.TOP;
+        return desiredState == State.MID || desiredState == State.TOP;
     }
 
     @Log.BooleanBox

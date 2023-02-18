@@ -66,9 +66,9 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
     @Config
     public final PIDController clawPoseController = new PIDController(0.1, 0, 0);
     private TorqueCurrentSpike currentDetection = new TorqueCurrentSpike(10);
-    private final DigitalInput clawSwitch;
+    private final DigitalInput clawCloseEmptySwitch;
     private final TorqueNEO claw = new TorqueNEO(Ports.HAND_MOTOR);
-    private boolean currentSpike = false, switchClicked = false;
+    private boolean currentSpike = false, clawCloseEmpty = false;
 
     private Hand() {
         claw.setCurrentLimit(5);
@@ -76,7 +76,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
         claw.setBreakMode(true);
         claw.burnFlash();
 
-        clawSwitch = new DigitalInput(0);
+        clawCloseEmptySwitch = new DigitalInput(0);
     }
 
     public GamePiece getGamePieceMode() {
@@ -131,28 +131,19 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
         SmartDashboard.putNumber("hand::realClawVolts", claw.getVolts());
         SmartDashboard.putString("hand::state", activeState.toString());
         SmartDashboard.putNumber("hand::current", claw.getCurrent());
+        SmartDashboard.putBoolean("hand::clawSwitch", clawCloseEmptySwitch.get());
 
         activeState = desiredState;
         realClawPose = claw.getPosition();
 
-        // if (arm.isAtScoringPose()) {
-        //     if (clawSwitch.get())
-        //         switchClicked = true;
-        // } else
-        //     switchClicked = false;
+        if (!clawCloseEmptySwitch.get())
+            clawCloseEmpty = true;
 
-        // if (switchClicked)
-        //     activeState = State.OPEN;
+        if (desiredState == State.OPEN)
+            clawCloseEmpty = false;
 
-        // if (activeState == State.OPEN)
-        //     currentSpike = currentDetection.calculate(claw.getCurrent());
-        // else {
-        //     currentDetection.reset();
-        //     currentSpike = false;
-        // }
- 
-        final double clawRequestedVolts = currentSpike ? 0 : activeState.getClawVolts();
-        // claw.setVolts(clawRequestedVolts);
+        final double clawRequestedVolts = clawCloseEmpty ? 0 : activeState.getClawVolts();
+        claw.setVolts(clawRequestedVolts);
         SmartDashboard.putNumber("hand::clawVoltsWanted", clawRequestedVolts);
 
         if (lastState != activeState) {
