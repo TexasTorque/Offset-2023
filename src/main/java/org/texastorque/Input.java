@@ -39,6 +39,8 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
     private Arm.State lastSetArmState = arm.getState();
 
+    private final TorqueRequestableTimeout clawTimeout = new TorqueRequestableTimeout();
+
     private Input() {
         driver = new TorqueController(0, .001);
         operator = new TorqueController(1);
@@ -84,8 +86,8 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
     public void update() {
         updateDrivebaseSpeeds();
 
-        driver.setRumble(driverTimeout.calculate());
-        operator.setRumble(operatorTimeout.calculate());
+        driver.setRumble(driverTimeout.get());
+        operator.setRumble(operatorTimeout.get());
 
         drivebase.setState(Drivebase.State.FIELD_RELATIVE);
 
@@ -112,17 +114,24 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         armToShelf.onTrue(() -> arm.setState(lastSetArmState = Arm.State.SHELF));
         armToMid.onTrue(() -> arm.setState(lastSetArmState = Arm.State.MID));
         armToTop.onTrue(() -> arm.setState(lastSetArmState = Arm.State.TOP));
-        armToLow.onTrue(() -> arm.setState(lastSetArmState = Arm.State.LOW));
         armToBottom.onTrue(() -> arm.setState(lastSetArmState = Arm.State.BOTTOM));
 
         armDoHandoff.onTrueOrFalse(() -> {
-            arm.setState(Arm.State.HANDOFF);
+            arm.setState(Arm.State.GRAB);
         }, () -> {
-            if (arm.isPerformingHandoff())
-                arm.setState(Arm.State.READY);
+            if (arm.isState(Arm.State.GRAB))
+                arm.setState(Arm.State.BOTTOM);
         });
 
-        intake.setState(wantsIntake.get() ? Intake.State.INTAKE : Intake.State.UP);
+        wantsIntake.onTrueOrFalse(() -> {
+            if (!clawTimeout.get())
+                arm.setState(Arm.State.HANDOFF);
+
+            intake.setState(Intake.State.INTAKE);
+        }, () -> {
+            clawTimeout.set(.5);
+            intake.setState(Intake.State.UP);
+        });
 
         forksUp.onTrue(() -> forks.setDirection(TorqueDirection.FORWARD));
         forksDown.onTrue(() -> forks.setDirection(TorqueDirection.REVERSE));

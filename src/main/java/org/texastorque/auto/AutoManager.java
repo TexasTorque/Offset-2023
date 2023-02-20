@@ -24,7 +24,7 @@ public final class AutoManager extends TorqueAutoManager {
      */
     public static final synchronized AutoManager getInstance() { return instance == null ? instance = new AutoManager() : instance; }
 
-    public AutoManager() { super(true); }
+    public AutoManager() { super(false); }
 
     @Override
     public final void init() {

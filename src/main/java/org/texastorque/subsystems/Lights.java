@@ -8,6 +8,7 @@ package org.texastorque.subsystems;
 
 import java.util.function.Supplier;
 
+import org.texastorque.Ports;
 import org.texastorque.Subsystems;
 import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
@@ -86,7 +87,7 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
                         blinkPurple = new Blink(() -> Color.kPurple, 6), blinkYellow = new Blink(() -> Color.kYellow, 6), rainbow = new Rainbow();
 
     private Lights() {
-        leds = new AddressableLED(0);
+        leds = new AddressableLED(Ports.LIGHTS);
         leds.setLength(LENGTH);
         buff = new AddressableLEDBuffer(LENGTH);
     }
