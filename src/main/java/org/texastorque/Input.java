@@ -116,6 +116,8 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         armToTop.onTrue(() -> arm.setState(lastSetArmState = Arm.State.TOP));
         armToBottom.onTrue(() -> arm.setState(lastSetArmState = Arm.State.BOTTOM));
 
+        arm.setpointAdjustment = operator.getRightYAxis();
+
         armDoHandoff.onTrueOrFalse(() -> {
             arm.setState(Arm.State.GRAB);
         }, () -> {
@@ -129,7 +131,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
             intake.setState(Intake.State.INTAKE);
         }, () -> {
-            clawTimeout.set(.5);
+            clawTimeout.set(.2);
             intake.setState(Intake.State.UP);
         });
 

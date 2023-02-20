@@ -31,7 +31,10 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
         turntable.setVoltageCompensation(12.6);
         turntable.setBreakMode(true);
         turntable.burnFlash();
-    } public final void setDirection(final TorqueDirection direction) {
+    } 
+    
+    
+    public final void setDirection(final TorqueDirection direction) {
         this.direction = direction;
     }
 

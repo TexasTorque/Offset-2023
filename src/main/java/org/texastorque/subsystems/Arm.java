@@ -25,6 +25,7 @@ import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import io.github.oblarg.oblog.annotations.Config;
@@ -54,7 +55,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
                 new ArmPose(0, Rotation2d.fromDegrees(255))
         ),
         INDEX(
-                new ArmPose(.26, Rotation2d.fromDegrees(250))
+                new ArmPose(.3, Rotation2d.fromDegrees(240))
         ),
         HANDOFF(new ArmPose(0.45, Rotation2d.fromDegrees(250))),
 
@@ -91,20 +92,22 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
             ELEVATOR_MAX = 1.3;
 
     private static volatile Arm instance;
-    public static final synchronized Arm getInstance() { return instance == null ? instance = new Arm() : instance; }
+    private static final double RADIANS_ADJUSTMENT_COEF = Units.degreesToRadians(15);
 
+    public static final synchronized Arm getInstance() { return instance == null ? instance = new Arm() : instance; }
     @Log.ToString
     private State activeState = State.BOTTOM;
     @Log.ToString
     private State desiredState = State.BOTTOM;
     @Log.ToString
     private State lastState = State.BOTTOM;
+
     @Log.ToString
     public double realElevatorPose = 0;
-
     @Log.ToString
     public Rotation2d realRotaryPose = Rotation2d.fromDegrees(0);
     private final TorqueNEO elevator = new TorqueNEO(Ports.ARM_ELEVATOR_MOTOR);
+
     @Config
     public final PIDController elevatorPoseController = new PIDController(15, 0, 0);
 
@@ -116,8 +119,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     public final PIDController rotaryPoseController = new PIDController(.5 * Math.PI, 0 * Math.PI, 0 * Math.PI);
 
     public final ArmFeedforward ARM_FF = new ArmFeedforward(0, 1.25, 2);
-
     public final ArmFeedforward HIGH_COG_ROTARY_POSE_FEEDFORWARD = new ArmFeedforward(0, 1.25, 1);
+
     public final ArmFeedforward STANDARD_ROTARY_POSE_FEEDFORWARD = new ArmFeedforward(0, .75, .5);
 
     // public final ArmFeedforward HIGH_COG_ROTARY_POSE_FEEDFORWARD = ARM_FF;
@@ -138,6 +141,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     @Log.BooleanBox
     private boolean grabbing = false;
+
+    public double setpointAdjustment = 0;
 
     private Arm() {
         currentRotaryPoseFeedForward = STANDARD_ROTARY_POSE_FEEDFORWARD;
@@ -187,7 +192,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     public boolean isAtState(final State state) {
         return activeState.get().atPose(realElevatorPose, realRotaryPose);
     }
-
+    
     @Log.BooleanBox
     public boolean isAtScoringPose() {
         return isAtState(State.MID) || isAtState(State.TOP);
@@ -197,7 +202,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     public boolean isAtShelf() {
         return isAtState(State.SHELF);
     }
-    
+
     @Log.BooleanBox
     public boolean hasHighCOG() {
         return isAtScoringPose() || isAtShelf();
@@ -229,14 +234,14 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
         if (desiredState == State.HANDOFF) {
             if (handoffState == State.HANDOFF && isAtDesiredPose())
-                handoffState = State.INDEX;
+                handoffState = intake.isState(Intake.State.INTAKE) || intake.isState(Intake.State.PRIME) ? State.INDEX : State.GRAB;
             
             activeState = handoffState;
         } else {
             handoffState = State.HANDOFF;
         } 
 
-        if (desiredState == State.GRAB)
+        if (activeState == State.GRAB)
             grabbing = true;
         else {
             if (grabbing)
@@ -254,7 +259,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     public boolean isPerformingHandoff() {
-        return activeState == State.INDEX || activeState == State.HANDOFF;
+        return activeState == State.INDEX || activeState == State.HANDOFF || activeState == State.GRAB;
     }
 
     private void updateFeedback() {
@@ -286,7 +291,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         currentRotaryPoseFeedForward = hand.isConeMode() && isAtScoringPose() ? HIGH_COG_ROTARY_POSE_FEEDFORWARD : STANDARD_ROTARY_POSE_FEEDFORWARD;
         // currentRotaryPoseFeedForward = ARM_FF;
 
-        final double armSetpoint = activeState.get().rotaryPose.getRadians();
+        final double armSetpoint = activeState.get().rotaryPose.getRadians() + (isPerformingHandoff() ? setpointAdjustment * RADIANS_ADJUSTMENT_COEF : 0);
 
         final double rotaryFFOutput = -currentRotaryPoseFeedForward.calculate(armSetpoint, 0);
 

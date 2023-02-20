@@ -41,7 +41,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
         // INTAKE(new IndexerPose(6, -6.04762 - .3095), new IndexerPose(6, -6.04762 - .3095)),
         // PRIME(new IndexerPose(0, -2.1428 - .3095)),
 
-        INTAKE(new IndexerPose(4, 4, ROT_INTAKE), new IndexerPose(8, 9, ROT_INTAKE)),
+        INTAKE(new IndexerPose(4 * .66, 4 * .66, ROT_INTAKE), new IndexerPose(8, 9, ROT_INTAKE)),
         PRIME(new IndexerPose(0, 0, ROT_PRIME)),
         UP(new IndexerPose(0, 0, ROT_UP));
 
@@ -58,12 +58,12 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
         public IndexerPose get() { return hand.isCubeMode() ? cubePose : conePose; }
     }
     private static final double ROT_INTAKE = -15;
-    private static final double ROT_PRIME = -6;
+    private static final double ROT_PRIME = -8;
     private static final double ROT_UP = 0;
 
     private static volatile Intake instance;
 
-    public static final double ROTARY_MAX_VOLTS = 10, ROLLER_MAX_VOLTS = 6;
+    public static final double ROTARY_MAX_VOLTS = 8, ROLLER_MAX_VOLTS = 6;
 
     public static final synchronized Intake getInstance() { return instance == null ? instance = new Intake() : instance; }
     @Log.ToString
@@ -118,7 +118,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
 
         realRotaryPose = rotary.getPosition();
 
-        if (desiredState == State.UP && arm.isPerformingHandoff() || arm.isState(Arm.State.GRAB))
+        if (desiredState == State.UP && arm.isPerformingHandoff())
             activeState = State.PRIME;
 
         SmartDashboard.putNumber("indexer::rotaryPose", rotary.getPosition());
