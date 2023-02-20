@@ -18,7 +18,7 @@ import io.github.oblarg.oblog.annotations.Log;
 public final class Spindexer extends TorqueSubsystem implements Subsystems {
     private static volatile Spindexer instance;
 
-    public static final double SPINDEXER_MAX_VOLTS = 8;
+    public static final double SPINDEXER_MAX_VOLTS = 4;
 
     public static final synchronized Spindexer getInstance() { return instance == null ? instance = new Spindexer() : instance; }
 
@@ -31,9 +31,7 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
         turntable.setVoltageCompensation(12.6);
         turntable.setBreakMode(true);
         turntable.burnFlash();
-    }
-
-    public final void setDirection(final TorqueDirection direction) {
+    } public final void setDirection(final TorqueDirection direction) {
         this.direction = direction;
     }
 

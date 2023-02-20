@@ -6,8 +6,6 @@
  */
 package org.texastorque;
 
-import org.texastorque.controllers.PathAlignController.AlignState;
-import org.texastorque.controllers.PathAlignController.GridState;
 import org.texastorque.subsystems.Arm;
 import org.texastorque.subsystems.Drivebase;
 import org.texastorque.subsystems.Drivebase.SpeedSetting;
@@ -33,7 +31,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
     private final TorqueBoolSupplier isZeroingWheels, slowModeToggle, alignGridLeft, alignGridCenter, alignGridRight, gridOverrideLeft, gridOverrideRight,
             gridOverrideCenter, resetGyroClick, resetPoseClick, toggleRotationLock, autoLevel, wantsIntake, gamePieceModeToggle, openClaw, armToBottom,
-            armToShelf, armToMid, armToTop, forksUp, forksDown, spindexerRight, spindexerLeft;
+            armToShelf, armToMid, armToTop, forksUp, forksDown, spindexerRight, spindexerLeft, armDoHandoff, armToLow;
 
     private final TorqueRequestableTimeout driverTimeout = new TorqueRequestableTimeout();
 
@@ -62,12 +60,14 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         autoLevel = new TorqueBoolSupplier(driver::isYButtonDown);
 
         wantsIntake = new TorqueBoolSupplier(operator::isRightTriggerDown);
-        openClaw = new TorqueBoolSupplier(operator::isLeftTriggerDown);
-        gamePieceModeToggle = new TorqueToggleSupplier(operator::isLeftCenterButtonDown);
+        openClaw = new TorqueBoolSupplier(operator::isRightBumperDown);
+        gamePieceModeToggle = new TorqueToggleSupplier(operator::isLeftBumperDown);
 
+        armDoHandoff = new TorqueBoolSupplier(operator::isLeftTriggerDown);
         armToShelf = new TorqueBoolSupplier(operator::isXButtonDown);
         armToMid = new TorqueBoolSupplier(operator::isBButtonDown);
         armToTop = new TorqueBoolSupplier(operator::isYButtonDown);
+        armToLow = new TorqueBoolSupplier(operator::isLeftCenterButtonDown);
         armToBottom = new TorqueBoolSupplier(operator::isAButtonDown);
 
         forksUp = new TorqueBoolSupplier(driver::isDPADUpDown);
@@ -77,16 +77,11 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         spindexerLeft = new TorqueBoolSupplier(operator::isLeftBumperDown);
     }
 
-    @Override
-    public final void update() {
-        updateDrivebase();
-    }
-
     public void setDriverRumbleFor(final double duration) { driverTimeout.set(duration); }
 
     public void setOperatorRumbleFor(final double duration) { operatorTimeout.set(duration); }
 
-    private void updateDrivebase() {
+    public void update() {
         updateDrivebaseSpeeds();
 
         driver.setRumble(driverTimeout.calculate());
@@ -99,15 +94,15 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
         drivebase.isRotationLocked = toggleRotationLock.get();
 
-        alignGridLeft.onTrue(() -> drivebase.setAlignState(AlignState.LEFT));
-        alignGridCenter.onTrue(() -> drivebase.setAlignState(AlignState.CENTER));
-        alignGridRight.onTrue(() -> drivebase.setAlignState(AlignState.RIGHT));
+        // alignGridLeft.onTrue(() -> drivebase.setAlignState(AlignState.LEFT));
+        // alignGridCenter.onTrue(() -> drivebase.setAlignState(AlignState.CENTER));
+        // alignGridRight.onTrue(() -> drivebase.setAlignState(AlignState.RIGHT));
 
-        gridOverrideLeft.onTrue(() -> drivebase.setGridOverride(GridState.LEFT));
-        gridOverrideCenter.onTrue(() -> drivebase.setGridOverride(GridState.CENTER));
-        gridOverrideRight.onTrue(() -> drivebase.setGridOverride(GridState.RIGHT));
+        // gridOverrideLeft.onTrue(() -> drivebase.setGridOverride(GridState.LEFT));
+        // gridOverrideCenter.onTrue(() -> drivebase.setGridOverride(GridState.CENTER));
+        // gridOverrideRight.onTrue(() -> drivebase.setGridOverride(GridState.RIGHT));
 
-        autoLevel.onTrue(() -> drivebase.setState(Drivebase.State.BALANCE));
+        // autoLevel.onTrue(() -> drivebase.setState(Drivebase.State.BALANCE));
         isZeroingWheels.onTrue(() -> drivebase.setState(Drivebase.State.ZERO));
 
         openClaw.onTrue(() -> hand.setState(Hand.State.OPEN));
@@ -117,30 +112,33 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         armToShelf.onTrue(() -> arm.setState(lastSetArmState = Arm.State.SHELF));
         armToMid.onTrue(() -> arm.setState(lastSetArmState = Arm.State.MID));
         armToTop.onTrue(() -> arm.setState(lastSetArmState = Arm.State.TOP));
-        armToBottom.onTrue(() -> arm.setState(lastSetArmState = Arm.State.BACK));
+        armToLow.onTrue(() -> arm.setState(lastSetArmState = Arm.State.LOW));
+        armToBottom.onTrue(() -> arm.setState(lastSetArmState = Arm.State.BOTTOM));
 
-        wantsIntake.onTrueOrFalse(() -> {
-            intake.setState(Intake.State.INTAKE);
-            arm.setState(Arm.State.DOWN);
+        armDoHandoff.onTrueOrFalse(() -> {
+            arm.setState(Arm.State.HANDOFF);
         }, () -> {
-            if (arm.isState(Arm.State.DOWN)) 
-                arm.setState(lastSetArmState = Arm.State.BACK);
-            intake.setState(Intake.State.UP);
+            if (arm.wasInSpindexer())
+                arm.setState(Arm.State.READY);
         });
 
-        spindexerRight.onTrue(() -> spindexer.setDirection(TorqueDirection.FORWARD));
-        spindexerLeft.onTrue(() -> spindexer.setDirection(TorqueDirection.REVERSE));
+        intake.setState(wantsIntake.get() ? Intake.State.INTAKE : Intake.State.UP);
 
         forksUp.onTrue(() -> forks.setDirection(TorqueDirection.FORWARD));
         forksDown.onTrue(() -> forks.setDirection(TorqueDirection.REVERSE));
 
-        if (driver.isDPADDownDown())
-            forks.setDirection(TorqueDirection.FORWARD);
-        else if (driver.isDPADUpDown())
-            forks.setDirection(TorqueDirection.REVERSE);
-        else 
-            forks.setDirection(TorqueDirection.OFF);
+        updateSpindexer();
         
+    }
+
+    private void updateSpindexer() {
+        final double input = operator.getLeftXAxis();
+        if (Math.abs(input) < .1)
+            spindexer.setDirection(TorqueDirection.NEUTRAL);
+        else if (input > 0)
+            spindexer.setDirection(TorqueDirection.FORWARD);
+        else 
+            spindexer.setDirection(TorqueDirection.REVERSE);
     }
 
     private void updateDrivebaseSpeeds() {

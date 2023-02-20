@@ -70,6 +70,8 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
     private final TorqueNEO claw = new TorqueNEO(Ports.HAND_MOTOR);
     private boolean currentSpike = false, clawCloseEmpty = false;
 
+    private boolean openedByHandoff = false;
+
     private Hand() {
         claw.setCurrentLimit(5);
         claw.setVoltageCompensation(12.6);
@@ -136,10 +138,13 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
         activeState = desiredState;
         realClawPose = claw.getPosition();
 
+        if (arm.isGrabby())
+            activeState = State.OPEN;
+
         if (!clawCloseEmptySwitch.get())
             clawCloseEmpty = true;
 
-        if (desiredState == State.OPEN)
+        if (activeState == State.OPEN)
             clawCloseEmpty = false;
 
         final double clawRequestedVolts = clawCloseEmpty ? 0 : activeState.getClawVolts();
