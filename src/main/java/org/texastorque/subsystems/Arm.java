@@ -48,19 +48,22 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     public static enum State {
-        GRAB(new ArmPose(0, Rotation2d.fromDegrees(260))),
-        HANDOFF(new ArmPose(0.35, Rotation2d.fromDegrees(250))),
+        GRAB(
+                new ArmPose(0, Rotation2d.fromDegrees(270)),
+                new ArmPose(0, Rotation2d.fromDegrees(260))
+        ),
+        HANDOFF(new ArmPose(0.45, Rotation2d.fromDegrees(250))),
 
-        BOTTOM(new ArmPose(.3, Rotation2d.fromDegrees(230))),
-        READY(new ArmPose(.3, Rotation2d.fromDegrees(210))),
-        SHELF(new ArmPose(.65, Rotation2d.fromDegrees(0))),            
+        BOTTOM(new ArmPose(.4, Rotation2d.fromDegrees(230))),
+        READY(new ArmPose(.4, Rotation2d.fromDegrees(210))),
+        SHELF(new ArmPose(.7, Rotation2d.fromDegrees(0))),            
         MID(
                 new ArmPose(.1, Rotation2d.fromDegrees(0)), 
                 new ArmPose(.275, Rotation2d.fromDegrees(25))
         ), 
         TOP(
                 new ArmPose(1.1,  Rotation2d.fromDegrees(0)), 
-                new ArmPose(1.2,  Rotation2d.fromDegrees(20))
+                new ArmPose(1.15,  Rotation2d.fromDegrees(20))
         ), 
         LOW(new ArmPose(.6, Rotation2d.fromDegrees(0)));
      
@@ -223,12 +226,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         lastState = activeState;
     }
 
-    public boolean wasInSpindexer() {
-        return lastState == State.GRAB || lastState == State.HANDOFF;
-    }
-
-    public boolean isGrabby() {
-        return activeState == State.GRAB;
+    public boolean isPerformingHandoff() {
+        return activeState == State.GRAB || activeState == State.HANDOFF;
     }
 
     private void updateFeedback() {

@@ -118,7 +118,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         armDoHandoff.onTrueOrFalse(() -> {
             arm.setState(Arm.State.HANDOFF);
         }, () -> {
-            if (arm.wasInSpindexer())
+            if (arm.isPerformingHandoff())
                 arm.setState(Arm.State.READY);
         });
 

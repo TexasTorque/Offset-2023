@@ -119,7 +119,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
 
         realRotaryPose = rotary.getPosition();
 
-        if (arm.wasInSpindexer())
+        if (arm.isPerformingHandoff())
             activeState = State.PRIME;
 
         SmartDashboard.putNumber("indexer::rotaryPose", rotary.getPosition());
