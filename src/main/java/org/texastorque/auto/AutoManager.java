@@ -33,6 +33,6 @@ public final class AutoManager extends TorqueAutoManager {
         addSequence(new FlatSide2PieceLevel());
         addSequence(new FlatSide3Piece());
         addSequence(new MiddleSide1PieceLevel());
-         addSequence(new AnySideOnePieceTaxi());
+        addSequence(new AnySideOnePieceTaxi());
     }
 }

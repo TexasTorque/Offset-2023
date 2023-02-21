@@ -241,7 +241,8 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
                 convertToFieldRelative();
             }
 
-            inputSpeeds = inputSpeeds.times(speedSetting.speed);
+            if (mode.isTeleop())
+                inputSpeeds = inputSpeeds.times(speedSetting.speed);
 
             if (state == State.FIELD_RELATIVE) {
                 calculateTeleop();
@@ -297,6 +298,10 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
     public TorqueCommand setStateCommand(final State state) {
         return new TorqueContinuous(() -> setState(state));
+    }
+
+    public boolean isNotMoving() {
+        return inputSpeeds.hasZeroVelocity();
     }
 
     private void updateFeedback() {

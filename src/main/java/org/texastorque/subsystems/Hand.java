@@ -138,8 +138,12 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
         activeState = desiredState;
         realClawPose = claw.getPosition();
 
-        if (arm.isGrabby())
+        if (arm.isWantingOpenClaw())
             activeState = State.OPEN;
+
+        // if (arm.isAtScoringPose() && !drivebase.isNotMoving() && activeState == State.OPEN) {
+            // activeState = State.CLOSE;
+        // }
 
         if (!clawCloseEmptySwitch.get())
             clawCloseEmpty = true;
