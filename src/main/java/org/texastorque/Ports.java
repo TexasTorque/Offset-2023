@@ -24,7 +24,8 @@ public final class Ports {
     public static final int ARM_ELEVATOR_MOTOR = 16;
     public static final int ARM_ROTARY_MOTOR = 17;
     public static final int ARM_ROTARY_ENCODER = 18;
-    public static final int HAND_MOTOR = 19;
+    public static final int CLAW_MOTOR = 19;
+    public static final int CLAW_ENCODER = 22;
     public static final int FORKS_MOTOR = 20;
 
     // DIO
