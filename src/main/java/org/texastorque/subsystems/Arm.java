@@ -55,12 +55,11 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
                 new ArmPose(0, Rotation2d.fromDegrees(255))
         ),
         INDEX(
+                new ArmPose(.4, Rotation2d.fromDegrees(230)),
                 new ArmPose(.3, Rotation2d.fromDegrees(240))
         ),
         HANDOFF(new ArmPose(0.45, Rotation2d.fromDegrees(250))),
-
-        BOTTOM(new ArmPose(.4, Rotation2d.fromDegrees(210))),
-        READY(new ArmPose(.4, Rotation2d.fromDegrees(210))),
+        STOWED(new ArmPose(.4, Rotation2d.fromDegrees(210))),
         SHELF(new ArmPose(.7, Rotation2d.fromDegrees(0))),            
         MID(
                 new ArmPose(.1, Rotation2d.fromDegrees(0)), 
@@ -96,11 +95,11 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     public static final synchronized Arm getInstance() { return instance == null ? instance = new Arm() : instance; }
     @Log.ToString
-    private State activeState = State.BOTTOM;
+    private State activeState = State.STOWED;
     @Log.ToString
-    private State desiredState = State.BOTTOM;
+    private State desiredState = State.STOWED;
     @Log.ToString
-    private State lastState = State.BOTTOM;
+    private State lastState = State.STOWED;
 
     @Log.ToString
     public double realElevatorPose = 0;
@@ -128,8 +127,6 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     @Log.BooleanBox
     private boolean wantsHandoff = false;
-
-    public State handoffState = State.HANDOFF;
 
     private final DigitalInput armSwitch;
 
@@ -162,11 +159,11 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
         armSwitch = new DigitalInput(Ports.ARM_SWITCH);
 
-        activeState = State.BOTTOM;
+        activeState = State.STOWED;
     }
 
     public boolean isWantingOpenClaw() {
-        return (desiredState == State.HANDOFF && handoffState == State.INDEX) || desiredState == State.GRAB;
+        return || desiredState == State.GRAB;
     }
 
     @Log.BooleanBox
@@ -228,25 +225,18 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
         updateFeedback();
 
-        if (desiredState == State.HANDOFF) {
-            if (handoffState == State.HANDOFF && isAtDesiredPose())
-                handoffState = intake.isState(Intake.State.INTAKE) || intake.isState(Intake.State.PRIME) ? State.INDEX : State.GRAB;
-            
-            activeState = handoffState;
-        } else {
-            handoffState = State.HANDOFF;
-        } 
-
-        if (activeState == State.GRAB)
+        if (activeState == State.GRAB) {
             grabbing = true;
-        else {
-            if (grabbing)
+        } else {
+            if (grabbing) {
                 grabTimeout.set(.5);
+            }
             grabbing = false;
         }
 
-        if (grabTimeout.get())
+        if (grabTimeout.get()) {
             activeState = State.GRAB;
+        }
 
         calculateElevator();
         calculateRotary();
@@ -276,19 +266,14 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     private void calculateRotary() {
         currentRotaryPoseFeedForward = hand.isConeMode() && isAtScoringPose() ? HIGH_COG_ROTARY_POSE_FEEDFORWARD : STANDARD_ROTARY_POSE_FEEDFORWARD;
-
         double armSetpoint = activeState.get().rotaryPose.getRadians();
         if (isPerformingHandoff()) 
             armSetpoint += setpointAdjustment * RADIANS_ADJUSTMENT_COEF;
-
         double rotaryVolts = -currentRotaryPoseFeedForward.calculate(armSetpoint, 0);
-
         final boolean stopArm = armSetpoint <= (Math.PI * 0.5) && armSwitch.get();
-
         rotaryVolts += -rotaryPoseController.calculate(realRotaryPose.getRadians(), armSetpoint);
-
         rotaryVolts = TorqueMath.constrain(rotaryVolts, ROTARY_MAX_VOLTS);
-
         rotary.setVolts(rotaryEncoder.isCANResponsive() && !isState(Arm.State.LOW) ? rotaryVolts : 0);
+        SmartDashboard.putNumber("arm::elevatorCurrent", elevator.getCurrent());
     }
 }

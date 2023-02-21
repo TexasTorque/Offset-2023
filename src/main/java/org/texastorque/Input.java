@@ -114,7 +114,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         armToShelf.onTrue(() -> arm.setState(lastSetArmState = Arm.State.SHELF));
         armToMid.onTrue(() -> arm.setState(lastSetArmState = Arm.State.MID));
         armToTop.onTrue(() -> arm.setState(lastSetArmState = Arm.State.TOP));
-        armToBottom.onTrue(() -> arm.setState(lastSetArmState = Arm.State.BOTTOM));
+        armToBottom.onTrue(() -> arm.setState(lastSetArmState = Arm.State.STOWED));
 
         arm.setpointAdjustment = operator.getRightYAxis();
 
@@ -122,7 +122,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
             arm.setState(Arm.State.GRAB);
         }, () -> {
             if (arm.isState(Arm.State.GRAB))
-                arm.setState(Arm.State.BOTTOM);
+                arm.setState(Arm.State.STOWED);
         });
 
         wantsIntake.onTrueOrFalse(() -> {
