@@ -55,11 +55,12 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
                 new ArmPose(0, Rotation2d.fromDegrees(255))
         ),
         INDEX(
-                new ArmPose(.4, Rotation2d.fromDegrees(230)),
+                new ArmPose(.4, Rotation2d.fromDegrees(240)),
                 new ArmPose(.3, Rotation2d.fromDegrees(240))
         ),
-        HANDOFF(new ArmPose(0.45, Rotation2d.fromDegrees(250))),
+        WAYPOINT(new ArmPose(0.45, Rotation2d.fromDegrees(250))),
         STOWED(new ArmPose(.4, Rotation2d.fromDegrees(210))),
+        GRABBED(STOWED),
         SHELF(new ArmPose(.7, Rotation2d.fromDegrees(0))),            
         MID(
                 new ArmPose(.1, Rotation2d.fromDegrees(0)), 
@@ -81,6 +82,10 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
             this.conePose = conePose;
         }
 
+        private State(final State other) {
+            this(other.cubePose, other.conePose);
+        }
+
         public ArmPose get() { return hand.isCubeMode() ? cubePose : conePose; }
     }
 
@@ -91,22 +96,22 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
             ELEVATOR_MAX = 1.3;
 
     private static volatile Arm instance;
-    private static final double RADIANS_ADJUSTMENT_COEF = Units.degreesToRadians(15);
 
+    private static final double RADIANS_ADJUSTMENT_COEF = Units.degreesToRadians(15);
     public static final synchronized Arm getInstance() { return instance == null ? instance = new Arm() : instance; }
+
     @Log.ToString
     private State activeState = State.STOWED;
     @Log.ToString
     private State desiredState = State.STOWED;
     @Log.ToString
     private State lastState = State.STOWED;
-
     @Log.ToString
     public double realElevatorPose = 0;
+
     @Log.ToString
     public Rotation2d realRotaryPose = Rotation2d.fromDegrees(0);
     private final TorqueNEO elevator = new TorqueNEO(Ports.ARM_ELEVATOR_MOTOR);
-
     @Config
     public final PIDController elevatorPoseController = new PIDController(15, 0, 0);
 
@@ -119,14 +124,11 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     // public final ArmFeedforward ARM_FF = new ArmFeedforward(0, 1.25, 2);
     public final ArmFeedforward HIGH_COG_ROTARY_POSE_FEEDFORWARD = new ArmFeedforward(0, 1.25, 1);
-    public final ArmFeedforward STANDARD_ROTARY_POSE_FEEDFORWARD = new ArmFeedforward(0, .75, .5);
 
+    public final ArmFeedforward STANDARD_ROTARY_POSE_FEEDFORWARD = new ArmFeedforward(0, .75, .5);
     public ArmFeedforward currentRotaryPoseFeedForward;
 
     private final TorqueCANCoder rotaryEncoder = new TorqueCANCoder(Ports.ARM_ROTARY_ENCODER);
-
-    @Log.BooleanBox
-    private boolean wantsHandoff = false;
 
     private final DigitalInput armSwitch;
 
@@ -136,6 +138,10 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     private boolean grabbing = false;
 
     public double setpointAdjustment = 0;
+
+    private final TorqueRequestableTimeout indexTimeout = new TorqueRequestableTimeout();
+
+    private boolean wantsClawOpen = false;
 
     private Arm() {
         currentRotaryPoseFeedForward = STANDARD_ROTARY_POSE_FEEDFORWARD;
@@ -162,8 +168,12 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         activeState = State.STOWED;
     }
 
-    public boolean isWantingOpenClaw() {
-        return || desiredState == State.GRAB;
+    public boolean isStowed() {
+        return activeState == State.STOWED || activeState == State.GRABBED;
+    }
+
+    public boolean isPerformingHandoff() {
+        return activeState == State.GRAB || activeState == State.INDEX;
     }
 
     @Log.BooleanBox
@@ -175,7 +185,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     public boolean isWantingScoringPose() {
         return desiredState == State.MID || desiredState == State.TOP;
     }
-
+    
     @Log.BooleanBox
     public boolean isWantingHighCOG() {
         return isWantingScoringPose() || isWantingShelf();
@@ -185,7 +195,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     public boolean isAtState(final State state) {
         return activeState.get().atPose(realElevatorPose, realRotaryPose);
     }
-    
+
     @Log.BooleanBox
     public boolean isAtScoringPose() {
         return isAtState(State.MID) || isAtState(State.TOP);
@@ -219,16 +229,24 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     @Log.ToString
     public boolean isAtDesiredPose() { return activeState.get().atPose(realElevatorPose, realRotaryPose); }
 
+    public boolean isWantingOpenClaw() {
+        return (desiredState == State.INDEX && !indexTimeout.get()) || desiredState == State.GRAB;
+    }
+
     @Override
     public final void update(final TorqueMode mode) {
         activeState = desiredState;
 
         updateFeedback();
 
+        if (activeState == State.INDEX && lastState != State.INDEX) {
+            indexTimeout.set(.25);
+        }
+
         if (activeState == State.GRAB) {
             grabbing = true;
         } else {
-            if (grabbing) {
+            if (grabbing && activeState == State.GRABBED) {
                 grabTimeout.set(.5);
             }
             grabbing = false;
@@ -242,10 +260,6 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         calculateRotary();
 
         lastState = activeState;
-    }
-
-    public boolean isPerformingHandoff() {
-        return activeState == State.INDEX || activeState == State.HANDOFF || activeState == State.GRAB;
     }
 
     private void updateFeedback() {

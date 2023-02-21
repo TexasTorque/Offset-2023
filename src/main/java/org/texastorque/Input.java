@@ -11,13 +11,13 @@ import org.texastorque.subsystems.Drivebase;
 import org.texastorque.subsystems.Drivebase.SpeedSetting;
 import org.texastorque.subsystems.Hand;
 import org.texastorque.subsystems.Hand.GamePiece;
-import org.texastorque.subsystems.Intake;
 import org.texastorque.torquelib.base.TorqueDirection;
 import org.texastorque.torquelib.base.TorqueInput;
 import org.texastorque.torquelib.control.TorqueBoolSupplier;
 import org.texastorque.torquelib.control.TorqueClickSupplier;
 import org.texastorque.torquelib.control.TorqueRequestableTimeout;
 import org.texastorque.torquelib.control.TorqueToggleSupplier;
+import org.texastorque.torquelib.control.TorqueTraversableSelection;
 import org.texastorque.torquelib.sensors.TorqueController;
 import org.texastorque.torquelib.swerve.TorqueSwerveSpeeds;
 import org.texastorque.torquelib.util.TorqueMath;
@@ -37,9 +37,11 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
     private final TorqueRequestableTimeout operatorTimeout = new TorqueRequestableTimeout();
 
-    private Arm.State lastSetArmState = arm.getState();
-
     private final TorqueRequestableTimeout clawTimeout = new TorqueRequestableTimeout();
+
+    private final TorqueTraversableSelection<Arm.State> handoffStates = new TorqueTraversableSelection<Arm.State>(
+        Arm.State.STOWED, Arm.State.INDEX, Arm.State.GRAB, Arm.State.STOWED
+    );
 
     private Input() {
         driver = new TorqueController(0, .001);
@@ -65,7 +67,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         openClaw = new TorqueBoolSupplier(operator::isRightBumperDown);
         gamePieceModeToggle = new TorqueToggleSupplier(operator::isLeftBumperDown);
 
-        armDoHandoff = new TorqueBoolSupplier(operator::isLeftTriggerDown);
+        armDoHandoff = new TorqueClickSupplier(operator::isLeftTriggerDown);
         armToShelf = new TorqueBoolSupplier(operator::isXButtonDown);
         armToMid = new TorqueBoolSupplier(operator::isBButtonDown);
         armToTop = new TorqueBoolSupplier(operator::isYButtonDown);
@@ -111,29 +113,30 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
         gamePieceModeToggle.onTrueOrFalse(() -> hand.setGamePieceMode(GamePiece.CONE), () -> hand.setGamePieceMode(GamePiece.CUBE));
 
-        armToShelf.onTrue(() -> arm.setState(lastSetArmState = Arm.State.SHELF));
-        armToMid.onTrue(() -> arm.setState(lastSetArmState = Arm.State.MID));
-        armToTop.onTrue(() -> arm.setState(lastSetArmState = Arm.State.TOP));
-        armToBottom.onTrue(() -> arm.setState(lastSetArmState = Arm.State.STOWED));
+        armToShelf.onTrue(() -> arm.setState(Arm.State.SHELF));
+        armToMid.onTrue(() -> arm.setState(Arm.State.MID));
+        armToTop.onTrue(() -> arm.setState(Arm.State.TOP));
+
+        armToBottom.onTrue(() -> {
+            arm.setState(Arm.State.STOWED);
+            handoffStates.set(0);
+        });
 
         arm.setpointAdjustment = operator.getRightYAxis();
 
-        armDoHandoff.onTrueOrFalse(() -> {
-            arm.setState(Arm.State.GRAB);
-        }, () -> {
-            if (arm.isState(Arm.State.GRAB))
-                arm.setState(Arm.State.STOWED);
-        });
+        armDoHandoff.onTrue(() -> arm.setState(handoffStates.calculate(false, true)));
 
-        wantsIntake.onTrueOrFalse(() -> {
-            if (!clawTimeout.get())
-                arm.setState(Arm.State.HANDOFF);
+        // wantsIntake.onTrueOrFalse(() -> {
+        //     if (!clawTimeout.get() && arm.isStowed()) {
+        //         handoffStates.set(1);
+        //         arm.setState(Arm.State.INDEX);
+        //     }
 
-            intake.setState(Intake.State.INTAKE);
-        }, () -> {
-            clawTimeout.set(.2);
-            intake.setState(Intake.State.UP);
-        });
+        //     intake.setState(Intake.State.INTAKE);
+        // }, () -> {
+        //     clawTimeout.set(.2);
+        //     intake.setState(Intake.State.UP);
+        // });
 
         forksUp.onTrue(() -> forks.setDirection(TorqueDirection.FORWARD));
         forksDown.onTrue(() -> forks.setDirection(TorqueDirection.REVERSE));

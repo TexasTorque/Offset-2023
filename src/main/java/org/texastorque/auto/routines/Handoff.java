@@ -16,7 +16,7 @@ import org.texastorque.torquelib.auto.commands.TorqueWaitForSeconds;
 public final class Handoff extends TorqueSequence implements Subsystems {
     // This must be reworked!
     public Handoff() {
-        addBlock(arm.setStateCommand(Arm.State.HANDOFF));
+        addBlock(arm.setStateCommand(Arm.State.INDEX));
         addBlock(new TorqueWaitForSeconds(.5));
         addBlock(hand.setStateCommand(Hand.State.CLOSE), arm.setStateCommand(Arm.State.STOWED));
         addBlock(new TorqueWaitForSeconds(.5));
