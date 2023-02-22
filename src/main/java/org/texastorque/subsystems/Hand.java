@@ -28,7 +28,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
     }
 
     public static enum State {
-        OPEN(1477), // double check negation
+        OPEN(1477),
         CLOSE(-1477);
 
         public final double clawSetpoint;
@@ -40,7 +40,6 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
         public double getClawSetpoint() {
             return clawSetpoint;
         }
-
     }
 
     private static volatile Hand instance;
@@ -150,6 +149,6 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
     }
 
     private void updateFeedback() {
-        realClawPose = clawEncoder.getPosition();
+        realClawPose = clawEncoder.getPosition() - CLAW_ENCODER_OFFSET;
     }
 }
