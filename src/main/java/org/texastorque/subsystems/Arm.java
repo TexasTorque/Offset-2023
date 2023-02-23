@@ -141,8 +141,6 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     private final TorqueRequestableTimeout indexTimeout = new TorqueRequestableTimeout();
 
-    private boolean wantsClawOpen = false;
-
     private Arm() {
         currentRotaryPoseFeedForward = STANDARD_ROTARY_POSE_FEEDFORWARD;
 
