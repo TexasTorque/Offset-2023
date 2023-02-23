@@ -18,8 +18,8 @@ import org.texastorque.torquelib.auto.commands.TorqueSequenceRunner;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 
-public final class AnySideOnePieceTaxi extends TorqueSequence implements Subsystems {
-    public AnySideOnePieceTaxi() {
+public final class AnySideOnePieceMobility extends TorqueSequence implements Subsystems {
+    public AnySideOnePieceMobility() {
         // Hack - not needed w/ april tags
         drivebase.resetPose(new Pose2d(0, 0, Rotation2d.fromRadians(Math.PI)));
 
@@ -27,6 +27,6 @@ public final class AnySideOnePieceTaxi extends TorqueSequence implements Subsyst
 
         addBlock(new TorqueSequenceRunner(new Score(Arm.State.TOP)));
 
-        addBlock(new FollowEventPath("origin-taxi", 1.5, 3.5));
+        addBlock(new FollowEventPath("origin-mobility", 1.5, 3.5));
     }
 }

@@ -73,7 +73,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
             MAX_VELOCITY = 4.522,                       // m/s
             MAX_ACCELERATION = 8.958,                   // m/s^2
-            MAX_ANGULAR_VELOCITY = 4 * Math.PI,         // rad/s
+            MAX_ANGULAR_VELOCITY = 2 * Math.PI,         // rad/s
             MAX_ANGULAR_ACCELERATION = 2 * Math.PI,     // rad/s^2
             WHEEL_DIAMETER = Units.inchesToMeters(4.0); // m
 
@@ -96,11 +96,11 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     private static final Vector<N3> VISION_STDS = VecBuilder.fill(0.1, 0.1, Units.degreesToRadians(5));
 
     private static final Transform3d BACK_CAMERA_TO_CENTER =
-            new Transform3d(new Translation3d(Units.inchesToMeters(0), Units.inchesToMeters(32.5625), -Units.inchesToMeters(12.25)), 
+            new Transform3d(new Translation3d(Units.inchesToMeters(10.5), Units.inchesToMeters(32.5625), -Units.inchesToMeters(12.25)), 
                     new Rotation3d(0, 0, Math.PI));
 
     private static final Transform3d FRONT_CAMERA_TO_CENTER =
-            new Transform3d(new Translation3d(Units.inchesToMeters(3.125), Units.inchesToMeters(32.5625), -Units.inchesToMeters(12.25)), 
+            new Transform3d(new Translation3d(Units.inchesToMeters(10.5), Units.inchesToMeters(21.5), Units.inchesToMeters(7.5)), 
                     new Rotation3d(0, 0, 0));
 
     public static SwerveModulePosition invertSwerveModuleDistance(final SwerveModulePosition pose) {
@@ -111,6 +111,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
     public SpeedSetting speedSetting = SpeedSetting.FAST;
 
+    @Log.ToString
     private State state = State.ROBOT_RELATIVE;
 
     private State requestedState = State.ROBOT_RELATIVE;
@@ -306,7 +307,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
     private void updateFeedback() {
         cameraFront.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
-        cameraBack.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
+        // cameraBack.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
 
         poseEstimator.update(gyro.getHeadingCCW(), getModulePositions());
 

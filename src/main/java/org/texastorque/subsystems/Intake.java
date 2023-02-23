@@ -6,6 +6,7 @@
  */
 package org.texastorque.subsystems;
 
+import org.texastorque.Ports;
 import org.texastorque.Subsystems;
 import org.texastorque.torquelib.auto.TorqueCommand;
 import org.texastorque.torquelib.auto.commands.TorqueExecute;
@@ -41,7 +42,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
         // INTAKE(new IndexerPose(6, -6.04762 - .3095), new IndexerPose(6, -6.04762 - .3095)),
         // PRIME(new IndexerPose(0, -2.1428 - .3095)),
 
-        INTAKE(new IndexerPose(4 * .66, 4 * .66, ROT_INTAKE), new IndexerPose(8, 9, ROT_INTAKE)),
+        INTAKE(new IndexerPose(4, 4, ROT_INTAKE), new IndexerPose(8, 9, ROT_INTAKE)),
         PRIME(new IndexerPose(0, 0, ROT_PRIME)),
         UP(new IndexerPose(0, 0, ROT_UP));
 
@@ -74,10 +75,10 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
     @Log.ToString
     public double realRotaryPose = 0;
 
-    private final TorqueNEO topRollers = new TorqueNEO(13);
-    private final TorqueNEO bottomRollers = new TorqueNEO(21);
+    private final TorqueNEO topRollers = new TorqueNEO(Ports.INTAKE_ROLLER_MOTOR_TOP);
+    private final TorqueNEO bottomRollers = new TorqueNEO(Ports.INTAKE_ROLLER_MOTOR_BOTTOM);
 
-    private final TorqueNEO rotary = new TorqueNEO(14);
+    private final TorqueNEO rotary = new TorqueNEO(Ports.INTAKE_ROTARY_MOTOR);
 
     @Config
     public final PIDController rotaryPoseController = new PIDController(2, 0, 0);
