@@ -42,7 +42,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
         // INTAKE(new IndexerPose(6, -6.04762 - .3095), new IndexerPose(6, -6.04762 - .3095)),
         // PRIME(new IndexerPose(0, -2.1428 - .3095)),
 
-        INTAKE(new IndexerPose(4 * .66, 4 * .66, ROT_INTAKE), new IndexerPose(8, 9, ROT_INTAKE)),
+        INTAKE(new IndexerPose(4, 4, ROT_INTAKE), new IndexerPose(8, 9, ROT_INTAKE)),
         PRIME(new IndexerPose(0, 0, ROT_PRIME)),
         UP(new IndexerPose(0, 0, ROT_UP));
 

@@ -51,24 +51,24 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     public static enum State {
         GRAB(
-                new ArmPose(0, Rotation2d.fromDegrees(260)),
-                new ArmPose(0, Rotation2d.fromDegrees(255))
+                new ArmPose(.15, Rotation2d.fromDegrees(250)),
+                new ArmPose(0, Rotation2d.fromDegrees(260))
         ),
         INDEX(
-                new ArmPose(.4, Rotation2d.fromDegrees(240)),
+                new ArmPose(.5, Rotation2d.fromDegrees(230)),
                 new ArmPose(.3, Rotation2d.fromDegrees(240))
         ),
         WAYPOINT(new ArmPose(0.45, Rotation2d.fromDegrees(250))),
         STOWED(new ArmPose(.4, Rotation2d.fromDegrees(210))),
         GRABBED(STOWED),
-        SHELF(new ArmPose(.7, Rotation2d.fromDegrees(0))),            
+        SHELF(new ArmPose(.55, Rotation2d.fromDegrees(0))),            
         MID(
                 new ArmPose(.1, Rotation2d.fromDegrees(0)), 
-                new ArmPose(.275, Rotation2d.fromDegrees(25))
+                new ArmPose(.275, Rotation2d.fromDegrees(15))
         ), 
         TOP(
                 new ArmPose(1.1,  Rotation2d.fromDegrees(0)), 
-                new ArmPose(1.15,  Rotation2d.fromDegrees(20))
+                new ArmPose(1.15,  Rotation2d.fromDegrees(15))
         ), 
         LOW(new ArmPose(.6, Rotation2d.fromDegrees(0)));
      
@@ -89,7 +89,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         public ArmPose get() { return hand.isCubeMode() ? cubePose : conePose; }
     }
 
-    private static final double ROTARY_ENCODER_OFFSET = -4.203098863363266, 
+    private static final double ROTARY_ENCODER_OFFSET = -8.889400698244572,
             ELEVATOR_MAX_VOLTS = 12,
             ROTARY_MAX_VOLTS = 8, 
             ELEVATOR_MIN = 0, 
@@ -188,7 +188,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     
     @Log.BooleanBox
     public boolean isWantingHighCOG() {
-        return isWantingScoringPose() || isWantingShelf();
+        return isWantingScoringPose();// || isWantingShelf();
     }
 
     @Log.BooleanBox
@@ -230,7 +230,11 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     public boolean isAtDesiredPose() { return activeState.get().atPose(realElevatorPose, realRotaryPose); }
 
     public boolean isWantingOpenClaw() {
-        return (desiredState == State.INDEX && !indexTimeout.get()) || desiredState == State.GRAB;
+        return (desiredState == State.INDEX && !indexTimeout.get());// || desiredState == State.GRAB;
+    }
+
+    public boolean isWantGrabbyClaw() {
+        return desiredState == State.GRAB;
     }
 
     @Override
@@ -264,7 +268,6 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     private void updateFeedback() {
         realElevatorPose = elevator.getPosition();
-
         final double rotaryRadians = TorqueMath.constrain0to2PI(-rotaryEncoder.getPosition() - ROTARY_ENCODER_OFFSET);
         realRotaryPose = Rotation2d.fromRadians(rotaryRadians);
     }
