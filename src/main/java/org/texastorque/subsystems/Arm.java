@@ -52,11 +52,11 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     public static enum State {
         GRAB(
                 new ArmPose(.15, Rotation2d.fromDegrees(250)),
-                new ArmPose(0, Rotation2d.fromDegrees(260))
+                new ArmPose(0, Rotation2d.fromDegrees(250))
         ),
         INDEX(
-                new ArmPose(.5, Rotation2d.fromDegrees(230)),
-                new ArmPose(.3, Rotation2d.fromDegrees(240))
+                new ArmPose(.4, Rotation2d.fromDegrees(230)),
+                new ArmPose(.4, Rotation2d.fromDegrees(240))
         ),
         WAYPOINT(new ArmPose(0.45, Rotation2d.fromDegrees(250))),
         STOWED(new ArmPose(.4, Rotation2d.fromDegrees(210))),
@@ -64,11 +64,11 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         SHELF(new ArmPose(.55, Rotation2d.fromDegrees(0))),            
         MID(
                 new ArmPose(.1, Rotation2d.fromDegrees(0)), 
-                new ArmPose(.275, Rotation2d.fromDegrees(15))
+                new ArmPose(.275, Rotation2d.fromDegrees(5))
         ), 
         TOP(
                 new ArmPose(1.1,  Rotation2d.fromDegrees(0)), 
-                new ArmPose(1.15,  Rotation2d.fromDegrees(15))
+                new ArmPose(1.15,  Rotation2d.fromDegrees(5))
         ), 
         LOW(new ArmPose(.6, Rotation2d.fromDegrees(0)));
      
@@ -264,6 +264,12 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         lastState = activeState;
     }
 
+    public void setSetpointAdjustment(final double setpointAdjustment) {
+        this.setpointAdjustment = setpointAdjustment;
+        if (Math.abs(this.setpointAdjustment) < .1)
+            this.setpointAdjustment = 0;
+    }
+
     private void updateFeedback() {
         realElevatorPose = elevator.getPosition();
         final double rotaryRadians = TorqueMath.constrain0to2PI(-rotaryEncoder.getPosition() - ROTARY_ENCODER_OFFSET);
@@ -282,13 +288,13 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     private void calculateRotary() {
         currentRotaryPoseFeedForward = hand.isConeMode() && isAtScoringPose() ? HIGH_COG_ROTARY_POSE_FEEDFORWARD : STANDARD_ROTARY_POSE_FEEDFORWARD;
         double armSetpoint = activeState.get().rotaryPose.getRadians();
-        if (isPerformingHandoff()) 
+        // if (isPerformingHandoff()) 
             armSetpoint += setpointAdjustment * RADIANS_ADJUSTMENT_COEF;
         double rotaryVolts = -currentRotaryPoseFeedForward.calculate(armSetpoint, 0);
         final boolean stopArm = armSetpoint <= (Math.PI * 0.5) && armSwitch.get();
         rotaryVolts += -rotaryPoseController.calculate(realRotaryPose.getRadians(), armSetpoint);
         rotaryVolts = TorqueMath.constrain(rotaryVolts, ROTARY_MAX_VOLTS);
-        rotary.setVolts(rotaryEncoder.isCANResponsive() && !isState(Arm.State.LOW) ? rotaryVolts : 0);
-        SmartDashboard.putNumber("arm::elevatorCurrent", elevator.getCurrent());
+        // rotary.setVolts(rotaryEncoder.isCANResponsive() && !isState(Arm.State.LOW) ? rotaryVolts : 0);
+        rotary.setVolts(rotaryVolts);
     }
 }

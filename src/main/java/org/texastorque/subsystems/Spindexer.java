@@ -8,24 +8,29 @@ package org.texastorque.subsystems;
 
 import org.texastorque.Ports;
 import org.texastorque.Subsystems;
-import org.texastorque.torquelib.base.TorqueDirection;
 import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.motors.TorqueNEO;
 
-import io.github.oblarg.oblog.annotations.Log;
-
 public final class Spindexer extends TorqueSubsystem implements Subsystems {
-    private static volatile Spindexer instance;
+    public static enum State {
+        SLOW_CW(2), FAST_CW(8), SLOW_CCW(-2), FAST_CCW(-8), OFF(0);
 
-    public static final double SPINDEXER_MAX_VOLTS = 4;
+        public final double volts;
+
+        private State(final double volts) {
+            this.volts = volts;
+        }
+    }
+
+    private static volatile Spindexer instance;
 
     public static final synchronized Spindexer getInstance() { return instance == null ? instance = new Spindexer() : instance; }
 
+    private State state = State.OFF;
+
     private final TorqueNEO turntable = new TorqueNEO(Ports.SPINDEXER_MOTOR);
 
-    @Log.ToString
-    private TorqueDirection direction = TorqueDirection.OFF;
     private Spindexer() {
         turntable.setCurrentLimit(20);
         turntable.setVoltageCompensation(12.6);
@@ -34,8 +39,8 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
     } 
     
     
-    public final void setDirection(final TorqueDirection direction) {
-        this.direction = direction;
+    public final void setState(final State state) {
+        this.state = state;
     }
 
     @Override
@@ -44,8 +49,11 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
     
     @Override
     public final void update(final TorqueMode mode) {
-        turntable.setVolts(SPINDEXER_MAX_VOLTS * direction.get());
+        if (intake.isState(Intake.State.INTAKE))
+            state = State.FAST_CW;
 
-        direction = TorqueDirection.OFF;
+        turntable.setVolts(state.volts);
+
+        state = State.OFF;
     }
 }
