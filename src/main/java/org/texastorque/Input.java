@@ -12,6 +12,7 @@ import org.texastorque.subsystems.Drivebase.SpeedSetting;
 import org.texastorque.subsystems.Hand;
 import org.texastorque.subsystems.Hand.GamePiece;
 import org.texastorque.subsystems.Intake;
+import org.texastorque.subsystems.Spindexer;
 import org.texastorque.torquelib.base.TorqueDirection;
 import org.texastorque.torquelib.base.TorqueInput;
 import org.texastorque.torquelib.control.TorqueBoolSupplier;
@@ -125,7 +126,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
             handoffStates.set(0);
         });
 
-        arm.setpointAdjustment = operator.getRightYAxis();
+        arm.setSetpointAdjustment(operator.getRightYAxis());
 
 
         armDoHandoff.onTrue(() -> arm.setState(handoffStates.calculate(false, true)));
@@ -153,13 +154,21 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
     }
 
     private void updateSpindexer() {
-        final double input = operator.getLeftXAxis();
-        if (Math.abs(input) < .1)
-            spindexer.setDirection(TorqueDirection.NEUTRAL);
-        else if (input > 0)
-            spindexer.setDirection(TorqueDirection.FORWARD);
-        else 
-            spindexer.setDirection(TorqueDirection.REVERSE);
+        final double fast = operator.getLeftYAxis();
+        if (Math.abs(fast) > DEADBAND) {
+            if (fast > 0)
+                spindexer.setState(Spindexer.State.FAST_CCW);
+            else
+                spindexer.setState(Spindexer.State.FAST_CW);
+        }
+
+        final double slow = operator.getLeftXAxis();
+        if (Math.abs(slow) > DEADBAND) {
+            if (slow > 0)
+                spindexer.setState(Spindexer.State.SLOW_CCW);
+            else
+                spindexer.setState(Spindexer.State.SLOW_CW);
+        }
     }
 
     private void updateDrivebaseSpeeds() {

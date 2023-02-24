@@ -29,7 +29,8 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
 
     public static enum State {
         GRAB(7.5),
-        OPEN(5.42),
+        BIG(11),
+        OPEN(5),
         CLOSE(-6.57);
 
         public final double clawSetpoint;
@@ -71,7 +72,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
     private final TorqueCANCoder clawEncoder = new TorqueCANCoder(Ports.CLAW_ENCODER); 
 
     private Hand() {
-        claw.setCurrentLimit(10);
+        claw.setCurrentLimit(20);
         claw.setVoltageCompensation(12.6);
         claw.setBreakMode(true);
         claw.burnFlash();
@@ -131,6 +132,8 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
             activeState = State.OPEN;
         if (arm.isWantGrabbyClaw())
             activeState = State.GRAB;
+        if (activeState == State.OPEN && arm.isWantingScoringPose())
+            activeState = State.BIG;
 
         double clawVolts =  clawPoseController.calculate(realClawPose, activeState.clawSetpoint);
         clawVolts = TorqueMath.constrain(clawVolts, MAX_CLAW_VOLTS);

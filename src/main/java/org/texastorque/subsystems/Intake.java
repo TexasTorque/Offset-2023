@@ -58,7 +58,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
 
         public IndexerPose get() { return hand.isCubeMode() ? cubePose : conePose; }
     }
-    private static final double ROT_INTAKE = -15;
+    private static final double ROT_INTAKE = -13.5;
     private static final double ROT_PRIME = -8;
     private static final double ROT_UP = 0;
 
