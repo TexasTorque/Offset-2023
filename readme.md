@@ -1,11 +1,6 @@
-# Torque-2023
+# Takeoff-2023
 
-Codebase for ***TBD***, Texas Torque's robot for the 2023 FRC season: Charged Up!
-
-The codebase is actually for the two versions of the robot:
-
-- Bravo: practice robot.
-- Charlie: competition robot.
+Codebase for **Takeoff**, Texas Torque's practice robot for the 2023 FRC season: Charged Up!
 
 ## Subsystems
 
