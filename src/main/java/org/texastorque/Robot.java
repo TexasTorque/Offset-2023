@@ -23,7 +23,7 @@ public final class Robot extends TorqueRobotBase implements Subsystems {
         // Configure Subsystems
         addSubsystem(drivebase);
         addSubsystem(lights);
-        addSubsystem(intake);
+        // addSubsystem(intake);
         addSubsystem(spindexer);
         addSubsystem(arm);
         addSubsystem(hand);
@@ -31,17 +31,19 @@ public final class Robot extends TorqueRobotBase implements Subsystems {
 
         final ShuffleboardTab dashboard = Shuffleboard.getTab("COMPETITION");
 
-        dashboard.addCamera("LEFT CAMERA", drivebase.cameraLeft.getName(), "http://10.14.77.79:1182/stream.mjpg")
-                .withPosition(0, 0)
-                .withSize(6, 4)
-                .withProperties(Map.of("Show crosshair", false, "Show controls", false));
+        // dashboard.addCamera("LEFT CAMERA", drivebase.cameraLeft.getName(), "http://10.14.77.79:1182/stream.mjpg")
+        //         .withPosition(0, 0)
+        //         .withSize(6, 4)
+        //         .withProperties(Map.of("Show crosshair", false, "Show controls", false));
 
-        dashboard.addCamera("RIGHT CAMERA", drivebase.cameraRight.getName(), "http://10.14.77.105:1182/stream.mjpg")
-                .withPosition(6, 0)
-                .withSize(6, 4)
-                .withProperties(Map.of("Show crosshair", false, "Show controls", false));
-        dashboard.add("FIELD", drivebase.fieldMap).withPosition(0, 4).withSize(7, 4);
+        // dashboard.addCamera("RIGHT CAMERA", drivebase.cameraRight.getName(), "http://10.14.77.105:1182/stream.mjpg")
+        //         .withPosition(6, 0)
+        //         .withSize(6, 4)
+        //         .withProperties(Map.of("Show crosshair", false, "Show controls", false));
+        dashboard.add("FIELD", drivebase.fieldMap).withPosition(0, 0).withSize(7, 4);
 
-        dashboard.add("AUTO SELECTOR", AutoManager.getInstance().getAutoSelector()).withPosition(7, 4).withSize(4, 2);
+        dashboard.add("AUTO SELECTOR", AutoManager.getInstance().getAutoSelector()).withPosition(7, 0).withSize(4, 2);
+
+        dashboard.addBoolean("MODE", hand::isConeMode).withProperties(Map.of("Color on true", "Yellow", "Color on false", "Purple")).withPosition(0, 4).withSize(2, 2);
     }
 }

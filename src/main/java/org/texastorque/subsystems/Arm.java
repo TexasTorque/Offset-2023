@@ -35,6 +35,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     public static class ArmPose {
         private static final double ELEVATOR_TOLERANCE = .1, ROTARY_TOLERANCE = (1. / 12.) * Math.PI;
 
+        public boolean autoReadyToScore = false;
+
         public final double elevatorPose;
         public final Rotation2d rotaryPose;
 
@@ -52,14 +54,14 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     public static enum State {
         GRAB(
                 new ArmPose(.15, Rotation2d.fromDegrees(250)),
-                new ArmPose(0, Rotation2d.fromDegrees(250))
+                new ArmPose(0, Rotation2d.fromDegrees(255))
         ),
         INDEX(
                 new ArmPose(.4, Rotation2d.fromDegrees(230)),
-                new ArmPose(.4, Rotation2d.fromDegrees(240))
+                new ArmPose(.4, Rotation2d.fromDegrees(242))
         ),
         WAYPOINT(new ArmPose(0.45, Rotation2d.fromDegrees(250))),
-        STOWED(new ArmPose(.4, Rotation2d.fromDegrees(210))),
+        STOWED(new ArmPose(.4, Rotation2d.fromDegrees(200))),
         GRABBED(STOWED),
         SHELF(new ArmPose(.55, Rotation2d.fromDegrees(0))),            
         MID(
@@ -91,7 +93,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     private static final double ROTARY_ENCODER_OFFSET = -8.889400698244572,
             ELEVATOR_MAX_VOLTS = 12,
-            ROTARY_MAX_VOLTS = 8, 
+            ROTARY_MAX_VOLTS = 12, 
             ELEVATOR_MIN = 0, 
             ELEVATOR_MAX = 1.3;
 

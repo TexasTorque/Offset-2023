@@ -24,6 +24,7 @@ import com.pathplanner.lib.server.PathPlannerServer;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -31,6 +32,7 @@ import edu.wpi.first.wpilibj.Timer;
 
 public final class FollowEventPath extends TorqueCommand implements Subsystems {
     public static final double MAX_VELOCITY_PATH = 3.5, MAX_ACCELERATION_PATH = 3.5;
+    // public static final double MAX_VELOCITY_PATH = 2, MAX_ACCELERATION_PATH = 2;
 
     private final PIDController xController = new PIDController(3, 0, 0);
     private final PIDController yController = new PIDController(3, 0, 0);
@@ -49,7 +51,6 @@ public final class FollowEventPath extends TorqueCommand implements Subsystems {
 
     public FollowEventPath(final String name, final Map<String, TorqueCommand> commands) {
         this(name, commands, MAX_VELOCITY_PATH, MAX_ACCELERATION_PATH);
-
     }
 
     public FollowEventPath(final String name, final double maxSpeed, final double maxAcceleration) {
@@ -57,7 +58,7 @@ public final class FollowEventPath extends TorqueCommand implements Subsystems {
     }
 
     public FollowEventPath(final String name, final Map<String, TorqueCommand> commands, final double maxSpeed, final double maxAcceleration) {
-        omegaController = new PIDController(Math.PI * .75, 0, 0);
+        omegaController = new PIDController(Math.PI * .4, 0, 0);
 
         xController.setTolerance(0.01);
         yController.setTolerance(0.01);
@@ -87,6 +88,9 @@ public final class FollowEventPath extends TorqueCommand implements Subsystems {
         unpassed.clear();
         unpassed.addAll(events);
         running.clear();
+
+        final Pose2d startingPose = reflect(trajectory.getInitialState()).poseMeters;
+        drivebase.resetPose(new Pose2d(startingPose.getTranslation(), new Rotation2d(Math.PI)));
     }
 
     @Override

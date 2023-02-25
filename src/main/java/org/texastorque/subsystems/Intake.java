@@ -58,24 +58,26 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
 
         public IndexerPose get() { return hand.isCubeMode() ? cubePose : conePose; }
     }
-    private static final double ROT_INTAKE = -13.5;
-    private static final double ROT_PRIME = -8;
+    private static final double ROT_INTAKE = -14.2;
+    private static final double ROT_PRIME = -5;
     private static final double ROT_UP = 0;
 
     private static volatile Intake instance;
 
     public static final double ROTARY_MAX_VOLTS = 8, ROLLER_MAX_VOLTS = 6;
 
+    private static final double ROLLER_SLOWDOWN = .3;
     public static final synchronized Intake getInstance() { return instance == null ? instance = new Intake() : instance; }
     @Log.ToString
     private State activeState = State.UP;
+
     @Log.ToString
     private State desiredState = State.UP;
 
     @Log.ToString
     public double realRotaryPose = 0;
-
     private final TorqueNEO topRollers = new TorqueNEO(Ports.INTAKE_ROLLER_MOTOR_TOP);
+
     private final TorqueNEO bottomRollers = new TorqueNEO(Ports.INTAKE_ROLLER_MOTOR_BOTTOM);
 
     private final TorqueNEO rotary = new TorqueNEO(Ports.INTAKE_ROTARY_MOTOR);
@@ -126,9 +128,11 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
         SmartDashboard.putNumber("indexer::topRollersPose", topRollers.getPosition());
         SmartDashboard.putNumber("indexer::botRollersPose", bottomRollers.getPosition());
 
-        topRollers.setVolts(activeState.get().topRollerVolts);
+        double topRollerVolts = activeState.get().topRollerVolts;
+        topRollerVolts /= (ROLLER_SLOWDOWN * TorqueMath.constrain(drivebase.inputSpeeds.getVelocityMagnitude(), 1, Drivebase.MAX_VELOCITY));
+        topRollers.setVolts(topRollerVolts);
 
-        bottomRollers.setVolts(-activeState.get().bottomRollerVolts);
+        // bottomRollers.setVolts(-activeState.get().bottomRollerVolts);
 
         final double requestedRotaryVolts = TorqueMath.constrain(rotaryPoseController.calculate(realRotaryPose, activeState.get().rotaryPose), ROTARY_MAX_VOLTS);
         SmartDashboard.putNumber("intake::requestedRotaryVolts", requestedRotaryVolts);

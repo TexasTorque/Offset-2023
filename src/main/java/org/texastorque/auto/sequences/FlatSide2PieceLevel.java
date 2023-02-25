@@ -15,16 +15,10 @@ import org.texastorque.subsystems.Hand;
 import org.texastorque.subsystems.Hand.GamePiece;
 import org.texastorque.torquelib.auto.TorqueSequence;
 import org.texastorque.torquelib.auto.commands.TorqueSequenceRunner;
-
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
+import org.texastorque.torquelib.auto.commands.TorqueWaitUntil;
 
 public final class FlatSide2PieceLevel extends TorqueSequence implements Subsystems {
     public FlatSide2PieceLevel() {
-
-        // Hack - not needed w/ april tags
-        // drivebase.resetPose(new Pose2d(1.8, 4.96, Rotation2d.fromRadians(Math.PI)));
-        drivebase.resetPose(new Pose2d(1.8, 4.96, Rotation2d.fromRadians(Math.PI)));
 
         addBlock(hand.setStateCommand(Hand.State.CLOSE), hand.setGamePieceModeCommand(GamePiece.CONE));
 
@@ -34,10 +28,18 @@ public final class FlatSide2PieceLevel extends TorqueSequence implements Subsyst
 
         addBlock(new FollowEventPath("flat-side-get-first"));
 
+        addBlock(new TorqueWaitUntil(arm::isAtDesiredPose));
+        // addBlock(new TorqueWaitForSeconds(1));
+
         addBlock(new TorqueSequenceRunner(new Score(Arm.State.TOP)));
 
         addBlock(new FollowEventPath("flat-side-go-level"));
 
         addBlock(drivebase.setStateCommand(Drivebase.State.BALANCE));
+
+
+        // addBlock(arm.setStateCommand(Arm.State.STOWED));
+        // addBlock(new TorqueWaitForSeconds(2));
+        // addBlock(new TorqueSequenceRunner(new Handoff()));
     }
 }
