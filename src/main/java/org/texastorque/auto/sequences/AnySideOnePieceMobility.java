@@ -13,6 +13,7 @@ import org.texastorque.subsystems.Arm;
 import org.texastorque.subsystems.Hand;
 import org.texastorque.subsystems.Hand.GamePiece;
 import org.texastorque.torquelib.auto.TorqueSequence;
+import org.texastorque.torquelib.auto.commands.TorqueExecute;
 import org.texastorque.torquelib.auto.commands.TorqueSequenceRunner;
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -21,6 +22,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 public final class AnySideOnePieceMobility extends TorqueSequence implements Subsystems {
     public AnySideOnePieceMobility() {
         // Hack - not needed w/ april tags
+        addBlock(new TorqueExecute(() -> drivebase.updateWithTags = false));
         drivebase.resetPose(new Pose2d(0, 0, Rotation2d.fromRadians(Math.PI)));
 
         addBlock(hand.setStateCommand(Hand.State.CLOSE), hand.setGamePieceModeCommand(GamePiece.CONE));

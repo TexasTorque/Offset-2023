@@ -13,6 +13,7 @@ import org.texastorque.torquelib.auto.TorqueCommand;
 import org.texastorque.torquelib.auto.commands.TorqueExecute;
 import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
+import org.texastorque.torquelib.control.TorqueRequestableTimeout;
 import org.texastorque.torquelib.motors.TorqueNEO;
 import org.texastorque.torquelib.sensors.TorqueCANCoder;
 import org.texastorque.torquelib.util.TorqueMath;
@@ -30,7 +31,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
     public static enum State {
         GRAB(7.5),
         BIG(11),
-        OPEN(3),
+        OPEN(2),
         CLOSE(-6.57);
 
         public final double clawSetpoint;
@@ -70,6 +71,8 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
     private final TorqueNEO claw = new TorqueNEO(Ports.CLAW_MOTOR);
 
     private final TorqueCANCoder clawEncoder = new TorqueCANCoder(Ports.CLAW_ENCODER); 
+
+    private final TorqueRequestableTimeout retractArmTimeout = new TorqueRequestableTimeout();
 
     private Hand() {
         claw.setCurrentLimit(20);
@@ -132,8 +135,9 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
             activeState = State.OPEN;
         if (arm.isWantGrabbyClaw())
             activeState = State.GRAB;
-        if (activeState == State.OPEN && arm.isWantingScoringPose())
+        if (activeState == State.OPEN && arm.isWantingScoringPose()) {
             activeState = State.BIG;
+        }
 
         double clawVolts =  clawPoseController.calculate(realClawPose, activeState.clawSetpoint);
         clawVolts = TorqueMath.constrain(clawVolts, MAX_CLAW_VOLTS);
@@ -141,9 +145,14 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
 
         if (lastState != activeState) {
             if (activeState == State.OPEN)
-                if (arm.isWantingScoringPose())
+                if (arm.isWantingScoringPose()) {
                     Input.getInstance().setDriverRumbleFor(1);
+                    retractArmTimeout.set(.5);
+                }
         }
+
+        if (retractArmTimeout.isJustDone())
+            arm.setState(Arm.State.STOWED);
 
         lastState = activeState;
 

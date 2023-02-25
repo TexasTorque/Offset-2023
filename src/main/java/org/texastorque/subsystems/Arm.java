@@ -279,11 +279,11 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     private void calculateElevator() {
-        double elevatorVolts = elevatorPoseController.calculate(realElevatorPose, activeState.get().elevatorPose);
+        double elevatorVolts = elevatorPoseController.calculate(-realElevatorPose, activeState.get().elevatorPose);
         elevatorVolts += elevatorPoseFeedForward.calculate(activeState.get().elevatorPose, 0);
         elevatorVolts = TorqueMath.constrain(elevatorVolts, ELEVATOR_MAX_VOLTS);
-        elevatorVolts = TorqueMath.linearConstraint(elevatorVolts, realElevatorPose, ELEVATOR_MIN, ELEVATOR_MAX); 
-        elevator.setVolts(elevatorVolts);
+        elevatorVolts = TorqueMath.linearConstraint(elevatorVolts, -realElevatorPose, ELEVATOR_MIN, ELEVATOR_MAX); 
+        elevator.setVolts(-elevatorVolts);
         SmartDashboard.putNumber("arm::elevatorCurrent", elevator.getCurrent());
     }
 
