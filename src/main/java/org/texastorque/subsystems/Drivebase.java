@@ -77,7 +77,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
             MAX_ANGULAR_ACCELERATION = 2 * Math.PI,     // rad/s^2
             WHEEL_DIAMETER = Units.inchesToMeters(4.0); // m
 
-    public static final Pose2d INITIAL_POS = new Pose2d(0, 0, new Rotation2d(0));
+    public static final Pose2d INITIAL_POS = new Pose2d(0, 0, Rotation2d.fromRadians(0));
 
     private static final double SIZE = Units.inchesToMeters(18);
 
@@ -145,11 +145,12 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
     public boolean isRotationLocked = true;
 
-    private final PathAlignController alignmentController = new PathAlignController(this::getPose, () -> inputSpeeds);
+    public final PathAlignController alignmentController = new PathAlignController(this::getPose, () -> inputSpeeds);
 
     private final AutoLevelController autoLevelController = new AutoLevelController(this::getPose);
 
     public final TorqueVision cameraLeft, cameraRight;
+    public boolean updateWithTags = true;
     /**
      * Constructor called on initialization.
      */
@@ -188,6 +189,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     public void setState(final State state) { this.state = state; }
     public State getState() { return requestedState; }
     public boolean isState(final State state) { return getState() == state; }
+
     public void setAlignState(final AlignState alignment) {
         state = alignment == AlignState.NONE ? state.parent : State.ALIGN;
         alignmentController.setAlignment(alignment);
@@ -195,9 +197,9 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
     public void setGridOverride(final GridState override) { alignmentController.setGridOverride(override); }
 
-    public final boolean isPathAlignDone() { return alignmentController.isDone(); }
+    public final boolean isPathAlignDone() { return alignmentController.isDone(); } 
 
-    public final boolean isAutoLevelDone() { return autoLevelController.isDone(); } 
+    public final boolean isAutoLevelDone() { return autoLevelController.isDone(); }
 
     @Override
     public final void initialize(final TorqueMode mode) {
@@ -210,7 +212,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
             isRotationLocked = true;
             state = State.FIELD_RELATIVE;
         });
-
+        updateWithTags = true;
         cameraLeft.setFieldLayout(Field.getCurrentFieldLayout());
         cameraRight.setFieldLayout(Field.getCurrentFieldLayout());
     }
@@ -220,7 +222,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
                                            invertSwerveModuleDistance(bl.getPosition()), invertSwerveModuleDistance(br.getPosition())};
     }
 
-    public void convertToFieldRelative() { inputSpeeds = inputSpeeds.toFieldRelativeSpeeds(gyro.getHeadingCCW()); }
+    public void convertToFieldRelative() { inputSpeeds = inputSpeeds.toFieldRelativeSpeeds(gyro.getHeadingCCW()); } 
 
     @Override
     public final void update(final TorqueMode mode) {
@@ -271,20 +273,20 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         autoLevelController.resetIf(state != State.BALANCE);
 
         state = state.parent;
-    } 
+    }
 
     public void resetPose(final Pose2d pose) {
         gyro.setOffsetCW(pose.getRotation());
         poseEstimator.resetPosition(gyro.getHeadingCCW(), getModulePositions(), pose);
     }
 
-    public void resetPose(final Rotation2d rotation) { resetPose(new Pose2d(getPose().getTranslation(), rotation)); }
+    public void resetPose(final Rotation2d rotation) { resetPose(new Pose2d(getPose().getTranslation(), rotation)); } 
 
-    public void setAngle(final Rotation2d rotation) { gyro.setOffsetCW(rotation); } 
+    public void setAngle(final Rotation2d rotation) { gyro.setOffsetCW(rotation); }
 
     public void resetPose(final Translation2d translation) { resetPose(new Pose2d(translation, gyro.getHeadingCCW())); }
 
-    public void resetGyro() { gyro.setOffsetCW(new Rotation2d(0)); }
+    public void resetGyro() { gyro.setOffsetCW(Rotation2d.fromRadians(0)); }
 
     @Log.ToString(name = "Robot Pose")
     public Pose2d getPose() {
@@ -306,8 +308,10 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     }
 
     private void updateFeedback() {
-        cameraLeft.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
-        cameraRight.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
+        if (updateWithTags) {
+            cameraLeft.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
+            cameraRight.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
+        }
 
         poseEstimator.update(gyro.getHeadingCCW(), getModulePositions());
 

@@ -77,7 +77,6 @@ public final class AutoLevelController extends AbstractController<TorqueSwerveSp
 
         return isFlat ? new TorqueSwerveSpeeds() : new TorqueSwerveSpeeds(drivePower * 3.5, 0, 0);
     }
-
     public void resetIf(final boolean notInLoop) {
         if (!notInLoop) return;
         hasTilted = false;

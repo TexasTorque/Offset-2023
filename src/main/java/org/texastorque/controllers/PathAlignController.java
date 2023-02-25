@@ -37,8 +37,8 @@ public final class PathAlignController extends AbstractController<Optional<Torqu
     public static enum TranslationState {
         NONE(0, 0),
         GRID_CENTER(ALIGN_X_OFFSET_GRID, 0),
-        GRID_RIGHT(ALIGN_X_OFFSET_GRID, -Units.inchesToMeters(22)),
-        GRID_LEFT(ALIGN_X_OFFSET_GRID, Units.inchesToMeters(22)),
+        GRID_RIGHT(ALIGN_X_OFFSET_GRID, -Units.inchesToMeters(26)),
+        GRID_LEFT(ALIGN_X_OFFSET_GRID, Units.inchesToMeters(28)),
         LOAD_ZONE_RIGHT(ALIGN_X_OFFSET_LOAD_ZONE, -Units.inchesToMeters(30)),
         LOAD_ZONE_LEFT(ALIGN_X_OFFSET_LOAD_ZONE, Units.inchesToMeters(30));
 
@@ -107,6 +107,8 @@ public final class PathAlignController extends AbstractController<Optional<Torqu
 
     final double LAST_LEG_X_OFFSET_MIN = Units.inchesToMeters(3);
 
+    private Pose2d goalPose;
+
     public PathAlignController(final Supplier<Pose2d> poseSupplier, final Supplier<TorqueSwerveSpeeds> speedsSupplier) {
         xController.setTolerance(0.01);
         yController.setTolerance(0.01);
@@ -122,7 +124,12 @@ public final class PathAlignController extends AbstractController<Optional<Torqu
         setGridOverride(GridState.NONE);
     }
 
+    public void incrementGoalPoseY(final double offset) {
+        goalPose = new Pose2d(goalPose.getX(), goalPose.getY() + offset, goalPose.getRotation());
+        
+    }
     public void setAlignment(final AlignState alignment) { this.alignment = alignment; }
+
     public void setGridOverride(final GridState gridOverride) { this.gridOverride = gridOverride; }
 
     public void resetIf(final boolean notInLoop) {
@@ -167,8 +174,8 @@ public final class PathAlignController extends AbstractController<Optional<Torqu
 
         return closestID;
     }
-
     private int getTargetID() { return gridOverride == GridState.NONE ? findClosestAprilTagID() : gridOverride.getID(); }
+
     private Optional<TranslationState> getTranslationState(final int targetID) {
         final AprilTagType tagType = Field.getAprilTagType(targetID);
 
@@ -189,7 +196,8 @@ public final class PathAlignController extends AbstractController<Optional<Torqu
 
         final Optional<TranslationState> translationState = getTranslationState(targetID);
 
-        final Pose2d goalPose = translationState.get().calculate(aprilPose);
+        // final Pose2d 
+        goalPose = translationState.get().calculate(aprilPose);
 
         final double offset = Math.min(Math.max(current.getX(), LAST_LEG_X_OFFSET_MIN), LAST_LEG_X_OFFSET_MAX);
 
@@ -200,8 +208,8 @@ public final class PathAlignController extends AbstractController<Optional<Torqu
 
         final PathPoint startPoint = new PathPoint(current.getTranslation(), initialHeading, current.getRotation());//, initialSpeed);
         final PathPoint midPoint =
-                new PathPoint(new Translation2d(goalPose.getX() + offset, goalPose.getY()), Rotation2d.fromRadians(Math.PI), new Rotation2d(Math.PI));
-        final PathPoint endPoint = new PathPoint(goalPose.getTranslation(), Rotation2d.fromRadians(0), new Rotation2d(Math.PI), 0);
+                new PathPoint(new Translation2d(goalPose.getX() + offset, goalPose.getY()), Rotation2d.fromRadians(Math.PI), Rotation2d.fromRadians(Math.PI));
+        final PathPoint endPoint = new PathPoint(goalPose.getTranslation(), Rotation2d.fromRadians(Math.PI), Rotation2d.fromRadians(Math.PI), 0);
 
         trajectory = PathPlanner.generatePath(MAX_PATH_CONSTRAINTS, startPoint, midPoint, endPoint);
         

@@ -14,16 +14,12 @@ import org.texastorque.torquelib.auto.commands.TorqueSequenceRunner;
 
 public final class EventMap implements Subsystems {
 
-    public static final Map<String, TorqueCommand> getMap() {
-        return (new EventMap()).map;
-    }
+    public static Map<String, TorqueCommand> get() {
+        final Map<String, TorqueCommand> map = new HashMap<String, TorqueCommand>();
 
-    private final Map<String, TorqueCommand> map = new HashMap<String, TorqueCommand>();
-
-    private EventMap() {
         map.put("intake-down", new TorqueExecute(() -> {
             intake.setState(Intake.State.INTAKE);
-            arm.setState(Arm.State.STOWED);
+            arm.setState(Arm.State.INDEX);
             hand.setState(Hand.State.OPEN);
         }));
 
@@ -34,5 +30,7 @@ public final class EventMap implements Subsystems {
 
         map.put("arm-ready-top", new TorqueExecute(() -> arm.setState(Arm.State.TOP)));
         map.put("arm-ready-mid", new TorqueExecute(() -> arm.setState(Arm.State.MID)));
+
+        return map;
     }
 }
