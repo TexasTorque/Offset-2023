@@ -31,7 +31,7 @@ public final class Forks extends TorqueSubsystem implements Subsystems {
 
     private Forks() {
         // rotary.setPositionConversionFactor(135.0);
-        rotary.setCurrentLimit(40);
+        rotary.setCurrentLimit(60);
         rotary.setVoltageCompensation(12.6);
         rotary.setBreakMode(true);
         rotary.burnFlash();
@@ -51,6 +51,6 @@ public final class Forks extends TorqueSubsystem implements Subsystems {
     SmartDashboard.putNumber("forks::current", rotary.getCurrent());
     SmartDashboard.putNumber("forks::volts", ROTARY_MAX_VOLTS * direction.get());
 
-    // direction = TorqueDirection.OFF;
+    direction = TorqueDirection.OFF;
     }
 }

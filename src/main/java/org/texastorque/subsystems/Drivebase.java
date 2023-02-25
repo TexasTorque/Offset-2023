@@ -96,12 +96,11 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     private static final Vector<N3> VISION_STDS = VecBuilder.fill(0.1, 0.1, Units.degreesToRadians(5));
 
     private static final Transform3d LEFT_CAMERA_TO_CENTER =
-            new Transform3d(new Translation3d(Units.inchesToMeters(10.5), Units.inchesToMeters(32.5625), -Units.inchesToMeters(7.5)), 
+            new Transform3d(new Translation3d(Units.inchesToMeters(10.5), Units.inchesToMeters(7.5), Units.inchesToMeters(32.5625)),
                     new Rotation3d(0, 0, 0));
 
     private static final Transform3d RIGHT_CAMERA_TO_CENTER =
-            // new Transform3d(new Translation3d(Units.inchesToMeters(8.5), Units.inchesToMeters(21.5), -Units.inchesToMeters(7.5)), 
-            new Transform3d(new Translation3d(Units.inchesToMeters(7.5), Units.inchesToMeters(21.5), Units.inchesToMeters(8.5)), 
+            new Transform3d(new Translation3d(Units.inchesToMeters(8.5), -Units.inchesToMeters(7.5), Units.inchesToMeters(21.5)), 
                     new Rotation3d(0, 0, 0));
 
     public static SwerveModulePosition invertSwerveModuleDistance(final SwerveModulePosition pose) {
@@ -308,7 +307,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
     private void updateFeedback() {
         cameraLeft.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
-        // cameraRight.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
+        cameraRight.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
 
         poseEstimator.update(gyro.getHeadingCCW(), getModulePositions());
 

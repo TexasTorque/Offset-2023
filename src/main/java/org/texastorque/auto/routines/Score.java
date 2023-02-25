@@ -15,8 +15,9 @@ import org.texastorque.torquelib.auto.commands.TorqueWaitUntil;
 
 public final class Score extends TorqueSequence implements Subsystems {
     public Score(final Arm.State armState) {
+        addBlock(hand.setStateCommand(Hand.State.CLOSE));
         addBlock(arm.setStateCommand(armState));
-        addBlock(new TorqueWaitUntil(() -> arm.isAtDesiredPose()));
+        addBlock(new TorqueWaitUntil(() -> arm.isAtState(armState)));
         addBlock(hand.setStateCommand(Hand.State.OPEN));
         addBlock(new TorqueWaitForSeconds(.31));
         addBlock(arm.setStateCommand(Arm.State.STOWED), hand.setStateCommand(Hand.State.CLOSE));

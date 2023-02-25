@@ -12,6 +12,8 @@ import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.motors.TorqueNEO;
 
+import io.github.oblarg.oblog.annotations.Log;
+
 public final class Spindexer extends TorqueSubsystem implements Subsystems {
     public static enum State {
         SLOW_CW(2), FAST_CW(8), SLOW_CCW(-2), FAST_CCW(-8), OFF(0);
@@ -27,6 +29,7 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
 
     public static final synchronized Spindexer getInstance() { return instance == null ? instance = new Spindexer() : instance; }
 
+    @Log.ToString
     private State state = State.OFF;
 
     private final TorqueNEO turntable = new TorqueNEO(Ports.SPINDEXER_MOTOR);
