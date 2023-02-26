@@ -29,10 +29,10 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
     }
 
     public static enum State {
-        GRAB(7.5),
-        BIG(11),
-        OPEN(2),
-        CLOSE(-6.57);
+        GRAB(-12.24),
+        BIG(-12.24),
+        OPEN(-4),
+        CLOSE(10);
 
         public final double clawSetpoint;
 
@@ -49,7 +49,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
 
     private static final double MAX_CLAW_VOLTS = 12;
 
-    private static final double CLAW_ENCODER_OFFSET = -1477;
+    private static final double CLAW_ENCODER_OFFSET = 0;
 
     public static final synchronized Hand getInstance() {
         return instance == null ? instance = new Hand() : instance;
@@ -164,7 +164,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
     }
 
     private void updateFeedback() {
-        // realClawPose = clawEncoder.getPosition() - CLAW_ENCODER_OFFSET;
+        // realClawPose = claw.getPosition() - CLAW_ENCODER_OFFSET;
         realClawPose = claw.getPosition();
     }
 }

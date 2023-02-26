@@ -46,7 +46,9 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         }
 
         public boolean atPose(final double elevatorReal, final Rotation2d rotaryReal) {
-            return Math.abs(elevatorReal - elevatorPose) < ELEVATOR_TOLERANCE 
+            return
+            // Math.abs(elevatorReal - elevatorPose) < ELEVATOR_TOLERANCE 
+            true
                     && Math.abs(rotaryReal.minus(rotaryPose).getRadians()) < ROTARY_TOLERANCE;
         }
     }
@@ -66,11 +68,11 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         SHELF(new ArmPose(.55, Rotation2d.fromDegrees(0))),            
         MID(
                 new ArmPose(.1, Rotation2d.fromDegrees(0)), 
-                new ArmPose(.275, Rotation2d.fromDegrees(5))
+                new ArmPose(.275, Rotation2d.fromDegrees(15))
         ), 
         TOP(
                 new ArmPose(1.1,  Rotation2d.fromDegrees(0)), 
-                new ArmPose(1.15,  Rotation2d.fromDegrees(5))
+                new ArmPose(1.15,  Rotation2d.fromDegrees(15))
         ), 
         LOW(new ArmPose(.6, Rotation2d.fromDegrees(0)));
      
@@ -91,7 +93,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         public ArmPose get() { return hand.isCubeMode() ? cubePose : conePose; }
     }
 
-    private static final double ROTARY_ENCODER_OFFSET = -8.889400698244572,
+    private static final double ROTARY_ENCODER_OFFSET = -Units.degreesToRadians(76 + 31),
             ELEVATOR_MAX_VOLTS = 12,
             ROTARY_MAX_VOLTS = 12, 
             ELEVATOR_MIN = 0, 
@@ -117,17 +119,17 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     @Config
     public final PIDController elevatorPoseController = new PIDController(15, 0, 0);
 
-    private final ElevatorFeedforward elevatorPoseFeedForward = new ElevatorFeedforward(0, 0, 0);
+    private final ElevatorFeedforward elevatorPoseFeedForward = new ElevatorFeedforward(0, .2, .1);
 
     private final TorqueNEO rotary = new TorqueNEO(Ports.ARM_ROTARY_MOTOR);
 
     @Config
-    public final PIDController rotaryPoseController = new PIDController(.5 * Math.PI, 0 * Math.PI, 0 * Math.PI);
+    public final PIDController rotaryPoseController = new PIDController(3, .4, 0);
 
     // public final ArmFeedforward ARM_FF = new ArmFeedforward(0, 1.25, 2);
     public final ArmFeedforward HIGH_COG_ROTARY_POSE_FEEDFORWARD = new ArmFeedforward(0, 1.25, 1);
 
-    public final ArmFeedforward STANDARD_ROTARY_POSE_FEEDFORWARD = new ArmFeedforward(0, .75, .5);
+    public final ArmFeedforward STANDARD_ROTARY_POSE_FEEDFORWARD = new ArmFeedforward(0, .4, 0);
     public ArmFeedforward currentRotaryPoseFeedForward;
 
     private final TorqueCANCoder rotaryEncoder = new TorqueCANCoder(Ports.ARM_ROTARY_ENCODER);
@@ -283,12 +285,13 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         elevatorVolts += elevatorPoseFeedForward.calculate(activeState.get().elevatorPose, 0);
         elevatorVolts = TorqueMath.constrain(elevatorVolts, ELEVATOR_MAX_VOLTS);
         elevatorVolts = TorqueMath.linearConstraint(elevatorVolts, -realElevatorPose, ELEVATOR_MIN, ELEVATOR_MAX); 
-        elevator.setVolts(-elevatorVolts);
+        // elevator.setVolts(-elevatorVolts);
         SmartDashboard.putNumber("arm::elevatorCurrent", elevator.getCurrent());
     }
 
     private void calculateRotary() {
-        currentRotaryPoseFeedForward = hand.isConeMode() && isAtScoringPose() ? HIGH_COG_ROTARY_POSE_FEEDFORWARD : STANDARD_ROTARY_POSE_FEEDFORWARD;
+        // currentRotaryPoseFeedForward = hand.isConeMode() && isAtScoringPose() ? HIGH_COG_ROTARY_POSE_FEEDFORWARD : STANDARD_ROTARY_POSE_FEEDFORWARD;
+        currentRotaryPoseFeedForward = STANDARD_ROTARY_POSE_FEEDFORWARD;
         double armSetpoint = activeState.get().rotaryPose.getRadians();
         // if (isPerformingHandoff()) 
             armSetpoint += setpointAdjustment * RADIANS_ADJUSTMENT_COEF;
@@ -298,5 +301,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         rotaryVolts = TorqueMath.constrain(rotaryVolts, ROTARY_MAX_VOLTS);
         // rotary.setVolts(rotaryEncoder.isCANResponsive() && !isState(Arm.State.LOW) ? rotaryVolts : 0);
         rotary.setVolts(rotaryVolts);
+
+        SmartDashboard.putNumber("arm::elevatorCurrent", rotary.getCurrent());
     }
 }

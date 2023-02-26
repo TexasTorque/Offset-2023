@@ -13,7 +13,7 @@ public final class Ports {
     // CAN 
 
     public static final SwervePorts FL_MOD = new SwervePorts(3, 4, 10);
-    public static final SwervePorts FR_MOD = new SwervePorts(6, 5, 11);
+    public static final SwervePorts FR_MOD = new SwervePorts(5, 6, 11);
     public static final SwervePorts BL_MOD = new SwervePorts(1, 2, 9);
     public static final SwervePorts BR_MOD = new SwervePorts(7, 8, 12);
 

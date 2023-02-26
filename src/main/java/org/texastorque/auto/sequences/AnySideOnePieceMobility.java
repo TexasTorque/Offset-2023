@@ -21,6 +21,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 
 public final class AnySideOnePieceMobility extends TorqueSequence implements Subsystems {
     public AnySideOnePieceMobility() {
+        addBlock(new TorqueExecute(() -> drivebase.updateWithTags = false));
         // Hack - not needed w/ april tags
         addBlock(new TorqueExecute(() -> drivebase.updateWithTags = false));
         drivebase.resetPose(new Pose2d(0, 0, Rotation2d.fromRadians(Math.PI)));
