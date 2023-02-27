@@ -47,9 +47,9 @@ public final class Forks extends TorqueSubsystem implements Subsystems {
     
     @Override
     public final void update(final TorqueMode mode) {
-    rotary.setVolts(ROTARY_MAX_VOLTS * direction.get());
-    SmartDashboard.putNumber("forks::current", rotary.getCurrent());
-    SmartDashboard.putNumber("forks::volts", ROTARY_MAX_VOLTS * direction.get());
+        rotary.setVolts(ROTARY_MAX_VOLTS * direction.get());
+        SmartDashboard.putNumber("forks::current", rotary.getCurrent());
+        SmartDashboard.putNumber("forks::volts", ROTARY_MAX_VOLTS * direction.get());
 
     direction = TorqueDirection.OFF;
     }

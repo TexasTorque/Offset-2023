@@ -31,8 +31,8 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 
 public final class FollowEventPath extends TorqueCommand implements Subsystems {
-    public static final double MAX_VELOCITY_PATH = 3.5, MAX_ACCELERATION_PATH = 3.5;
-    // public static final double MAX_VELOCITY_PATH = 2, MAX_ACCELERATION_PATH = 2;
+    // public static final double MAX_VELOCITY_PATH = 3.5, MAX_ACCELERATION_PATH = 3.5;
+    public static final double MAX_VELOCITY_PATH = 2, MAX_ACCELERATION_PATH = 2;
     // public static final double MAX_VELOCITY_PATH = .5, MAX_ACCELERATION_PATH = .5;
 
     private final PIDController xController = new PIDController(3, 0, 0);

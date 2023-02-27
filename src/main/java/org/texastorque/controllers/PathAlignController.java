@@ -107,7 +107,7 @@ public final class PathAlignController extends AbstractController<Optional<Torqu
 
     final double LAST_LEG_X_OFFSET_MIN = Units.inchesToMeters(3);
 
-    private Pose2d goalPose;
+    private Pose2d goalPose = new Pose2d();
 
     public PathAlignController(final Supplier<Pose2d> poseSupplier, final Supplier<TorqueSwerveSpeeds> speedsSupplier) {
         xController.setTolerance(0.01);

@@ -33,7 +33,7 @@ import io.github.oblarg.oblog.annotations.Log;
 
 public final class Arm extends TorqueSubsystem implements Subsystems {
     public static class ArmPose {
-        private static final double ELEVATOR_TOLERANCE = .1, ROTARY_TOLERANCE = (1. / 12.) * Math.PI;
+        private static final double ELEVATOR_TOLERANCE = .4, ROTARY_TOLERANCE = (1. / 12.) * Math.PI;
 
         public boolean autoReadyToScore = false;
 
@@ -46,11 +46,13 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         }
 
         public boolean atPose(final double elevatorReal, final Rotation2d rotaryReal) {
-            return Math.abs(elevatorReal - elevatorPose) < ELEVATOR_TOLERANCE 
+            return
+            Math.abs(elevatorReal - elevatorPose) < ELEVATOR_TOLERANCE 
                     && Math.abs(rotaryReal.minus(rotaryPose).getRadians()) < ROTARY_TOLERANCE;
         }
     }
 
+    // TODO: All these setpoints need to be re-tuned -- arm should be fine
     public static enum State {
         GRAB(
                 new ArmPose(.15, Rotation2d.fromDegrees(250)),
@@ -65,12 +67,12 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         GRABBED(STOWED),
         SHELF(new ArmPose(.55, Rotation2d.fromDegrees(0))),            
         MID(
-                new ArmPose(.1, Rotation2d.fromDegrees(0)), 
-                new ArmPose(.275, Rotation2d.fromDegrees(5))
+                new ArmPose(35, Rotation2d.fromDegrees(0)), 
+                new ArmPose(35, Rotation2d.fromDegrees(15))
         ), 
         TOP(
-                new ArmPose(1.1,  Rotation2d.fromDegrees(0)), 
-                new ArmPose(1.15,  Rotation2d.fromDegrees(5))
+                new ArmPose(45,  Rotation2d.fromDegrees(0)), 
+                new ArmPose(45,  Rotation2d.fromDegrees(15))
         ), 
         LOW(new ArmPose(.6, Rotation2d.fromDegrees(0)));
      
@@ -91,11 +93,11 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         public ArmPose get() { return hand.isCubeMode() ? cubePose : conePose; }
     }
 
-    private static final double ROTARY_ENCODER_OFFSET = -8.889400698244572,
+    private static final double ROTARY_ENCODER_OFFSET = -Units.degreesToRadians(76 + 31),
             ELEVATOR_MAX_VOLTS = 12,
             ROTARY_MAX_VOLTS = 12, 
             ELEVATOR_MIN = 0, 
-            ELEVATOR_MAX = 1.3;
+            ELEVATOR_MAX = 50; // 54 is the technical max
 
     private static volatile Arm instance;
 
@@ -115,20 +117,16 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     public Rotation2d realRotaryPose = Rotation2d.fromDegrees(0);
     private final TorqueNEO elevator = new TorqueNEO(Ports.ARM_ELEVATOR_MOTOR);
     @Config
-    public final PIDController elevatorPoseController = new PIDController(15, 0, 0);
+    public final PIDController elevatorPoseController = new PIDController(1.13, 0, 0);
 
-    private final ElevatorFeedforward elevatorPoseFeedForward = new ElevatorFeedforward(0, 0, 0);
+    private final ElevatorFeedforward elevatorPoseFeedForward = new ElevatorFeedforward(0.072294, 0.28979, 0.12498, 0.0019267);
 
     private final TorqueNEO rotary = new TorqueNEO(Ports.ARM_ROTARY_MOTOR);
 
     @Config
-    public final PIDController rotaryPoseController = new PIDController(.5 * Math.PI, 0 * Math.PI, 0 * Math.PI);
+    public final PIDController rotaryPoseController = new PIDController(1.89, 0, 0);
 
-    // public final ArmFeedforward ARM_FF = new ArmFeedforward(0, 1.25, 2);
-    public final ArmFeedforward HIGH_COG_ROTARY_POSE_FEEDFORWARD = new ArmFeedforward(0, 1.25, 1);
-
-    public final ArmFeedforward STANDARD_ROTARY_POSE_FEEDFORWARD = new ArmFeedforward(0, .75, .5);
-    public ArmFeedforward currentRotaryPoseFeedForward;
+    public final ArmFeedforward rotaryFeedforward = new ArmFeedforward(0.18362, 0.22356, 4);
 
     private final TorqueCANCoder rotaryEncoder = new TorqueCANCoder(Ports.ARM_ROTARY_ENCODER);
 
@@ -144,8 +142,6 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     private final TorqueRequestableTimeout indexTimeout = new TorqueRequestableTimeout();
 
     private Arm() {
-        currentRotaryPoseFeedForward = STANDARD_ROTARY_POSE_FEEDFORWARD;
-
         elevator.setCurrentLimit(30);
         elevator.setVoltageCompensation(12.6);
         elevator.setBreakMode(true);
@@ -279,24 +275,47 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     private void calculateElevator() {
-        double elevatorVolts = elevatorPoseController.calculate(-realElevatorPose, activeState.get().elevatorPose);
-        elevatorVolts += elevatorPoseFeedForward.calculate(activeState.get().elevatorPose, 0);
+        double elevatorVolts = elevatorPoseController.calculate(realElevatorPose, activeState.get().elevatorPose);
+        elevatorVolts += elevatorPoseFeedForward.calculate(calculateElevatorVelocity(activeState.get().elevatorPose, realElevatorPose), calculateElevatorAcceleration(activeState.get().elevatorPose, realElevatorPose));
         elevatorVolts = TorqueMath.constrain(elevatorVolts, ELEVATOR_MAX_VOLTS);
-        elevatorVolts = TorqueMath.linearConstraint(elevatorVolts, -realElevatorPose, ELEVATOR_MIN, ELEVATOR_MAX); 
-        elevator.setVolts(-elevatorVolts);
+        elevatorVolts = TorqueMath.linearConstraint(elevatorVolts, realElevatorPose, ELEVATOR_MIN, ELEVATOR_MAX); 
+        elevator.setVolts(elevatorVolts);
         SmartDashboard.putNumber("arm::elevatorCurrent", elevator.getCurrent());
+        SmartDashboard.putNumber("arm::elevatorRequestedVolts", elevatorVolts);
+    }
+
+    // omega with respect to delta x
+    private double calculateElevatorVelocity(double wanted, double actual) {
+        return Math.signum(wanted-actual) * (80. / (1 + Math.pow(Math.E, -.05*(Math.abs(wanted-actual)-80./2)))-9.53);
+    }
+
+    // derivative of calculateElevatorVelocity
+    private double calculateElevatorAcceleration(double wanted, double actual) {
+        return Math.signum(wanted-actual) * (4*Math.pow(Math.E,-.05*(wanted-actual-40)) / Math.pow(Math.pow(Math.E, -.05*(wanted-actual-40)) + 1, 2));
     }
 
     private void calculateRotary() {
-        currentRotaryPoseFeedForward = hand.isConeMode() && isAtScoringPose() ? HIGH_COG_ROTARY_POSE_FEEDFORWARD : STANDARD_ROTARY_POSE_FEEDFORWARD;
         double armSetpoint = activeState.get().rotaryPose.getRadians();
         // if (isPerformingHandoff()) 
-            armSetpoint += setpointAdjustment * RADIANS_ADJUSTMENT_COEF;
-        double rotaryVolts = -currentRotaryPoseFeedForward.calculate(armSetpoint, 0);
-        final boolean stopArm = armSetpoint <= (Math.PI * 0.5) && armSwitch.get();
+            // armSetpoint += setpointAdjustment * RADIANS_ADJUSTMENT_COEF;
+        double rotaryVolts = -rotaryFeedforward.calculate(armSetpoint, calculateRotaryVelocity(armSetpoint, realRotaryPose.getRadians()), calculateRotaryAcceleration(armSetpoint, realRotaryPose.getRadians()));
+        // final boolean stopArm = armSetpoint <= (Math.PI * 0.5) && armSwitch.get();
         rotaryVolts += -rotaryPoseController.calculate(realRotaryPose.getRadians(), armSetpoint);
         rotaryVolts = TorqueMath.constrain(rotaryVolts, ROTARY_MAX_VOLTS);
         // rotary.setVolts(rotaryEncoder.isCANResponsive() && !isState(Arm.State.LOW) ? rotaryVolts : 0);
         rotary.setVolts(rotaryVolts);
+        SmartDashboard.putNumber("arm::rotaryVolts", rotaryVolts);
+
+        SmartDashboard.putNumber("arm::elevatorCurrent", rotary.getCurrent());
+    }
+
+    // omega with respect to delta theta (radians)
+    private double calculateRotaryVelocity(double wanted, double actual) {
+        return Math.signum(wanted-actual) * (15 / (1 + Math.pow(Math.E, -.3*(Math.abs(wanted-actual)-12)))-.399);
+    }
+
+    // derivative of calculateRotaryVelocity
+    private double calculateRotaryAcceleration(double wanted, double actual) {
+        return Math.signum(wanted-actual) * (12*Math.pow(Math.E,-1.5*(Math.abs(wanted-actual-12))) / Math.pow(Math.pow(Math.E, -1.5*(wanted-actual-1.3)) + 1, 2));
     }
 }

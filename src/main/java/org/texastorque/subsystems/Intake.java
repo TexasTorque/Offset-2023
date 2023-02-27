@@ -81,7 +81,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
 
     private final TorqueNEO bottomRollers = new TorqueNEO(Ports.INTAKE_ROLLER_MOTOR_BOTTOM);
 
-    private final TorqueNEO rotary = new TorqueNEO(Ports.INTAKE_ROTARY_MOTOR);
+    private final TorqueNEO rotary = new TorqueNEO(Ports.INTAKE_ROTARY_MOTOR_LEFT);
 
     @Config
     public final PIDController rotaryPoseController = new PIDController(2, 0, 0);
@@ -100,6 +100,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
         rotary.setCurrentLimit(33);
         rotary.setVoltageCompensation(12.6);
         rotary.setBreakMode(true);
+        rotary.addFollower(Ports.INTAKE_ROTARY_MOTOR_RIGHT, true);
         rotary.burnFlash();
     }
 
