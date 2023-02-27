@@ -126,7 +126,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     @Config
     public final PIDController rotaryPoseController = new PIDController(1.89, 0, 0);
 
-    public final ArmFeedforward rotaryFeedforward = new ArmFeedforward(0.18362, 0.22356, 4);
+    public final ArmFeedforward rotaryFeedforward = new ArmFeedforward(0.18362, 0.22356, 4, 4.4775);
 
     private final TorqueCANCoder rotaryEncoder = new TorqueCANCoder(Ports.ARM_ROTARY_ENCODER);
 
@@ -298,9 +298,13 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         double armSetpoint = activeState.get().rotaryPose.getRadians();
         // if (isPerformingHandoff()) 
             // armSetpoint += setpointAdjustment * RADIANS_ADJUSTMENT_COEF;
-        double rotaryVolts = -rotaryFeedforward.calculate(armSetpoint, calculateRotaryVelocity(armSetpoint, realRotaryPose.getRadians()), calculateRotaryAcceleration(armSetpoint, realRotaryPose.getRadians()));
+        double rotaryPos = realRotaryPose.getRadians();
+        if(rotaryPos > Math.toRadians(315)) { // wrap around up to prevent overshoot causing a massive spin.
+            rotaryPos = rotaryPos - 2*Math.PI;
+        }
+        double rotaryVolts = -rotaryFeedforward.calculate(armSetpoint, calculateRotaryVelocity(armSetpoint, rotaryPos), calculateRotaryAcceleration(armSetpoint, rotaryPos));
         // final boolean stopArm = armSetpoint <= (Math.PI * 0.5) && armSwitch.get();
-        rotaryVolts += -rotaryPoseController.calculate(realRotaryPose.getRadians(), armSetpoint);
+        rotaryVolts += -rotaryPoseController.calculate(rotaryPos, armSetpoint);
         rotaryVolts = TorqueMath.constrain(rotaryVolts, ROTARY_MAX_VOLTS);
         // rotary.setVolts(rotaryEncoder.isCANResponsive() && !isState(Arm.State.LOW) ? rotaryVolts : 0);
         rotary.setVolts(rotaryVolts);
