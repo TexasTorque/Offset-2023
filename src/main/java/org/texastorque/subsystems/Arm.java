@@ -46,38 +46,36 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         }
 
         public boolean atPose(final double elevatorReal, final Rotation2d rotaryReal) {
-            return Math.abs(elevatorReal - elevatorPose) < ELEVATOR_TOLERANCE 
+            return Math.abs(elevatorReal - elevatorPose) < ELEVATOR_TOLERANCE
                     && Math.abs(rotaryReal.minus(rotaryPose).getRadians()) < ROTARY_TOLERANCE;
         }
     }
 
     public static enum State {
         GRAB(
-                new ArmPose(.15, Rotation2d.fromDegrees(250)),
-                new ArmPose(0, Rotation2d.fromDegrees(255))
-        ),
+                new ArmPose(-.15, Rotation2d.fromDegrees(250)),
+                new ArmPose(0, Rotation2d.fromDegrees(255))),
         INDEX(
-                new ArmPose(.4, Rotation2d.fromDegrees(230)),
-                new ArmPose(.4, Rotation2d.fromDegrees(242))
-        ),
-        WAYPOINT(new ArmPose(0.45, Rotation2d.fromDegrees(250))),
-        STOWED(new ArmPose(.4, Rotation2d.fromDegrees(200))),
+                new ArmPose(-.4, Rotation2d.fromDegrees(230)),
+                new ArmPose(-.4, Rotation2d.fromDegrees(242))),
+        WAYPOINT(new ArmPose(-0.45, Rotation2d.fromDegrees(250))),
+        STOWED(new ArmPose(-.4, Rotation2d.fromDegrees(200))),
         GRABBED(STOWED),
-        SHELF(new ArmPose(.55, Rotation2d.fromDegrees(0))),            
+        SHELF(new ArmPose(-.55, Rotation2d.fromDegrees(0))),
         MID(
-                new ArmPose(.1, Rotation2d.fromDegrees(0)), 
-                new ArmPose(.275, Rotation2d.fromDegrees(5))
-        ), 
+                new ArmPose(-.1, Rotation2d.fromDegrees(0)),
+                new ArmPose(-.275, Rotation2d.fromDegrees(5))),
         TOP(
-                new ArmPose(1.1,  Rotation2d.fromDegrees(0)), 
-                new ArmPose(1.15,  Rotation2d.fromDegrees(5))
-        ), 
-        LOW(new ArmPose(.6, Rotation2d.fromDegrees(0)));
-     
+                new ArmPose(-1.1, Rotation2d.fromDegrees(0)),
+                new ArmPose(-1.15, Rotation2d.fromDegrees(5))),
+        LOW(new ArmPose(-.6, Rotation2d.fromDegrees(0)));
+
         public final ArmPose cubePose;
         public final ArmPose conePose;
 
-        private State(final ArmPose both) { this(both, both); }
+        private State(final ArmPose both) {
+            this(both, both);
+        }
 
         private State(final ArmPose cubePose, final ArmPose conePose) {
             this.cubePose = cubePose;
@@ -88,19 +86,24 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
             this(other.cubePose, other.conePose);
         }
 
-        public ArmPose get() { return hand.isCubeMode() ? cubePose : conePose; }
+        public ArmPose get() {
+            return hand.isCubeMode() ? cubePose : conePose;
+        }
     }
 
     private static final double ROTARY_ENCODER_OFFSET = -8.889400698244572,
             ELEVATOR_MAX_VOLTS = 12,
-            ROTARY_MAX_VOLTS = 12, 
-            ELEVATOR_MIN = 0, 
+            ROTARY_MAX_VOLTS = 12,
+            ELEVATOR_MIN = 0,
             ELEVATOR_MAX = 1.3;
 
     private static volatile Arm instance;
 
     private static final double RADIANS_ADJUSTMENT_COEF = Units.degreesToRadians(15);
-    public static final synchronized Arm getInstance() { return instance == null ? instance = new Arm() : instance; }
+
+    public static final synchronized Arm getInstance() {
+        return instance == null ? instance = new Arm() : instance;
+    }
 
     @Log.ToString
     private State activeState = State.STOWED;
@@ -185,7 +188,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     public boolean isWantingScoringPose() {
         return desiredState == State.MID || desiredState == State.TOP;
     }
-    
+
     @Log.BooleanBox
     public boolean isWantingHighCOG() {
         return isWantingScoringPose();// || isWantingShelf();
@@ -211,11 +214,17 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         return isAtScoringPose() || isAtShelf();
     }
 
-    public void setState(final State state) { this.desiredState = state; }
+    public void setState(final State state) {
+        this.desiredState = state;
+    }
 
-    public State getState() { return desiredState; }
+    public State getState() {
+        return desiredState;
+    }
 
-    public boolean isState(final State state) { return getState() == state; }
+    public boolean isState(final State state) {
+        return getState() == state;
+    }
 
     public TorqueCommand setStateCommand(final State state) {
         return new TorqueExecute(() -> setState(state));
@@ -227,7 +236,9 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     @Log.ToString
-    public boolean isAtDesiredPose() { return activeState.get().atPose(realElevatorPose, realRotaryPose); }
+    public boolean isAtDesiredPose() {
+        return activeState.get().atPose(realElevatorPose, realRotaryPose);
+    }
 
     public boolean isWantingOpenClaw() {
         return (desiredState == State.INDEX && !indexTimeout.get());// || desiredState == State.GRAB;
@@ -282,21 +293,38 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         double elevatorVolts = elevatorPoseController.calculate(-realElevatorPose, activeState.get().elevatorPose);
         elevatorVolts += elevatorPoseFeedForward.calculate(activeState.get().elevatorPose, 0);
         elevatorVolts = TorqueMath.constrain(elevatorVolts, ELEVATOR_MAX_VOLTS);
-        elevatorVolts = TorqueMath.linearConstraint(elevatorVolts, -realElevatorPose, ELEVATOR_MIN, ELEVATOR_MAX); 
+        elevatorVolts = TorqueMath.linearConstraint(elevatorVolts, -realElevatorPose, ELEVATOR_MIN, ELEVATOR_MAX);
         elevator.setVolts(-elevatorVolts);
         SmartDashboard.putNumber("arm::elevatorCurrent", elevator.getCurrent());
     }
 
     private void calculateRotary() {
-        currentRotaryPoseFeedForward = hand.isConeMode() && isAtScoringPose() ? HIGH_COG_ROTARY_POSE_FEEDFORWARD : STANDARD_ROTARY_POSE_FEEDFORWARD;
+        double rotaryPos = realRotaryPose.getRadians();
+        if (rotaryPos > Math.toRadians(315)) { // wrap around up to prevent overshoot causing a massive spin.
+            rotaryPos = rotaryPos - 2 * Math.PI;
+        }
+        //double rotaryVolts = -rotaryFeedforward.calculate(armSetpoint, calculateRotaryVelocity(armSetpoint, rotaryPos), calculateRotaryAcceleration(armSetpoint, rotaryPos));
+
+        currentRotaryPoseFeedForward = hand.isConeMode() && isAtScoringPose() ? HIGH_COG_ROTARY_POSE_FEEDFORWARD
+                : STANDARD_ROTARY_POSE_FEEDFORWARD;
+
         double armSetpoint = activeState.get().rotaryPose.getRadians();
         // if (isPerformingHandoff()) 
-            armSetpoint += setpointAdjustment * RADIANS_ADJUSTMENT_COEF;
-        double rotaryVolts = -currentRotaryPoseFeedForward.calculate(armSetpoint, 0);
-        final boolean stopArm = armSetpoint <= (Math.PI * 0.5) && armSwitch.get();
-        rotaryVolts += -rotaryPoseController.calculate(realRotaryPose.getRadians(), armSetpoint);
+        armSetpoint += setpointAdjustment * RADIANS_ADJUSTMENT_COEF;
+        double rotaryVolts = -currentRotaryPoseFeedForward.calculate(armSetpoint,
+                calculateRotaryVelocity(armSetpoint, rotaryPos));
+        //final boolean stopArm = armSetpoint <= (Math.PI * 0.5) && armSwitch.get();
+
+        rotaryVolts += -rotaryPoseController.calculate(rotaryPos, armSetpoint);
         rotaryVolts = TorqueMath.constrain(rotaryVolts, ROTARY_MAX_VOLTS);
-        // rotary.setVolts(rotaryEncoder.isCANResponsive() && !isState(Arm.State.LOW) ? rotaryVolts : 0);
-        rotary.setVolts(rotaryVolts);
+        rotary.setVolts(rotaryEncoder.isCANResponsive() && !isState(Arm.State.LOW) ? rotaryVolts : 0);
+        //rotary.setVolts(rotaryVolts);
     }
+
+    // omega with respect to delta theta (radians)
+    private double calculateRotaryVelocity(double wanted, double actual) {
+        return Math.signum(wanted - actual)
+                * (15 / (1 + Math.pow(Math.E, -.3 * (Math.abs(wanted - actual) - 12))) - .399);
+    }
+
 }
