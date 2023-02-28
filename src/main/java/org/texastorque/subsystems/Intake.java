@@ -59,16 +59,17 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
 
         public IndexerPose get() { return hand.isCubeMode() ? cubePose : conePose; }
     }
-    private static final double ROT_INTAKE = -14.5;
-    private static final double ROT_PRIME = -5;
-    private static final double ROT_UP = 0;
+    private static final double ROT_INTAKE = -10.14;
+    private static final double ROT_PRIME = -7;
+    private static final double ROT_UP = -1;
 
     private static volatile Intake instance;
 
-    public static final double ROTARY_MAX_VOLTS = 7, ROLLER_MAX_VOLTS = 6;
+    public static final double ROTARY_MAX_VOLTS = 4, ROLLER_MAX_VOLTS = 6;
 
     private static final double ROLLER_SLOWDOWN = .3;
     public static final synchronized Intake getInstance() { return instance == null ? instance = new Intake() : instance; }
+
     @Log.ToString
     private State activeState = State.UP;
 
@@ -77,14 +78,13 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
 
     @Log.ToString
     public double realRotaryPose = 0;
+
     private final TorqueNEO topRollers = new TorqueNEO(Ports.INTAKE_ROLLER_MOTOR_TOP);
-
     private final TorqueNEO bottomRollers = new TorqueNEO(Ports.INTAKE_ROLLER_MOTOR_BOTTOM);
-
     private final TorqueNEO rotary = new TorqueNEO(Ports.INTAKE_ROTARY_MOTOR_LEFT);
 
     @Config
-    public final PIDController rotaryPoseController = new PIDController(2, 0, 0);
+    public final PIDController rotaryPoseController = new PIDController(2.4, 0, 0);
 
     private Intake() {
         topRollers.setCurrentLimit(30);
@@ -99,8 +99,9 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
 
         rotary.setCurrentLimit(33);
         rotary.setVoltageCompensation(12.6);
-        rotary.setBreakMode(true);
         rotary.addFollower(Ports.INTAKE_ROTARY_MOTOR_RIGHT, true);
+        // must happen after add followers
+        rotary.setBreakMode(true);
         rotary.burnFlash();
     }
 
@@ -140,10 +141,14 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
         if (hand.isConeMode()) bottomRollerVolts /= rollerSlowdown;
         bottomRollers.setVolts(bottomRollerVolts);
 
-        final double requestedRotaryVolts = TorqueMath.constrain(rotaryPoseController.calculate(realRotaryPose, activeState.get().rotaryPose), ROTARY_MAX_VOLTS);
+        SmartDashboard.putNumber("intake::requestedRotaryPose", activeState.get().rotaryPose);
+        double requestedRotaryVolts = TorqueMath.constrain(rotaryPoseController.calculate(realRotaryPose, activeState.get().rotaryPose), ROTARY_MAX_VOLTS);
+        if (activeState == State.INTAKE || activeState == State.OUTAKE) {
+            requestedRotaryVolts += .25;
+        }
         SmartDashboard.putNumber("intake::requestedRotaryVolts", requestedRotaryVolts);
         SmartDashboard.putNumber("intake::rotaryCurrent", rotary.getCurrent());
-        // rotary.setVolts(requestedRotaryVolts);
+        rotary.setVolts(requestedRotaryVolts);
 
         // if (mode.isTeleop())
             // desiredState = State.UP;
