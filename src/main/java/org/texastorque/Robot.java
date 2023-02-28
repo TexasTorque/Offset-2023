@@ -11,7 +11,6 @@ import java.util.Map;
 import org.texastorque.auto.AutoManager;
 import org.texastorque.torquelib.base.TorqueRobotBase;
 
-import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.util.Color;
@@ -24,7 +23,7 @@ public final class Robot extends TorqueRobotBase implements Subsystems {
 
         // Configure Subsystems
         addSubsystem(drivebase);
-        // addSubsystem(lights);
+        addSubsystem(lights);
         // addSubsystem(intake);
         addSubsystem(spindexer);
         addSubsystem(arm);
@@ -42,9 +41,6 @@ public final class Robot extends TorqueRobotBase implements Subsystems {
         //         .withPosition(6, 0)
         //         .withSize(6, 4)
         //         .withProperties(Map.of("Show crosshair", false, "Show controls", false));
-
-        var w = BuiltInWidgets.kBooleanBox;
-
 
 
         dashboard.add("FIELD", drivebase.fieldMap).withPosition(0, 0).withSize(7, 4);

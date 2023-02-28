@@ -30,7 +30,6 @@ public final class Forks extends TorqueSubsystem implements Subsystems {
     private TorqueDirection direction = TorqueDirection.OFF;
 
     private Forks() {
-        // rotary.setPositionConversionFactor(135.0);
         rotary.setCurrentLimit(60);
         rotary.setVoltageCompensation(12.6);
         rotary.setBreakMode(true);

@@ -285,22 +285,20 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     // omega with respect to delta x
-    private double calculateElevatorVelocity(double wanted, double actual) {
-        return Math.signum(wanted-actual) * (80. / (1 + Math.pow(Math.E, -.05*(Math.abs(wanted-actual)-80./2)))-9.53);
+    private double calculateElevatorVelocity(final double wanted, final double actual) {
+        return Math.signum(wanted - actual) * (80. / (1 + Math.pow(Math.E, -.05 * (Math.abs(wanted - actual) - 80. / 2))) - 9.53);
     }
 
     // derivative of calculateElevatorVelocity
-    private double calculateElevatorAcceleration(double wanted, double actual) {
-        return Math.signum(wanted-actual) * (4*Math.pow(Math.E,-.05*(wanted-actual-40)) / Math.pow(Math.pow(Math.E, -.05*(wanted-actual-40)) + 1, 2));
+    private double calculateElevatorAcceleration(final double wanted, final double actual) {
+        return Math.signum(wanted - actual) * (4 * Math.pow(Math.E, -.05 * (wanted - actual - 40)) / Math.pow(Math.pow(Math.E, -.05 * (wanted - actual - 40)) + 1, 2));
     }
 
     private void calculateRotary() {
         double armSetpoint = activeState.get().rotaryPose.getRadians();
-        // if (isPerformingHandoff()) 
-            // armSetpoint += setpointAdjustment * RADIANS_ADJUSTMENT_COEF;
         double rotaryPos = realRotaryPose.getRadians();
-        if(rotaryPos > Math.toRadians(315)) { // wrap around up to prevent overshoot causing a massive spin.
-            rotaryPos = rotaryPos - 2*Math.PI;
+        if (rotaryPos > Math.toRadians(315)) { // wrap around up to prevent overshoot causing a massive spin.
+            rotaryPos = rotaryPos - 2 * Math.PI;
         }
         double rotaryVolts = -rotaryFeedforward.calculate(armSetpoint, calculateRotaryVelocity(armSetpoint, rotaryPos), calculateRotaryAcceleration(armSetpoint, rotaryPos));
         // final boolean stopArm = armSetpoint <= (Math.PI * 0.5) && armSwitch.get();
@@ -309,17 +307,16 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         // rotary.setVolts(rotaryEncoder.isCANResponsive() && !isState(Arm.State.LOW) ? rotaryVolts : 0);
         rotary.setVolts(rotaryVolts);
         SmartDashboard.putNumber("arm::rotaryVolts", rotaryVolts);
-
         SmartDashboard.putNumber("arm::elevatorCurrent", rotary.getCurrent());
     }
 
     // omega with respect to delta theta (radians)
-    private double calculateRotaryVelocity(double wanted, double actual) {
-        return Math.signum(wanted-actual) * (15 / (1 + Math.pow(Math.E, -.3*(Math.abs(wanted-actual)-12)))-.399);
+    private double calculateRotaryVelocity(final double wanted, final double actual) {
+        return Math.signum(wanted - actual) * (15 / (1 + Math.pow(Math.E, -.3 * (Math.abs(wanted-actual) - 12))) - .399);
     }
 
     // derivative of calculateRotaryVelocity
-    private double calculateRotaryAcceleration(double wanted, double actual) {
-        return Math.signum(wanted-actual) * (12*Math.pow(Math.E,-1.5*(Math.abs(wanted-actual-12))) / Math.pow(Math.pow(Math.E, -1.5*(wanted-actual-1.3)) + 1, 2));
+    private double calculateRotaryAcceleration(final double wanted, final double actual) {
+        return Math.signum(wanted - actual) * (12 * Math.pow(Math.E, -1.5 * (Math.abs(wanted - actual - 12))) / Math.pow(Math.pow(Math.E, -1.5 * (wanted - actual - 1.3)) + 1, 2));
     }
 }

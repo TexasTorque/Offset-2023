@@ -18,7 +18,12 @@ import org.texastorque.torquelib.motors.TorqueNEO;
 import org.texastorque.torquelib.sensors.TorqueCANCoder;
 import org.texastorque.torquelib.util.TorqueMath;
 
+import com.ctre.phoenix.sensors.CANCoderConfiguration;
+import com.ctre.phoenix.sensors.SensorInitializationStrategy;
+import com.ctre.phoenix.sensors.SensorTimeBase;
+
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
 
@@ -29,10 +34,10 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
     }
 
     public static enum State {
-        GRAB(-12.24),
-        BIG(-12.24),
-        OPEN(-4),
-        CLOSE(10);
+        GRAB(-.54),
+        BIG(-.54),
+        OPEN(-.3),
+        CLOSE(.48);
 
         public final double clawSetpoint;
 
@@ -49,8 +54,6 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
 
     private static final double MAX_CLAW_VOLTS = 12;
 
-    private static final double CLAW_ENCODER_OFFSET = 0;
-
     public static final synchronized Hand getInstance() {
         return instance == null ? instance = new Hand() : instance;
     }
@@ -66,7 +69,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
     @Log.ToString
     public double realClawPose = 0;
     @Config
-    public final PIDController clawPoseController = new PIDController(1, 0, 0);
+    public final PIDController clawPoseController = new PIDController(12, 0, 0);
 
     private final TorqueNEO claw = new TorqueNEO(Ports.CLAW_MOTOR);
 
@@ -79,6 +82,13 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
         claw.setVoltageCompensation(12.6);
         claw.setBreakMode(true);
         claw.burnFlash();
+
+        final CANCoderConfiguration cancoderConfig = new CANCoderConfiguration();
+        cancoderConfig.sensorCoefficient = 2 * Math.PI / 4096.0;
+        cancoderConfig.unitString = "rad";
+        cancoderConfig.sensorTimeBase = SensorTimeBase.PerSecond;
+        cancoderConfig.initializationStrategy = SensorInitializationStrategy.BootToAbsolutePosition;
+        clawEncoder.configAllSettings(cancoderConfig);
     }
 
     public GamePiece getGamePieceMode() {
@@ -139,9 +149,11 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
             activeState = State.BIG;
         }
 
-        double clawVolts =  clawPoseController.calculate(realClawPose, activeState.clawSetpoint);
+        SmartDashboard.putNumber("claw::requestedPose", activeState.clawSetpoint);
+        double clawVolts = clawPoseController.calculate(realClawPose, activeState.clawSetpoint);
+        SmartDashboard.putNumber("claw::requestedVolts", clawVolts);
         clawVolts = TorqueMath.constrain(clawVolts, MAX_CLAW_VOLTS);
-        // claw.setVolts(clawVolts);
+        claw.setVolts(clawVolts);
 
         if (lastState != activeState) {
             if (activeState == State.OPEN)
@@ -150,9 +162,6 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
                     retractArmTimeout.set(.5);
                 }
         }
-
-        if (retractArmTimeout.isJustDone())
-            arm.setState(Arm.State.STOWED);
 
         lastState = activeState;
 
@@ -164,7 +173,6 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
     }
 
     private void updateFeedback() {
-        // realClawPose = claw.getPosition() - CLAW_ENCODER_OFFSET;
-        realClawPose = claw.getPosition();
+        realClawPose = clawEncoder.getPosition();
     }
 }
