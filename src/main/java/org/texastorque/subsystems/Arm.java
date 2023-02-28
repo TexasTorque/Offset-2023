@@ -53,22 +53,22 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     public static enum State {
         GRAB(
-                new ArmPose(-.15, Rotation2d.fromDegrees(250)),
+                new ArmPose(.15, Rotation2d.fromDegrees(250)),
                 new ArmPose(0, Rotation2d.fromDegrees(255))),
         INDEX(
-                new ArmPose(-.4, Rotation2d.fromDegrees(230)),
-                new ArmPose(-.4, Rotation2d.fromDegrees(242))),
-        WAYPOINT(new ArmPose(-0.45, Rotation2d.fromDegrees(250))),
-        STOWED(new ArmPose(-.4, Rotation2d.fromDegrees(200))),
+                new ArmPose(.4, Rotation2d.fromDegrees(230)),
+                new ArmPose(.4, Rotation2d.fromDegrees(242))),
+        WAYPOINT(new ArmPose(0.45, Rotation2d.fromDegrees(250))),
+        STOWED(new ArmPose(.4, Rotation2d.fromDegrees(200))),
         GRABBED(STOWED),
-        SHELF(new ArmPose(-.55, Rotation2d.fromDegrees(0))),
+        SHELF(new ArmPose(.55, Rotation2d.fromDegrees(0))),
         MID(
-                new ArmPose(-.1, Rotation2d.fromDegrees(0)),
-                new ArmPose(-.275, Rotation2d.fromDegrees(5))),
+                new ArmPose(.1, Rotation2d.fromDegrees(0)),
+                new ArmPose(.275, Rotation2d.fromDegrees(5))),
         TOP(
-                new ArmPose(-1.1, Rotation2d.fromDegrees(0)),
-                new ArmPose(-1.15, Rotation2d.fromDegrees(5))),
-        LOW(new ArmPose(-.6, Rotation2d.fromDegrees(0)));
+                new ArmPose(1.1, Rotation2d.fromDegrees(0)),
+                new ArmPose(1.15, Rotation2d.fromDegrees(5))),
+        LOW(new ArmPose(.6, Rotation2d.fromDegrees(0)));
 
         public final ArmPose cubePose;
         public final ArmPose conePose;
