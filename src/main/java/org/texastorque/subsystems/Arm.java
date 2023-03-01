@@ -54,7 +54,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     public static enum State {
         GRAB(
                 new ArmPose(.15, Rotation2d.fromDegrees(250)),
-                new ArmPose(0, Rotation2d.fromDegrees(255))),
+                new ArmPose(0, Rotation2d.fromDegrees(245))),
         INDEX(
                 new ArmPose(.4, Rotation2d.fromDegrees(230)),
                 new ArmPose(.4, Rotation2d.fromDegrees(242))),
@@ -68,7 +68,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         TOP(
                 new ArmPose(1.1, Rotation2d.fromDegrees(0)),
                 new ArmPose(1.15, Rotation2d.fromDegrees(5))),
-        LOW(new ArmPose(.6, Rotation2d.fromDegrees(0)));
+        LOW(new ArmPose(.55, Rotation2d.fromDegrees(0)));
 
         public final ArmPose cubePose;
         public final ArmPose conePose;
@@ -295,7 +295,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         elevatorVolts += elevatorPoseFeedForward.calculate(activeState.get().elevatorPose, 0);
         elevatorVolts = TorqueMath.constrain(elevatorVolts, ELEVATOR_MAX_VOLTS);
         elevatorVolts = TorqueMath.linearConstraint(elevatorVolts, -realElevatorPose, ELEVATOR_MIN, ELEVATOR_MAX);
-       elevator.setVolts(-elevatorVolts);
+        elevator.setVolts(-elevatorVolts);
         SmartDashboard.putNumber("arm::elevatorCurrent", elevator.getCurrent());
     }
 
