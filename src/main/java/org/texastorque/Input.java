@@ -129,10 +129,8 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         armToMid.onTrue(() -> arm.setState(Arm.State.MID));
         armToTop.onTrue(() -> arm.setState(Arm.State.TOP));
 
-
         adjustAutoAlignRight.onTrue(() -> drivebase.alignmentController.incrementGoalPoseY(-Units.inchesToMeters(3)));
         adjustAutoAlignLeft.onTrue(() -> drivebase.alignmentController.incrementGoalPoseY(Units.inchesToMeters(3)));
-
 
         armToBottom.onTrue(() -> {
             arm.setState(Arm.State.STOWED);

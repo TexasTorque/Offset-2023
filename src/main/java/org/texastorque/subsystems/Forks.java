@@ -19,7 +19,7 @@ import io.github.oblarg.oblog.annotations.Log;
 public final class Forks extends TorqueSubsystem implements Subsystems {
     private static volatile Forks instance;
 
-    public static final double ROTARY_MAX_VOLTS = 6;
+    public static final double ROTARY_MAX_VOLTS = 8;
     
 
     public static final synchronized Forks getInstance() { return instance == null ? instance = new Forks() : instance; }

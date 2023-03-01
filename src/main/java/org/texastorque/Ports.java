@@ -36,5 +36,6 @@ public final class Ports {
 
     // PWM
 
-    public static final int LIGHTS = 0;
+    public static final int LIGHTS_SUPERSTRUCTURE = 0;
+    public static final int LIGHTS_UNDERGLOW = 1;
 }

@@ -55,17 +55,17 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     // TODO: All these setpoints need to be re-tuned -- arm should be fine
     public static enum State {
         GRAB(
-                new ArmPose(.15, Rotation2d.fromDegrees(250)),
-                new ArmPose(0, Rotation2d.fromDegrees(255))
+                new ArmPose(2.4523, Rotation2d.fromDegrees(248)),
+                new ArmPose(.238, Rotation2d.fromDegrees(245))
         ),
         INDEX(
-                new ArmPose(.4, Rotation2d.fromDegrees(230)),
-                new ArmPose(.4, Rotation2d.fromDegrees(242))
+                new ArmPose(16, Rotation2d.fromDegrees(248)),
+                new ArmPose(14, Rotation2d.fromDegrees(245))
         ),
-        WAYPOINT(new ArmPose(0.45, Rotation2d.fromDegrees(250))),
-        STOWED(new ArmPose(.4, Rotation2d.fromDegrees(200))),
+        WAYPOINT(new ArmPose(0.45, Rotation2d.fromDegrees(250))), //unused
+        STOWED(new ArmPose(3, Rotation2d.fromDegrees(200))),
         GRABBED(STOWED),
-        SHELF(new ArmPose(.55, Rotation2d.fromDegrees(0))),            
+        SHELF(new ArmPose(40, Rotation2d.fromDegrees(0))),            
         MID(
                 new ArmPose(35, Rotation2d.fromDegrees(0)), 
                 new ArmPose(35, Rotation2d.fromDegrees(15))
