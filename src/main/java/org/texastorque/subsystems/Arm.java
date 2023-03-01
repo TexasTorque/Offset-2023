@@ -126,7 +126,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     @Config
     public final PIDController rotaryPoseController = new PIDController(1.89, 0, 0);
 
-    public final ArmFeedforward rotaryFeedforward = new ArmFeedforward(0.18362, 0.22356, 4, 4.4775);
+    public final ArmFeedforward rotaryFeedforward = new ArmFeedforward(0.18362, 0.22356, 8.9688, 2.9553);
 
     private final TorqueCANCoder rotaryEncoder = new TorqueCANCoder(Ports.ARM_ROTARY_ENCODER);
 
@@ -312,11 +312,11 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     // omega with respect to delta theta (radians)
     private double calculateRotaryVelocity(final double wanted, final double actual) {
-        return Math.signum(wanted - actual) * (15 / (1 + Math.pow(Math.E, -.3 * (Math.abs(wanted-actual) - 12))) - .399);
+        return Math.signum(wanted - actual) * (3 / (1 + 3*Math.pow(Math.E, -.5 * (Math.abs(wanted-actual) - 3))) - .399);
     }
 
     // derivative of calculateRotaryVelocity
     private double calculateRotaryAcceleration(final double wanted, final double actual) {
-        return Math.signum(wanted - actual) * (12 * Math.pow(Math.E, -1.5 * (Math.abs(wanted - actual - 12))) / Math.pow(Math.pow(Math.E, -1.5 * (wanted - actual - 1.3)) + 1, 2));
+        return Math.signum(wanted - actual) * (4.5 * Math.pow(Math.E, -.5 * (Math.abs(wanted - actual - 3))) / Math.pow(3*Math.pow(Math.E, -.5 * (wanted - actual - 3)) + 1, 2));
     }
 }
