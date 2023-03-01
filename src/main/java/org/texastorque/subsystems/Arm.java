@@ -91,7 +91,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         }
     }
 
-    private static final double ROTARY_ENCODER_OFFSET = -8.889400698244572,
+    private static final double ROTARY_ENCODER_OFFSET = -2.5341311,
             ELEVATOR_MAX_VOLTS = 12,
             ROTARY_MAX_VOLTS = 12,
             ELEVATOR_MIN = 0,
@@ -285,6 +285,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     private void updateFeedback() {
         realElevatorPose = elevator.getPosition();
+        SmartDashboard.putNumber("rotaryCanCoder", -rotaryEncoder.getPosition());
         final double rotaryRadians = TorqueMath.constrain0to2PI(-rotaryEncoder.getPosition() - ROTARY_ENCODER_OFFSET);
         realRotaryPose = Rotation2d.fromRadians(rotaryRadians);
     }
@@ -294,12 +295,13 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         elevatorVolts += elevatorPoseFeedForward.calculate(activeState.get().elevatorPose, 0);
         elevatorVolts = TorqueMath.constrain(elevatorVolts, ELEVATOR_MAX_VOLTS);
         elevatorVolts = TorqueMath.linearConstraint(elevatorVolts, -realElevatorPose, ELEVATOR_MIN, ELEVATOR_MAX);
-        elevator.setVolts(-elevatorVolts);
+       elevator.setVolts(-elevatorVolts);
         SmartDashboard.putNumber("arm::elevatorCurrent", elevator.getCurrent());
     }
 
     private void calculateRotary() {
         double rotaryPos = realRotaryPose.getRadians();
+        SmartDashboard.putNumber("rotaryPos", rotaryPos);
         if (rotaryPos > Math.toRadians(315)) { // wrap around up to prevent overshoot causing a massive spin.
             rotaryPos = rotaryPos - 2 * Math.PI;
         }

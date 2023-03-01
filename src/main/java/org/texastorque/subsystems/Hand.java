@@ -19,6 +19,7 @@ import org.texastorque.torquelib.sensors.TorqueCANCoder;
 import org.texastorque.torquelib.util.TorqueMath;
 
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
 
@@ -139,7 +140,9 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
             activeState = State.BIG;
         }
 
-        double clawVolts =  clawPoseController.calculate(realClawPose, activeState.clawSetpoint);
+        SmartDashboard.putNumber("claw::requestedPose", activeState.clawSetpoint);
+        double clawVolts = clawPoseController.calculate(realClawPose, activeState.clawSetpoint);
+        SmartDashboard.putNumber("claw::requestedVolts", clawVolts);
         clawVolts = TorqueMath.constrain(clawVolts, MAX_CLAW_VOLTS);
         claw.setVolts(clawVolts);
 
@@ -150,9 +153,6 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
                     retractArmTimeout.set(.5);
                 }
         }
-
-        if (retractArmTimeout.isJustDone())
-            arm.setState(Arm.State.STOWED);
 
         lastState = activeState;
 
