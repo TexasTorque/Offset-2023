@@ -8,7 +8,6 @@ package org.texastorque.subsystems;
 
 import org.texastorque.Ports;
 import org.texastorque.Subsystems;
-import org.texastorque.torquelib.base.TorqueDirection;
 import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.motors.TorqueNEO;
@@ -19,7 +18,7 @@ import io.github.oblarg.oblog.annotations.Log;
 public final class Forks extends TorqueSubsystem implements Subsystems {
     private static volatile Forks instance;
 
-    public static final double ROTARY_MAX_VOLTS = 6;
+    public static final double ROTARY_MAX_VOLTS = 8;
     
 
     public static final synchronized Forks getInstance() { return instance == null ? instance = new Forks() : instance; }
@@ -27,7 +26,8 @@ public final class Forks extends TorqueSubsystem implements Subsystems {
     private final TorqueNEO rotary = new TorqueNEO(Ports.FORKS_MOTOR);
 
     @Log.ToString
-    private TorqueDirection direction = TorqueDirection.OFF;
+    // private TorqueDirection direction = TorqueDirection.OFF;
+    private double direction = 0;
 
     private Forks() {
         rotary.setCurrentLimit(60);
@@ -36,7 +36,10 @@ public final class Forks extends TorqueSubsystem implements Subsystems {
         rotary.burnFlash();
     }
 
-    public final void setDirection(final TorqueDirection direction) {
+    // public final void setDirection(final TorqueDirection direction) {
+    //     this.direction = direction;
+    // }
+    public final void setDirection(final double direction) {
         this.direction = direction;
     }
 
@@ -46,10 +49,10 @@ public final class Forks extends TorqueSubsystem implements Subsystems {
     
     @Override
     public final void update(final TorqueMode mode) {
-        rotary.setVolts(ROTARY_MAX_VOLTS * direction.get());
+        rotary.setVolts(ROTARY_MAX_VOLTS * direction);
         SmartDashboard.putNumber("forks::current", rotary.getCurrent());
-        SmartDashboard.putNumber("forks::volts", ROTARY_MAX_VOLTS * direction.get());
+        SmartDashboard.putNumber("forks::volts", ROTARY_MAX_VOLTS * direction);
 
-    direction = TorqueDirection.OFF;
+        direction = 0;
     }
 }

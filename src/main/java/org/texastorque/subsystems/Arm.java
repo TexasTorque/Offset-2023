@@ -55,24 +55,24 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     // TODO: All these setpoints need to be re-tuned -- arm should be fine
     public static enum State {
         GRAB(
-                new ArmPose(.15, Rotation2d.fromDegrees(250)),
-                new ArmPose(0, Rotation2d.fromDegrees(255))
+                new ArmPose(5, Rotation2d.fromDegrees(254)),
+                new ArmPose(.238, Rotation2d.fromDegrees(248))
         ),
         INDEX(
-                new ArmPose(.4, Rotation2d.fromDegrees(230)),
-                new ArmPose(.4, Rotation2d.fromDegrees(242))
+                new ArmPose(18, Rotation2d.fromDegrees(230)),
+                new ArmPose(18, Rotation2d.fromDegrees(240))
         ),
-        WAYPOINT(new ArmPose(0.45, Rotation2d.fromDegrees(250))),
-        STOWED(new ArmPose(.4, Rotation2d.fromDegrees(200))),
+        WAYPOINT(new ArmPose(0.45, Rotation2d.fromDegrees(250))), //unused
+        STOWED(new ArmPose(8, Rotation2d.fromDegrees(175))),
         GRABBED(STOWED),
-        SHELF(new ArmPose(.55, Rotation2d.fromDegrees(0))),            
+        SHELF(new ArmPose(40, Rotation2d.fromDegrees(0))),            
         MID(
-                new ArmPose(35, Rotation2d.fromDegrees(0)), 
-                new ArmPose(35, Rotation2d.fromDegrees(15))
+                new ArmPose(5, Rotation2d.fromDegrees(0)), 
+                new ArmPose(18, Rotation2d.fromDegrees(10))
         ), 
         TOP(
-                new ArmPose(45,  Rotation2d.fromDegrees(0)), 
-                new ArmPose(45,  Rotation2d.fromDegrees(15))
+                new ArmPose(43,  Rotation2d.fromDegrees(0)), 
+                new ArmPose(43,  Rotation2d.fromDegrees(10))
         ), 
         LOW(new ArmPose(.6, Rotation2d.fromDegrees(0)));
      
@@ -95,7 +95,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     private static final double ROTARY_ENCODER_OFFSET = -Units.degreesToRadians(76 + 31),
             ELEVATOR_MAX_VOLTS = 12,
-            ROTARY_MAX_VOLTS = 12, 
+            ROTARY_MAX_VOLTS = 10, 
             ELEVATOR_MIN = 0, 
             ELEVATOR_MAX = 50; // 54 is the technical max
 

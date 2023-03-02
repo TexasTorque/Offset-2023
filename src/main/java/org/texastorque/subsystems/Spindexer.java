@@ -8,6 +8,8 @@ package org.texastorque.subsystems;
 
 import org.texastorque.Ports;
 import org.texastorque.Subsystems;
+import org.texastorque.torquelib.auto.TorqueCommand;
+import org.texastorque.torquelib.auto.commands.TorqueExecute;
 import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.motors.TorqueNEO;
@@ -46,6 +48,10 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
         this.state = state;
     }
 
+    public TorqueCommand setStateCommand(final State state) {
+        return new TorqueExecute(() -> setState(state));
+    }
+
     @Override
     public final void initialize(final TorqueMode mode) {}
 
@@ -56,7 +62,7 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
             state = State.FAST_CW;
 
         turntable.setVolts(state.volts);
-
-        state = State.OFF;
+        if (mode.isTeleop())
+            state = State.OFF;
     }
 }

@@ -6,8 +6,6 @@
  */
 package org.texastorque;
 
-import org.texastorque.controllers.PathAlignController.AlignState;
-import org.texastorque.controllers.PathAlignController.GridState;
 import org.texastorque.subsystems.Arm;
 import org.texastorque.subsystems.Drivebase;
 import org.texastorque.subsystems.Drivebase.SpeedSetting;
@@ -15,7 +13,6 @@ import org.texastorque.subsystems.Hand;
 import org.texastorque.subsystems.Hand.GamePiece;
 import org.texastorque.subsystems.Intake;
 import org.texastorque.subsystems.Spindexer;
-import org.texastorque.torquelib.base.TorqueDirection;
 import org.texastorque.torquelib.base.TorqueInput;
 import org.texastorque.torquelib.control.TorqueBoolSupplier;
 import org.texastorque.torquelib.control.TorqueClickSupplier;
@@ -110,13 +107,13 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
         drivebase.isRotationLocked = toggleRotationLock.get();
 
-        alignGridLeft.onTrue(() -> drivebase.setAlignState(AlignState.LEFT));
-        alignGridCenter.onTrue(() -> drivebase.setAlignState(AlignState.CENTER));
-        alignGridRight.onTrue(() -> drivebase.setAlignState(AlignState.RIGHT));
+        // alignGridLeft.onTrue(() -> drivebase.setAlignState(AlignState.LEFT));
+        // alignGridCenter.onTrue(() -> drivebase.setAlignState(AlignState.CENTER));
+        // alignGridRight.onTrue(() -> drivebase.setAlignState(AlignState.RIGHT));
 
-        gridOverrideLeft.onTrue(() -> drivebase.setGridOverride(GridState.LEFT));
-        gridOverrideCenter.onTrue(() -> drivebase.setGridOverride(GridState.CENTER));
-        gridOverrideRight.onTrue(() -> drivebase.setGridOverride(GridState.RIGHT));
+        // gridOverrideLeft.onTrue(() -> drivebase.setGridOverride(GridState.LEFT));
+        // gridOverrideCenter.onTrue(() -> drivebase.setGridOverride(GridState.CENTER));
+        // gridOverrideRight.onTrue(() -> drivebase.setGridOverride(GridState.RIGHT));
 
         // autoLevel.onTrue(() -> drivebase.setState(Drivebase.State.BALANCE));
         isZeroingWheels.onTrue(() -> drivebase.setState(Drivebase.State.ZERO));
@@ -129,17 +126,15 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         armToMid.onTrue(() -> arm.setState(Arm.State.MID));
         armToTop.onTrue(() -> arm.setState(Arm.State.TOP));
 
-
         adjustAutoAlignRight.onTrue(() -> drivebase.alignmentController.incrementGoalPoseY(-Units.inchesToMeters(3)));
         adjustAutoAlignLeft.onTrue(() -> drivebase.alignmentController.incrementGoalPoseY(Units.inchesToMeters(3)));
-
 
         armToBottom.onTrue(() -> {
             arm.setState(Arm.State.STOWED);
             handoffStates.set(0);
         });
 
-        arm.setSetpointAdjustment(operator.getRightYAxis());
+        // arm.setSetpointAdjustment(operator.getRightYAxis());
 
         armDoHandoff.onTrue(() -> arm.setState(handoffStates.calculate(false, true)));
 
@@ -160,8 +155,10 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
         wantsOuttake.onTrue(() -> intake.setState(Intake.State.OUTAKE));
 
-        forksUp.onTrue(() -> forks.setDirection(TorqueDirection.FORWARD));
-        forksDown.onTrue(() -> forks.setDirection(TorqueDirection.REVERSE));
+        // forksUp.onTrue(() -> forks.setDirection(TorqueDirection.FORWARD));
+        // forksDown.onTrue(() -> forks.setDirection(TorqueDirection.REVERSE));
+
+        forks.setDirection(TorqueMath.scaledLinearDeadband(operator.getRightYAxis(), DEADBAND * 4));
 
         updateSpindexer();
     }
