@@ -19,8 +19,8 @@ import org.texastorque.torquelib.auto.commands.TorqueSequenceRunner;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 
-public final class BumpySide2PieceLevel extends TorqueSequence implements Subsystems {
-    public BumpySide2PieceLevel() {
+public final class BumpySide2PieceEngage extends TorqueSequence implements Subsystems {
+    public BumpySide2PieceEngage() {
 
         drivebase.resetPose(new Pose2d(1.8, .51, Rotation2d.fromRadians(Math.PI)));
 

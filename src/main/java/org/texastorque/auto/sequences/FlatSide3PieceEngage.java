@@ -15,10 +15,15 @@ import org.texastorque.subsystems.Hand;
 import org.texastorque.subsystems.Hand.GamePiece;
 import org.texastorque.torquelib.auto.TorqueSequence;
 import org.texastorque.torquelib.auto.commands.TorqueSequenceRunner;
-import org.texastorque.torquelib.auto.commands.TorqueWaitUntil;
 
-public final class FlatSide2PieceLevel extends TorqueSequence implements Subsystems {
-    public FlatSide2PieceLevel() {
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+
+public final class FlatSide3PieceEngage extends TorqueSequence implements Subsystems {
+    public FlatSide3PieceEngage() {
+
+        // Hack - not needed w/ april tags
+        drivebase.resetPose(new Pose2d(1.8, 4.96, Rotation2d.fromRadians(Math.PI)));
 
         addBlock(hand.setStateCommand(Hand.State.CLOSE), hand.setGamePieceModeCommand(GamePiece.CONE));
 
@@ -26,20 +31,16 @@ public final class FlatSide2PieceLevel extends TorqueSequence implements Subsyst
 
         addBlock(hand.setGamePieceModeCommand(GamePiece.CUBE));
 
-        addBlock(new FollowEventPath("flat-side-get-first"));
-
-        addBlock(new TorqueWaitUntil(arm::isAtDesiredPose));
-        // addBlock(new TorqueWaitForSeconds(1));
+        addBlock(new FollowEventPath("flat-side-get-first", 4.5, 4.5)); 
 
         addBlock(new TorqueSequenceRunner(new Score(Arm.State.TOP)));
 
-        addBlock(new FollowEventPath("flat-side-go-level"));
+        addBlock(new FollowEventPath("flat-side-get-second-x", 4.5, 4.5));
+
+        addBlock(new TorqueSequenceRunner(new Score(Arm.State.MID)));
+
+        addBlock(new FollowEventPath("flat-side-go-level-fast", 6, 8));
 
         addBlock(drivebase.setStateCommand(Drivebase.State.BALANCE));
-
-
-        // addBlock(arm.setStateCommand(Arm.State.STOWED));
-        // addBlock(new TorqueWaitForSeconds(2));
-        // addBlock(new TorqueSequenceRunner(new Handoff()));
     }
 }

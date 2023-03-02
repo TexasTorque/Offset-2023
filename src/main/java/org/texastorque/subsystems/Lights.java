@@ -8,6 +8,7 @@ package org.texastorque.subsystems;
 
 import java.util.function.Supplier;
 
+import org.texastorque.Ports;
 import org.texastorque.Subsystems;
 import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
@@ -76,7 +77,7 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
 
     public static final synchronized Lights getInstance() { return instance == null ? instance = new Lights() : instance; }
 
-    private final AddressableLED superstructureLEDs, underglowLEDs;
+    private final AddressableLED superstructureLEDs;
 
     private final AddressableLEDBuffer buff;
 
@@ -86,14 +87,9 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
                         blinkPurple = new Blink(() -> Color.kPurple, 6), blinkYellow = new Blink(() -> Color.kYellow, 6), rainbow = new Rainbow();
 
     private Lights() {
-        // superstructureLEDs = new AddressableLED(Ports.LIGHTS_SUPERSTRUCTURE);
-        superstructureLEDs = new AddressableLED(0);
+        superstructureLEDs = new AddressableLED(Ports.LIGHTS_SUPERSTRUCTURE);
         superstructureLEDs.setLength(LENGTH);
 
-        // underglowLEDs = new AddressableLED(Ports.LIGHTS_UNDERGLOW);
-        // underglowLEDs.setLength(LENGTH);
-        underglowLEDs = null;
-        
         buff = new AddressableLEDBuffer(LENGTH);
     }
 
@@ -126,6 +122,5 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
     public final void update(final TorqueMode mode) {
         getColor(mode).run(buff);
         superstructureLEDs.setData(buff);
-        // underglowLEDs.setData(buff);
     }
 }

@@ -6,13 +6,12 @@
  */
 package org.texastorque.auto;
 
-import org.texastorque.auto.sequences.AnySideOnePieceEngage;
-import org.texastorque.auto.sequences.AnySideOnePieceMobility;
-import org.texastorque.auto.sequences.BumpySide2PieceLevel;
-import org.texastorque.auto.sequences.BumpySide3Piece;
-import org.texastorque.auto.sequences.FlatSide2PieceLevel;
-import org.texastorque.auto.sequences.FlatSide3Piece;
-import org.texastorque.auto.sequences.MiddleSide1PieceLevel;
+
+import org.texastorque.auto.sequences.DumbBothSide1PieceMobility;
+import org.texastorque.auto.sequences.DumbBumpySide1PieceEngage;
+import org.texastorque.auto.sequences.DumbFlatSide1PieceEngage;
+import org.texastorque.auto.sequences.DumbMiddleSide1PieceEngagel;
+import org.texastorque.auto.sequences.FlatSide2PieceEngage;
 import org.texastorque.torquelib.auto.TorqueAutoManager;
 
 public final class AutoManager extends TorqueAutoManager {
@@ -29,12 +28,15 @@ public final class AutoManager extends TorqueAutoManager {
 
     @Override
     public final void init() {
-        addSequence(new BumpySide2PieceLevel());
-        addSequence(new BumpySide3Piece());
-        addSequence(new FlatSide2PieceLevel());
-        addSequence(new FlatSide3Piece());
-        addSequence(new MiddleSide1PieceLevel());
-        addSequence(new AnySideOnePieceMobility());
-        addSequence(new AnySideOnePieceEngage());
+        // addSequence(new BumpySide2PieceLevel());
+        // addSequence(new BumpySide3Piece());
+        addSequence(new FlatSide2PieceEngage());
+        // addSequence(new FlatSide3Piece());
+        // addSequence(new MiddleSide1PieceLevel());
+        addSequence(new DumbBothSide1PieceMobility());
+        addSequence(new DumbMiddleSide1PieceEngagel());
+        addSequence(new DumbFlatSide1PieceEngage());
+        addSequence(new DumbBumpySide1PieceEngage());
+
     }
 }

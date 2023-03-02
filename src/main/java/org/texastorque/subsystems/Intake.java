@@ -59,15 +59,15 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
 
         public IndexerPose get() { return hand.isCubeMode() ? cubePose : conePose; }
     }
-    private static final double ROT_INTAKE = -10;
-    private static final double ROT_PRIME = -7;
+    private static final double ROT_INTAKE = -12;
+    private static final double ROT_PRIME = -9;
     private static final double ROT_UP = 0;
 
     private static volatile Intake instance;
 
     public static final double ROTARY_MAX_VOLTS = 4, ROLLER_MAX_VOLTS = 6;
 
-    private static final double ROLLER_SLOWDOWN = .3;
+    private static final double ROLLER_SLOWDOWN = .1;
     public static final synchronized Intake getInstance() { return instance == null ? instance = new Intake() : instance; }
 
     @Log.ToString
