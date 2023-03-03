@@ -58,7 +58,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     }
 
     public enum SpeedSetting {
-        FAST(.8), SLOW(.25);
+        FAST(1.0), SLOW(.5);
 
         public final double speed;
         private SpeedSetting(final double speed) {

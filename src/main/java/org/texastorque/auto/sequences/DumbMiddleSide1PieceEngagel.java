@@ -31,7 +31,7 @@ public final class DumbMiddleSide1PieceEngagel extends TorqueSequence implements
 
         addBlock(new TorqueSequenceRunner(new Score(Arm.State.TOP)));
 
-        addBlock(new FollowEventPath("origin-engage", 1.5, 3.5));
+        addBlock(new FollowEventPath("origin-engage", 2.5, 3.5));
 
         addBlock(drivebase.setStateCommand(Drivebase.State.BALANCE));
     }

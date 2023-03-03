@@ -56,7 +56,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     public static enum State {
         GRAB(
                 new ArmPose(5, Rotation2d.fromDegrees(254)),
-                new ArmPose(.238, Rotation2d.fromDegrees(248))
+                new ArmPose(.238, Rotation2d.fromDegrees(251))
         ),
         INDEX(
                 new ArmPose(18, Rotation2d.fromDegrees(230)),
@@ -94,8 +94,9 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     private static final double ROTARY_ENCODER_OFFSET = -Units.degreesToRadians(76 + 31),
-            ELEVATOR_MAX_VOLTS = 12,
-            ROTARY_MAX_VOLTS = 10, 
+            ELEVATOR_MAX_VOLTS_UP = 12,
+            ELEVATOR_MAX_VOLTS_DOWN = 7,
+            ROTARY_MAX_VOLTS = 12, 
             ELEVATOR_MIN = 0, 
             ELEVATOR_MAX = 50; // 54 is the technical max
 
@@ -275,9 +276,10 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     private void calculateElevator() {
+        final boolean isComingDown = (lastState == State.TOP || lastState == State.MID) && (activeState != State.TOP || activeState != State.MID);
         double elevatorVolts = elevatorPoseController.calculate(realElevatorPose, activeState.get().elevatorPose);
         elevatorVolts += elevatorPoseFeedForward.calculate(calculateElevatorVelocity(activeState.get().elevatorPose, realElevatorPose), calculateElevatorAcceleration(activeState.get().elevatorPose, realElevatorPose));
-        elevatorVolts = TorqueMath.constrain(elevatorVolts, ELEVATOR_MAX_VOLTS);
+        elevatorVolts = TorqueMath.constrain(elevatorVolts, isComingDown ? ELEVATOR_MAX_VOLTS_UP : ELEVATOR_MAX_VOLTS_DOWN);
         elevatorVolts = TorqueMath.linearConstraint(elevatorVolts, realElevatorPose, ELEVATOR_MIN, ELEVATOR_MAX); 
         elevator.setVolts(elevatorVolts);
         SmartDashboard.putNumber("arm::elevatorCurrent", elevator.getCurrent());
