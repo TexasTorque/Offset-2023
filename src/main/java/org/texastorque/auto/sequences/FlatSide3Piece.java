@@ -15,14 +15,8 @@ import org.texastorque.subsystems.Hand.GamePiece;
 import org.texastorque.torquelib.auto.TorqueSequence;
 import org.texastorque.torquelib.auto.commands.TorqueSequenceRunner;
 
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-
 public final class FlatSide3Piece extends TorqueSequence implements Subsystems {
     public FlatSide3Piece() {
-       // Hack - not needed w/ april tags
-       drivebase.resetPose(new Pose2d(1.8, 4.96, Rotation2d.fromRadians(Math.PI)));
-
        addBlock(hand.setStateCommand(Hand.State.CLOSE), hand.setGamePieceModeCommand(GamePiece.CONE));
 
        addBlock(new TorqueSequenceRunner(new Score(Arm.State.TOP)));
