@@ -42,7 +42,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
         // INTAKE(new IndexerPose(6, -6.04762 - .3095), new IndexerPose(6, -6.04762 - .3095)),
         // PRIME(new IndexerPose(0, -2.1428 - .3095)),
 
-        INTAKE(new IndexerPose(4, 4, ROT_INTAKE), new IndexerPose(8, 9, ROT_INTAKE)),
+        INTAKE(new IndexerPose(3, 2, ROT_INTAKE), new IndexerPose(6, 9, ROT_INTAKE)),
         OUTAKE(new IndexerPose(-4, -4, ROT_INTAKE), new IndexerPose(-8, -9, ROT_INTAKE)),
         PRIME(new IndexerPose(0, 0, ROT_PRIME)),
         UP(new IndexerPose(0, 0, ROT_UP));
@@ -59,7 +59,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
 
         public IndexerPose get() { return hand.isCubeMode() ? cubePose : conePose; }
     }
-    private static final double ROT_INTAKE = -11;
+    private static final double ROT_INTAKE = -13;
     private static final double ROT_PRIME = -7;
     private static final double ROT_UP = 0;
 
@@ -134,11 +134,11 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
         final double rollerSlowdown = ROLLER_SLOWDOWN * TorqueMath.constrain(drivebase.inputSpeeds.getVelocityMagnitude(), 1, Drivebase.MAX_VELOCITY);
 
         double topRollerVolts = activeState.get().topRollerVolts;
-        if (hand.isConeMode()) topRollerVolts /= rollerSlowdown;
+        // if (hand.isCubeMode()) topRollerVolts /= rollerSlowdown;
         topRollers.setVolts(topRollerVolts);
 
         double bottomRollerVolts = -activeState.get().bottomRollerVolts;
-        if (hand.isConeMode()) bottomRollerVolts /= rollerSlowdown;
+        // if (hand.isCubeMode()) bottomRollerVolts /= rollerSlowdown;
         bottomRollers.setVolts(bottomRollerVolts);
 
         SmartDashboard.putNumber("intake::requestedRotaryPose", activeState.get().rotaryPose);

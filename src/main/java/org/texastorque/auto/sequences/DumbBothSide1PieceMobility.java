@@ -22,14 +22,13 @@ import edu.wpi.first.math.geometry.Rotation2d;
 public final class DumbBothSide1PieceMobility extends TorqueSequence implements Subsystems {
     public DumbBothSide1PieceMobility() {
         addBlock(new TorqueExecute(() -> drivebase.updateWithTags = false));
-        // Hack - not needed w/ april tags
-        addBlock(new TorqueExecute(() -> drivebase.updateWithTags = false));
-        drivebase.resetPose(new Pose2d(0, 0, Rotation2d.fromRadians(Math.PI)));
+
+        drivebase.resetPose(new Pose2d(0, 0, Rotation2d.fromRadians(Math.PI))); // not needed
 
         addBlock(hand.setStateCommand(Hand.State.CLOSE), hand.setGamePieceModeCommand(GamePiece.CONE));
 
         addBlock(new TorqueSequenceRunner(new Score(Arm.State.TOP)));
 
-        addBlock(new FollowEventPath("origin-mobility", 1.5, 3.5));
+        addBlock(new FollowEventPath("origin-mobility", 2.5, 3.5));
     }
 }

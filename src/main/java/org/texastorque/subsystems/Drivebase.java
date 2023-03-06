@@ -50,7 +50,8 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         ROBOT_RELATIVE(null),
         ALIGN(FIELD_RELATIVE),
         ZERO(FIELD_RELATIVE),
-        BALANCE(FIELD_RELATIVE);
+        BALANCE(FIELD_RELATIVE),
+        XF(FIELD_RELATIVE);
 
         public final State parent;
 
@@ -227,6 +228,8 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
         if (state == State.ZERO) {
             zeroModules();
+        } else if (state == State.XF) {
+            xFactor();
         } else {
             if (arm.isWantingHighCOG())
                 speedSetting = SpeedSetting.SLOW;
@@ -327,6 +330,13 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         fr.setDesiredState(new SwerveModuleState(0, swerveStates[1].angle));
         bl.setDesiredState(new SwerveModuleState(0, swerveStates[2].angle));
         br.setDesiredState(new SwerveModuleState(0, swerveStates[3].angle));
+    }
+
+    private void xFactor() {
+        fl.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(45)));
+        fr.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(90 + 45)));
+        bl.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(90 + 45)));
+        br.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(45)));
     }
 
     private void calculateTeleop() {

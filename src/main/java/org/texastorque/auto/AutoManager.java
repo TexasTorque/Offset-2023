@@ -10,7 +10,7 @@ package org.texastorque.auto;
 import org.texastorque.auto.sequences.DumbBothSide1PieceMobility;
 import org.texastorque.auto.sequences.DumbBumpySide1PieceEngage;
 import org.texastorque.auto.sequences.DumbFlatSide1PieceEngage;
-import org.texastorque.auto.sequences.DumbMiddleSide1PieceEngagel;
+import org.texastorque.auto.sequences.DumbMiddleSide1PieceEngage;
 import org.texastorque.auto.sequences.FlatSide2PieceEngage;
 import org.texastorque.torquelib.auto.TorqueAutoManager;
 
@@ -34,7 +34,7 @@ public final class AutoManager extends TorqueAutoManager {
         // addSequence(new FlatSide3Piece());
         // addSequence(new MiddleSide1PieceLevel());
         addSequence(new DumbBothSide1PieceMobility());
-        addSequence(new DumbMiddleSide1PieceEngagel());
+        addSequence(new DumbMiddleSide1PieceEngage());
         addSequence(new DumbFlatSide1PieceEngage());
         addSequence(new DumbBumpySide1PieceEngage());
 

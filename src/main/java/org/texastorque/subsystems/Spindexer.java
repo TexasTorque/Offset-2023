@@ -18,7 +18,7 @@ import io.github.oblarg.oblog.annotations.Log;
 
 public final class Spindexer extends TorqueSubsystem implements Subsystems {
     public static enum State {
-        SLOW_CW(2), FAST_CW(8), SLOW_CCW(-2), FAST_CCW(-8), OFF(0);
+        SLOW_CW(2), FAST_CW(9), SLOW_CCW(-2), FAST_CCW(-9), OFF(0), INTAKE(4);
 
         public final double volts;
 
@@ -59,7 +59,7 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
     @Override
     public final void update(final TorqueMode mode) {
         if (intake.isState(Intake.State.INTAKE) && hand.isConeMode())
-            state = State.FAST_CW;
+            state = State.INTAKE;
 
         turntable.setVolts(state.volts);
         if (mode.isTeleop())

@@ -19,7 +19,6 @@ import org.texastorque.torquelib.auto.commands.TorqueSequenceRunner;
 
 public final class DumbBumpySide1PieceEngage extends TorqueSequence implements Subsystems {
     public DumbBumpySide1PieceEngage() {
-        // Hack - not needed w/ april tags
         addBlock(new TorqueExecute(() -> drivebase.updateWithTags = false));
         
         addBlock(hand.setStateCommand(Hand.State.CLOSE), hand.setGamePieceModeCommand(GamePiece.CONE));

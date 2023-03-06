@@ -20,12 +20,11 @@ import org.texastorque.torquelib.auto.commands.TorqueSequenceRunner;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 
-public final class DumbMiddleSide1PieceEngagel extends TorqueSequence implements Subsystems {
-    public DumbMiddleSide1PieceEngagel() {
-        // Hack - not needed w/ april tags
+public final class DumbMiddleSide1PieceEngage extends TorqueSequence implements Subsystems {
+    public DumbMiddleSide1PieceEngage() {
         addBlock(new TorqueExecute(() -> drivebase.updateWithTags = false));
         
-        drivebase.resetPose(new Pose2d(0, 0, Rotation2d.fromRadians(Math.PI)));
+        drivebase.resetPose(new Pose2d(0, 0, Rotation2d.fromRadians(Math.PI))); // not needed
 
         addBlock(hand.setStateCommand(Hand.State.CLOSE), hand.setGamePieceModeCommand(GamePiece.CONE));
 
