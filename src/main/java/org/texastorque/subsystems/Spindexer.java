@@ -18,7 +18,7 @@ import io.github.oblarg.oblog.annotations.Log;
 
 public final class Spindexer extends TorqueSubsystem implements Subsystems {
     public static enum State {
-        SLOW_CW(2), FAST_CW(9), SLOW_CCW(-2), FAST_CCW(-9), OFF(0), INTAKE(4);
+        SLOW_CW(2), FAST_CW(9), SLOW_CCW(-2), FAST_CCW(-9), OFF(0), INTAKE(0);
 
         public final double volts;
 
