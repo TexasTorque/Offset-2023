@@ -58,6 +58,10 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
                 new ArmPose(5, Rotation2d.fromDegrees(256)),
                 new ArmPose(.238, Rotation2d.fromDegrees(249))
         ),
+        AUTOGRAB(
+                new ArmPose(5, Rotation2d.fromDegrees(268)),
+                new ArmPose(.238, Rotation2d.fromDegrees(249))
+        ),
         INDEX(
                 new ArmPose(18, Rotation2d.fromDegrees(215)),
                 new ArmPose(18, Rotation2d.fromDegrees(240))
@@ -65,7 +69,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         WAYPOINT(new ArmPose(0.45, Rotation2d.fromDegrees(250))), //unused
         STOWED(new ArmPose(8, Rotation2d.fromDegrees(175))),
         GRABBED(STOWED),
-        SHELF(new ArmPose(40, Rotation2d.fromDegrees(0))),            
+        SHELF(new ArmPose(0, Rotation2d.fromDegrees(220))),            
         MID(
                 new ArmPose(0, Rotation2d.fromDegrees(0)), 
                 new ArmPose(10, Rotation2d.fromDegrees(10))
@@ -170,7 +174,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     public boolean isPerformingHandoff() {
-        return activeState == State.GRAB || activeState == State.INDEX;
+        return activeState == State.GRAB || activeState == State.INDEX || activeState == State.AUTOGRAB;
     }
 
     @Log.BooleanBox
@@ -227,7 +231,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     public boolean isAtDesiredPose() { return activeState.get().atPose(realElevatorPose, realRotaryPose); }
 
     public boolean isWantingOpenClaw() {
-        return (desiredState == State.INDEX && !indexTimeout.get());// || desiredState == State.GRAB;
+        return (desiredState == State.INDEX && !indexTimeout.get());
     }
 
     public boolean isWantGrabbyClaw() {
@@ -256,6 +260,9 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         if (grabTimeout.get()) {
             activeState = State.GRAB;
         }
+
+        if (mode.isAuto() && activeState == State.GRAB)
+            activeState = State.AUTOGRAB;
 
         calculateElevator();
         calculateRotary();

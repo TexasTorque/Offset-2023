@@ -34,10 +34,9 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
     }
 
     public static enum State {
-        GRAB(2.97),
-        BIG(2.97),
+        GRAB(3.3),
         OPEN(2.97),
-        CLOSE(3.9);
+        CLOSE(4);
 
         public final double clawSetpoint;
 
@@ -144,10 +143,9 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
         if (arm.isWantingOpenClaw())
             activeState = State.OPEN;
         if (arm.isWantGrabbyClaw())
+            activeState = State.OPEN;
+        if (arm.isState(Arm.State.SHELF))
             activeState = State.GRAB;
-        if (activeState == State.OPEN && arm.isWantingScoringPose()) {
-            activeState = State.BIG;
-        }
 
         SmartDashboard.putNumber("claw::requestedPose", activeState.clawSetpoint);
         SmartDashboard.putNumber("Claw Encoder", claw.getPosition());
