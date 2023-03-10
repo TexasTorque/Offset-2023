@@ -42,7 +42,9 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
         // INTAKE(new IndexerPose(6, -6.04762 - .3095), new IndexerPose(6, -6.04762 - .3095)),
         // PRIME(new IndexerPose(0, -2.1428 - .3095)),
 
-        INTAKE(new IndexerPose(3, 2, ROT_INTAKE), new IndexerPose(6, 9, ROT_INTAKE)),
+        // cube cone
+        INTAKE(new IndexerPose(6, 6, ROT_INTAKE), new IndexerPose(9, 12, ROT_INTAKE)),
+        AUTOINTAKE(new IndexerPose(3, 3, ROT_INTAKE), new IndexerPose(9, 12, ROT_INTAKE)),
         OUTAKE(new IndexerPose(-4, -4, ROT_INTAKE), new IndexerPose(-8, -9, ROT_INTAKE)),
         PRIME(new IndexerPose(0, 0, ROT_PRIME)),
         UP(new IndexerPose(0, 0, ROT_UP));
@@ -127,6 +129,9 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
         if (desiredState == State.UP && arm.isPerformingHandoff())
             activeState = State.PRIME;
 
+        if (activeState == State.INTAKE)
+            activeState = State.AUTOINTAKE;
+
         SmartDashboard.putNumber("indexer::rotaryPose", rotary.getPosition());
         SmartDashboard.putNumber("indexer::topRollersPose", topRollers.getPosition());
         SmartDashboard.putNumber("indexer::botRollersPose", bottomRollers.getPosition());
@@ -136,10 +141,12 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
         double topRollerVolts = activeState.get().topRollerVolts;
         // if (hand.isCubeMode()) topRollerVolts /= rollerSlowdown;
         topRollers.setVolts(topRollerVolts);
+        SmartDashboard.putNumber("intake::topRollersSpeed", topRollers.getVelocity());
 
         double bottomRollerVolts = -activeState.get().bottomRollerVolts;
         // if (hand.isCubeMode()) bottomRollerVolts /= rollerSlowdown;
         bottomRollers.setVolts(bottomRollerVolts);
+        SmartDashboard.putNumber("intake::bottomRollersSpeed", bottomRollers.getVelocity());
 
         SmartDashboard.putNumber("intake::requestedRotaryPose", activeState.get().rotaryPose);
         double requestedRotaryVolts = TorqueMath.constrain(rotaryPoseController.calculate(realRotaryPose, activeState.get().rotaryPose), ROTARY_MAX_VOLTS);
