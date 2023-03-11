@@ -60,8 +60,12 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         ),
         AUTOGRAB(
                 new ArmPose(5, Rotation2d.fromDegrees(268)),
-                new ArmPose(.238, Rotation2d.fromDegrees(249))
+                new ArmPose(0, Rotation2d.fromDegrees(180))
         ),
+        AUTOINDEX(
+                new ArmPose(5, Rotation2d.fromDegrees(250)),
+                new ArmPose(0, Rotation2d.fromDegrees(180))
+        ), 
         INDEX(
                 new ArmPose(18, Rotation2d.fromDegrees(215)),
                 new ArmPose(18, Rotation2d.fromDegrees(240))
