@@ -96,13 +96,15 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
      */
     private static final Vector<N3> VISION_STDS = VecBuilder.fill(0.1, 0.1, Units.degreesToRadians(5));
 
+    // (forward from center, left from center, up from center)
+
     private static final Transform3d LEFT_CAMERA_TO_CENTER =
-            new Transform3d(new Translation3d(Units.inchesToMeters(10.5), Units.inchesToMeters(7.5), Units.inchesToMeters(32.5625)),
-                    new Rotation3d(0, 0, 0));
+            new Transform3d(new Translation3d(Units.inchesToMeters(2.623), Units.inchesToMeters(5.781), Units.inchesToMeters(44.052)),
+                    new Rotation3d(Units.degreesToRadians(-25), Units.degreesToRadians(0), Units.degreesToRadians(35.895)));
 
     private static final Transform3d RIGHT_CAMERA_TO_CENTER =
-            new Transform3d(new Translation3d(Units.inchesToMeters(8.5), -Units.inchesToMeters(7.5), Units.inchesToMeters(21.5)), 
-                    new Rotation3d(0, 0, 0));
+            new Transform3d(new Translation3d(Units.inchesToMeters(3.224), Units.inchesToMeters(12.890), Units.inchesToMeters(44.052)), 
+                    new Rotation3d(Units.degreesToRadians(-25), Units.degreesToRadians(0), Units.degreesToRadians(-35.895)));
 
     public static SwerveModulePosition invertSwerveModuleDistance(final SwerveModulePosition pose) {
         return new SwerveModulePosition(-pose.distanceMeters, pose.angle);
@@ -308,7 +310,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
     private void updateFeedback() {
         if (updateWithTags || DriverStation.isTeleop()) {
-            cameraLeft.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
+            // cameraLeft.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
             cameraRight.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
         }
 

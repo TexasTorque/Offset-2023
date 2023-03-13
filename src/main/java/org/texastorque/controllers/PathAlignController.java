@@ -12,7 +12,6 @@ import java.util.function.Supplier;
 
 import org.texastorque.Field;
 import org.texastorque.Field.AprilTagType;
-import org.texastorque.auto.commands.FollowEventPath;
 import org.texastorque.torquelib.control.TorquePID;
 import org.texastorque.torquelib.swerve.TorqueSwerveSpeeds;
 
@@ -32,13 +31,14 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public final class PathAlignController extends AbstractController<Optional<TorqueSwerveSpeeds>> {
     public static enum TranslationState {
         NONE(0, 0),
         GRID_CENTER(ALIGN_X_OFFSET_GRID, 0),
-        GRID_RIGHT(ALIGN_X_OFFSET_GRID, -Units.inchesToMeters(26)),
-        GRID_LEFT(ALIGN_X_OFFSET_GRID, Units.inchesToMeters(28)),
+        GRID_RIGHT(ALIGN_X_OFFSET_GRID, -Units.inchesToMeters(21)),
+        GRID_LEFT(ALIGN_X_OFFSET_GRID, Units.inchesToMeters(26.5)),
         LOAD_ZONE_RIGHT(ALIGN_X_OFFSET_LOAD_ZONE, -Units.inchesToMeters(30)),
         LOAD_ZONE_LEFT(ALIGN_X_OFFSET_LOAD_ZONE, Units.inchesToMeters(30));
 
@@ -77,12 +77,13 @@ public final class PathAlignController extends AbstractController<Optional<Torqu
         public int getID() { return DriverStation.getAlliance() == DriverStation.Alliance.Blue ? blueID : redID; }
     }
 
-    public static final PathConstraints MAX_PATH_CONSTRAINTS = new PathConstraints(FollowEventPath.MAX_VELOCITY_PATH, FollowEventPath.MAX_ACCELERATION_PATH);
+    // public static final PathConstraints MAX_PATH_CONSTRAINTS = new PathConstraints(FollowEventPath.MAX_VELOCITY_PATH, FollowEventPath.MAX_ACCELERATION_PATH);
+    public static final PathConstraints MAX_PATH_CONSTRAINTS = new PathConstraints(2, 2);
 
     private static final double DISTANCE_TOLERANCE_TIGHT = Units.inchesToMeters(1);
     private static final double DISTANCE_TOLERANCE_LOOSE = Units.inchesToMeters(3);
 
-    public static double ALIGN_X_OFFSET_GRID = (15.589758 - 14.72) - Units.inchesToMeters(4);
+    public static double ALIGN_X_OFFSET_GRID = (15.589758 - 14.72) + Units.inchesToMeters(0);
 
     public static double ALIGN_X_OFFSET_LOAD_ZONE = 1;
 
@@ -206,10 +207,13 @@ public final class PathAlignController extends AbstractController<Optional<Torqu
 
         // https://github.com/Spectrum3847/2023-X-Ray/blob/78bb093b7675331c04ca4c66c1ebbebec51e0383/src/main/java/frc/robot/trajectories/commands/GeneratePath.java#L58
 
-        final PathPoint startPoint = new PathPoint(current.getTranslation(), initialHeading, current.getRotation());//, initialSpeed);
+        SmartDashboard.putNumber("__heading", initialHeading.getDegrees());
+        SmartDashboard.putNumber("__speed", initialSpeed);
+
+        final PathPoint startPoint = new PathPoint(current.getTranslation(), Rotation2d.fromRadians(Math.PI), current.getRotation(), initialSpeed);
         final PathPoint midPoint =
                 new PathPoint(new Translation2d(goalPose.getX() + offset, goalPose.getY()), Rotation2d.fromRadians(Math.PI), Rotation2d.fromRadians(Math.PI));
-        final PathPoint endPoint = new PathPoint(goalPose.getTranslation(), Rotation2d.fromRadians(Math.PI), Rotation2d.fromRadians(Math.PI), 0);
+        final PathPoint endPoint = new PathPoint(goalPose.getTranslation(), Rotation2d.fromRadians(Math.PI), Rotation2d.fromRadians(Math.PI));//, 0);
 
         trajectory = PathPlanner.generatePath(MAX_PATH_CONSTRAINTS, startPoint, midPoint, endPoint);
         
