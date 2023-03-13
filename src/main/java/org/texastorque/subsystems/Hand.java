@@ -135,6 +135,10 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
         gamePieceMode = GamePiece.CONE;
     }
 
+    public final boolean isClosedEnough() {
+        return realClawPose >= 3.8;
+    }
+
     @Override
     public final void update(final TorqueMode mode) {
         activeState = desiredState;
@@ -147,8 +151,6 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
         if (arm.isState(Arm.State.SHELF))
             activeState = State.GRAB;
 
-        SmartDashboard.putNumber("claw::requestedPose", activeState.clawSetpoint);
-        SmartDashboard.putNumber("Claw Encoder", claw.getPosition());
         double clawVolts = clawPoseController.calculate(realClawPose, activeState.clawSetpoint);
         SmartDashboard.putNumber("claw::requestedVolts", clawVolts);
         clawVolts = TorqueMath.constrain(clawVolts, MAX_CLAW_VOLTS);

@@ -6,6 +6,8 @@
  */
 package org.texastorque;
 
+import org.texastorque.controllers.PathAlignController.AlignState;
+import org.texastorque.controllers.PathAlignController.GridState;
 import org.texastorque.subsystems.Arm;
 import org.texastorque.subsystems.Drivebase;
 import org.texastorque.subsystems.Drivebase.SpeedSetting;
@@ -108,13 +110,13 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
         drivebase.isRotationLocked = toggleRotationLock.get();
 
-        // alignGridLeft.onTrue(() -> drivebase.setAlignState(AlignState.LEFT));
-        // alignGridCenter.onTrue(() -> drivebase.setAlignState(AlignState.CENTER));
-        // alignGridRight.onTrue(() -> drivebase.setAlignState(AlignState.RIGHT));
+        alignGridLeft.onTrue(() -> drivebase.setAlignState(AlignState.LEFT));
+        alignGridCenter.onTrue(() -> drivebase.setAlignState(AlignState.CENTER));
+        alignGridRight.onTrue(() -> drivebase.setAlignState(AlignState.RIGHT));
 
-        // gridOverrideLeft.onTrue(() -> drivebase.setGridOverride(GridState.LEFT));
-        // gridOverrideCenter.onTrue(() -> drivebase.setGridOverride(GridState.CENTER));
-        // gridOverrideRight.onTrue(() -> drivebase.setGridOverride(GridState.RIGHT));
+        gridOverrideLeft.onTrue(() -> drivebase.setGridOverride(GridState.LEFT));
+        gridOverrideCenter.onTrue(() -> drivebase.setGridOverride(GridState.CENTER));
+        gridOverrideRight.onTrue(() -> drivebase.setGridOverride(GridState.RIGHT));
 
         // autoLevel.onTrue(() -> drivebase.setState(Drivebase.State.BALANCE));
         xFactorToggle.onTrue(() -> drivebase.setState(Drivebase.State.XF));
