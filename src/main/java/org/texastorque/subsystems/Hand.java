@@ -148,7 +148,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
             activeState = State.OPEN;
         if (arm.isWantGrabbyClaw())
             activeState = State.OPEN;
-        if (arm.isState(Arm.State.SHELF))
+        if (activeState == State.OPEN && arm.isState(Arm.State.SHELF))
             activeState = State.GRAB;
 
         double clawVolts = clawPoseController.calculate(realClawPose, activeState.clawSetpoint);

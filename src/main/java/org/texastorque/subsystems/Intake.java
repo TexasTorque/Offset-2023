@@ -61,7 +61,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
 
         public IndexerPose get() { return hand.isCubeMode() ? cubePose : conePose; }
     }
-    private static final double ROT_INTAKE = -13;
+    private static final double ROT_INTAKE = -7; //13
     private static final double ROT_PRIME = -7;
     private static final double ROT_UP = 0;
 
@@ -144,6 +144,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
         // if (hand.isCubeMode()) bottomRollerVolts /= rollerSlowdown;
         bottomRollers.setVolts(bottomRollerVolts);
         SmartDashboard.putNumber("intake::bottomRollersSpeed", bottomRollers.getVelocity());
+        SmartDashboard.putNumber("intake::bottomRollerCurrent", bottomRollers.getCurrent());
 
         SmartDashboard.putNumber("intake::requestedRotaryPose", activeState.get().rotaryPose);
         double requestedRotaryVolts = TorqueMath.constrain(rotaryPoseController.calculate(realRotaryPose, activeState.get().rotaryPose), ROTARY_MAX_VOLTS);

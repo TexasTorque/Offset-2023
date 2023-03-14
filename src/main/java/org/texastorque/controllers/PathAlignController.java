@@ -36,11 +36,11 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 public final class PathAlignController extends AbstractController<Optional<TorqueSwerveSpeeds>> {
     public static enum TranslationState {
         NONE(0, 0),
-        GRID_CENTER(ALIGN_X_OFFSET_GRID, 0),
-        GRID_RIGHT(ALIGN_X_OFFSET_GRID, -Units.inchesToMeters(21)),
-        GRID_LEFT(ALIGN_X_OFFSET_GRID, Units.inchesToMeters(26.5)),
-        LOAD_ZONE_RIGHT(ALIGN_X_OFFSET_LOAD_ZONE, -Units.inchesToMeters(30)),
-        LOAD_ZONE_LEFT(ALIGN_X_OFFSET_LOAD_ZONE, Units.inchesToMeters(30));
+        GRID_CENTER(ALIGN_X_OFFSET_GRID, -.15),
+        GRID_RIGHT(ALIGN_X_OFFSET_GRID, -(3.65 - 2.83)),
+        GRID_LEFT(ALIGN_X_OFFSET_GRID, (4.05 - 3.65)),
+        LOAD_ZONE_RIGHT(ALIGN_X_OFFSET_LOAD_ZONE, 0),
+        LOAD_ZONE_LEFT(ALIGN_X_OFFSET_LOAD_ZONE, 0);
 
         public Translation3d transl;
         private double x, y;

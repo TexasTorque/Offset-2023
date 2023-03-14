@@ -87,24 +87,24 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
      * model's state estimates less. This matrix is in the form [x, y, theta]ᵀ,
      * with units in meters and radians, then meters.
      */
-    private static final Vector<N3> STATE_STDS = VecBuilder.fill(0.05, 0.05, Units.degreesToRadians(20));
+    private static final Vector<N3> STATE_STDS = VecBuilder.fill(0.05, 0.05, Units.degreesToRadians(5));
 
     /**
      * Standard deviations of the vision measurements. Increase these numbers to
      * trust global measurements from vision less. This matrix is in the form
      * [x, y, theta]ᵀ, with units in meters and radians.
      */
-    private static final Vector<N3> VISION_STDS = VecBuilder.fill(0.1, 0.1, Units.degreesToRadians(5));
+    private static final Vector<N3> VISION_STDS = VecBuilder.fill(0.1, 0.1, Units.degreesToRadians(10));
 
     // (forward from center, left from center, up from center)
 
-    private static final Transform3d LEFT_CAMERA_TO_CENTER =
-            new Transform3d(new Translation3d(Units.inchesToMeters(2.623), Units.inchesToMeters(5.781), Units.inchesToMeters(44.052)),
-                    new Rotation3d(Units.degreesToRadians(-25), Units.degreesToRadians(0), Units.degreesToRadians(35.895)));
+    private static final Transform3d LEFT_CAMERA_TO_CENTER =//-12.803
+            new Transform3d(new Translation3d(Units.inchesToMeters(5.539), Units.inchesToMeters(-7.961), Units.inchesToMeters(43.3)),
+                    new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(0), Units.degreesToRadians(-35.895))); 
 
     private static final Transform3d RIGHT_CAMERA_TO_CENTER =
-            new Transform3d(new Translation3d(Units.inchesToMeters(3.224), Units.inchesToMeters(12.890), Units.inchesToMeters(44.052)), 
-                    new Rotation3d(Units.degreesToRadians(-25), Units.degreesToRadians(0), Units.degreesToRadians(-35.895)));
+            new Transform3d(new Translation3d(Units.inchesToMeters(5.464), Units.inchesToMeters(-7.961), Units.inchesToMeters(43.3)), 
+                    new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(0), Units.degreesToRadians(-35.895))); 
 
     public static SwerveModulePosition invertSwerveModuleDistance(final SwerveModulePosition pose) {
         return new SwerveModulePosition(-pose.distanceMeters, pose.angle);
@@ -158,9 +158,8 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
      * Constructor called on initialization.
      */
     private Drivebase() {
-        // Do this for each camera
-        cameraLeft = new TorqueVision("camera_left", Field.getCurrentFieldLayout(), LEFT_CAMERA_TO_CENTER);
-        cameraRight = new TorqueVision("camera_right", Field.getCurrentFieldLayout(), RIGHT_CAMERA_TO_CENTER);
+        cameraLeft = new TorqueVision("justus", Field.getCurrentFieldLayout(), LEFT_CAMERA_TO_CENTER);
+        cameraRight = new TorqueVision("justus", Field.getCurrentFieldLayout(), RIGHT_CAMERA_TO_CENTER);
 
         teleopOmegaController.enableContinuousInput(-Math.PI, Math.PI);
         lastRotationRadians = gyro.getRotation2d().getRadians();
