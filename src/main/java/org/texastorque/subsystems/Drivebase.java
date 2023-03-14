@@ -50,8 +50,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         ROBOT_RELATIVE(null),
         ALIGN(FIELD_RELATIVE),
         ZERO(FIELD_RELATIVE),
-        BALANCE(FIELD_RELATIVE),
-        XF(FIELD_RELATIVE);
+        BALANCE(FIELD_RELATIVE);
 
         public final State parent;
 
@@ -59,7 +58,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     }
 
     public enum SpeedSetting {
-        FAST(1.0), SLOW(.5);
+        FAST(.8), SLOW(.25);
 
         public final double speed;
         private SpeedSetting(final double speed) {
@@ -170,10 +169,15 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         config.maxAngularVelocity = MAX_ANGULAR_VELOCITY;
         config.maxAngularAcceleration = MAX_ANGULAR_ACCELERATION;
 
-        fl = new TorqueSwerveModule2022("Front Left", Ports.FL_MOD, -1.510968022048473 + Math.PI, config);
-        fr = new TorqueSwerveModule2022("Front Right", Ports.FR_MOD, 0.875901259481907, config);
-        bl = new TorqueSwerveModule2022("Back Left", Ports.BL_MOD, 2.147568762302399 + Math.PI, config);
-        br = new TorqueSwerveModule2022("Back Right", Ports.BR_MOD, -0.751661766563551, config);
+        // fl = new TorqueSwerveModule2022("Front Left", Ports.FL_MOD, 5.769290082156658, config);
+        // fr = new TorqueSwerveModule2022("Front Right", Ports.FR_MOD, 4.312011279165745, config);
+        // bl = new TorqueSwerveModule2022("Back Left", Ports.BL_MOD, 1.135143488645554, config);
+        // br = new TorqueSwerveModule2022("Back Right", Ports.BR_MOD, 5.186378560960293, config);
+
+        fl = new TorqueSwerveModule2022("Front Left", Ports.FL_MOD, -.53686679, config);
+        fr = new TorqueSwerveModule2022("Front Right", Ports.FR_MOD, 1.365240141749382+Math.PI, config);
+        bl = new TorqueSwerveModule2022("Back Left", Ports.BL_MOD, 1.135143488645554, config);
+        br = new TorqueSwerveModule2022("Back Right", Ports.BR_MOD, 2.069323200489386 + Math.PI, config);
 
         kinematics = new SwerveDriveKinematics(LOC_BL, LOC_BR, LOC_FL, LOC_FR);
 
@@ -184,7 +188,6 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     }
     public void setState(final State state) { this.state = state; }
     public State getState() { return requestedState; }
-
     public boolean isState(final State state) { return getState() == state; }
 
     public void setAlignState(final AlignState alignment) {
@@ -192,9 +195,9 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         alignmentController.setAlignment(alignment);
     }
 
-    public void setGridOverride(final GridState override) { alignmentController.setGridOverride(override); } 
+    public void setGridOverride(final GridState override) { alignmentController.setGridOverride(override); }
 
-    public final boolean isPathAlignDone() { return alignmentController.isDone(); }
+    public final boolean isPathAlignDone() { return alignmentController.isDone(); } 
 
     public final boolean isAutoLevelDone() { return autoLevelController.isDone(); }
 
@@ -217,9 +220,9 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     public SwerveModulePosition[] getModulePositions() {
         return new SwerveModulePosition[] {invertSwerveModuleDistance(fl.getPosition()), invertSwerveModuleDistance(fr.getPosition()),
                                            invertSwerveModuleDistance(bl.getPosition()), invertSwerveModuleDistance(br.getPosition())};
-    } 
+    }
 
-    public void convertToFieldRelative() { inputSpeeds = inputSpeeds.toFieldRelativeSpeeds(gyro.getHeadingCCW()); }
+    public void convertToFieldRelative() { inputSpeeds = inputSpeeds.toFieldRelativeSpeeds(gyro.getHeadingCCW()); } 
 
     @Override
     public final void update(final TorqueMode mode) {
@@ -228,8 +231,6 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
         if (state == State.ZERO) {
             zeroModules();
-        } else if (state == State.XF) {
-            xFactor();
         } else {
             if (arm.isWantingHighCOG())
                 speedSetting = SpeedSetting.SLOW;
@@ -307,7 +308,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     }
 
     private void updateFeedback() {
-        if (updateWithTags || DriverStation.isTeleop()) {
+        if (updateWithTags) {
             cameraLeft.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
             cameraRight.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
         }
@@ -330,13 +331,6 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         fr.setDesiredState(new SwerveModuleState(0, swerveStates[1].angle));
         bl.setDesiredState(new SwerveModuleState(0, swerveStates[2].angle));
         br.setDesiredState(new SwerveModuleState(0, swerveStates[3].angle));
-    }
-
-    private void xFactor() {
-        fl.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(45)));
-        fr.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(90 + 45)));
-        bl.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(90 + 45)));
-        br.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(45)));
     }
 
     private void calculateTeleop() {

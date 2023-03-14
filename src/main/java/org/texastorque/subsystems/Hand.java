@@ -34,10 +34,10 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
     }
 
     public static enum State {
-        GRAB(2.97),
-        BIG(2.97),
-        OPEN(2.97),
-        CLOSE(3.9);
+        GRAB(4.46),
+        BIG(4.46),
+        OPEN(4.46),
+        CLOSE(5.24);
 
         public final double clawSetpoint;
 
@@ -150,7 +150,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
         }
 
         SmartDashboard.putNumber("claw::requestedPose", activeState.clawSetpoint);
-        SmartDashboard.putNumber("Claw Encoder", claw.getPosition());
+        SmartDashboard.putNumber("Claw Encoder", clawEncoder.getPosition());
         double clawVolts = clawPoseController.calculate(realClawPose, activeState.clawSetpoint);
         SmartDashboard.putNumber("claw::requestedVolts", clawVolts);
         clawVolts = TorqueMath.constrain(clawVolts, MAX_CLAW_VOLTS);

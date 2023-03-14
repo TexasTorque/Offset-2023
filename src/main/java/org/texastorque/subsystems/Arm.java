@@ -53,22 +53,22 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     public static enum State {
         GRAB(
-                new ArmPose(5, Rotation2d.fromDegrees(256)),
-                new ArmPose(.238, Rotation2d.fromDegrees(249))),
+                new ArmPose(.15, Rotation2d.fromDegrees(250)),
+                new ArmPose(0, Rotation2d.fromDegrees(240))),
         INDEX(
-                new ArmPose(18, Rotation2d.fromDegrees(215)),
-                new ArmPose(18, Rotation2d.fromDegrees(240))),
-        WAYPOINT(new ArmPose(0.45, Rotation2d.fromDegrees(250))), // unused
-        STOWED(new ArmPose(8, Rotation2d.fromDegrees(175))),
+                new ArmPose(.4, Rotation2d.fromDegrees(230)),
+                new ArmPose(.4, Rotation2d.fromDegrees(242))),
+        WAYPOINT(new ArmPose(0.45, Rotation2d.fromDegrees(250))),
+        STOWED(new ArmPose(.2, Rotation2d.fromDegrees(175))),
         GRABBED(STOWED),
-        SHELF(new ArmPose(40, Rotation2d.fromDegrees(0))),
+        SHELF(new ArmPose(.55, Rotation2d.fromDegrees(0))),
         MID(
-                new ArmPose(0, Rotation2d.fromDegrees(0)),
-                new ArmPose(10, Rotation2d.fromDegrees(10))),
+                new ArmPose(.1, Rotation2d.fromDegrees(0)),
+                new ArmPose(.275, Rotation2d.fromDegrees(5))),
         TOP(
-                new ArmPose(30, Rotation2d.fromDegrees(0)),
-                new ArmPose(43, Rotation2d.fromDegrees(10))),
-        LOW(new ArmPose(.6, Rotation2d.fromDegrees(0)));
+                new ArmPose(1.3, Rotation2d.fromDegrees(0)),
+                new ArmPose(1.3, Rotation2d.fromDegrees(5))),
+        LOW(new ArmPose(.55, Rotation2d.fromDegrees(0)));
 
         public final ArmPose cubePose;
         public final ArmPose conePose;
@@ -91,7 +91,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         }
     }
 
-    private static final double ROTARY_ENCODER_OFFSET = -Units.degreesToRadians(76 + 31),
+    private static final double ROTARY_ENCODER_OFFSET = -Units.degreesToRadians(76 + 31 + 31),
             ELEVATOR_MAX_VOLTS_UP = 12,
             ELEVATOR_MAX_VOLTS_DOWN = 7,
             ROTARY_MAX_VOLTS = 12,
@@ -119,15 +119,13 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     public Rotation2d realRotaryPose = Rotation2d.fromDegrees(0);
     private final TorqueNEO elevator = new TorqueNEO(Ports.ARM_ELEVATOR_MOTOR);
     @Config
-    public final PIDController elevatorPoseController = new PIDController(1.13, 0, 0);
-
-    private final ElevatorFeedforward elevatorPoseFeedForward = new ElevatorFeedforward(0.072294, 0.28979, 0.12498,
-            0.0019267);
+    public final PIDController elevatorPoseController = new PIDController(15, 0, 0);
+        private final ElevatorFeedforward elevatorPoseFeedForward = new ElevatorFeedforward(0, 0, 0);
 
     private final TorqueNEO rotary = new TorqueNEO(Ports.ARM_ROTARY_MOTOR);
 
     @Config
-    public final PIDController rotaryPoseController = new PIDController(1.89, 0, 0);
+    public final PIDController rotaryPoseController = new PIDController(.5 * Math.PI, 0 * Math.PI, 0 * Math.PI);
 
     public final ArmFeedforward rotaryFeedforward = new ArmFeedforward(0.18362, 0.22356, 4, 4.4775);
 
@@ -148,6 +146,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         elevator.setCurrentLimit(30);
         elevator.setVoltageCompensation(12.6);
         elevator.setBreakMode(true);
+        elevator.invertMotor(true);
         elevator.burnFlash();
 
         rotary.setCurrentLimit(60);
@@ -295,7 +294,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         elevatorVolts = TorqueMath.constrain(elevatorVolts,
                 isComingDown ? ELEVATOR_MAX_VOLTS_UP : ELEVATOR_MAX_VOLTS_DOWN);
         elevatorVolts = TorqueMath.linearConstraint(elevatorVolts, realElevatorPose, ELEVATOR_MIN, ELEVATOR_MAX);
-       elevator.setVolts(-elevatorVolts);
+        elevator.setVolts(elevatorVolts);
         SmartDashboard.putNumber("arm::elevatorCurrent", elevator.getCurrent());
         SmartDashboard.putNumber("arm::elevatorRequestedVolts", elevatorVolts);
     }
