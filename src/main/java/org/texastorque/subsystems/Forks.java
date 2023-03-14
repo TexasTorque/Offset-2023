@@ -13,7 +13,6 @@ import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.control.TorquePID;
 import org.texastorque.torquelib.motors.TorqueNEO;
 import org.texastorque.torquelib.motors.TorqueNEO.SmartMotionProfile;
-
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import io.github.oblarg.oblog.annotations.Log;
 
@@ -28,7 +27,6 @@ public final class Forks extends TorqueSubsystem implements Subsystems {
     private final TorqueNEO rotary = new TorqueNEO(Ports.FORKS_MOTOR);
 
     @Log.ToString
-    // private TorqueDirection direction = TorqueDirection.OFF;
     private double direction = 0;
 
     private final double encoderToOutputGearing = 302.4;
@@ -46,9 +44,6 @@ public final class Forks extends TorqueSubsystem implements Subsystems {
         rotary.burnFlash();
     }
 
-    // public final void setDirection(final TorqueDirection direction) {
-    //     this.direction = direction;
-    // }
     public final void setDirection(final double direction) {
         this.direction = direction;
     }
@@ -59,7 +54,6 @@ public final class Forks extends TorqueSubsystem implements Subsystems {
     
     @Override
     public final void update(final TorqueMode mode) {
-        // rotary.setVolts( direction * ROTARY_MAX_VOLTS);
         rotary.setSmartVelocity(maxVelocity * direction);
         SmartDashboard.putNumber("forks::current", rotary.getCurrent());
         SmartDashboard.putNumber("forks::direction", direction);
