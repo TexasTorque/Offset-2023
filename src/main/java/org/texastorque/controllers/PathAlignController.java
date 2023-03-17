@@ -37,7 +37,7 @@ public final class PathAlignController extends AbstractController<Optional<Torqu
         NONE(0, 0),
         GRID_CENTER(ALIGN_X_OFFSET_GRID, -.15),
         GRID_RIGHT(ALIGN_X_OFFSET_GRID, -(3.65 - 2.75)),
-        GRID_LEFT(ALIGN_X_OFFSET_GRID, (4.05 - 3.75)),
+        GRID_LEFT(ALIGN_X_OFFSET_GRID, (4.05 - 3.75 - .076)),
         LOAD_ZONE(2.25, -1.25);
 
         public Translation3d transl;
@@ -85,14 +85,14 @@ public final class PathAlignController extends AbstractController<Optional<Torqu
     private static final double DISTANCE_TOLERANCE_TIGHT = Units.inchesToMeters(1);
     private static final double DISTANCE_TOLERANCE_LOOSE = Units.inchesToMeters(3);
 
-    public static double ALIGN_X_OFFSET_GRID = (15.589758 - 14.72) + Units.inchesToMeters(0);
+    public static double ALIGN_X_OFFSET_GRID = (15.589758 - 14.72) + Units.inchesToMeters(3);
 
     public static double ALIGN_X_OFFSET_LOAD_ZONE = 1;
 
     private final PIDController xController = TorquePID.create(2).build();
     private final PIDController yController = TorquePID.create(5).build();
 
-    private final PIDController thetaController = new PIDController(1.5 * Math.PI, 0, 0);
+    private final PIDController thetaController = new PIDController(2 * Math.PI, 0, 0);
     private final PPHolonomicDriveController controller;
 
     private AlignState alignment = AlignState.NONE;

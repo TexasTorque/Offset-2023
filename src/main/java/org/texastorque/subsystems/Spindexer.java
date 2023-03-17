@@ -124,7 +124,7 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
             } else if (autoSpindexState == AutoState.STOP) {
                 if (Timer.getFPGATimestamp() - grabPoseTimer > 0.5) {
                     arm.setState(Arm.State.GRABBED);
-                }
+                 }
             }
         } else {
             initAutoSpindex = false;
@@ -133,7 +133,7 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
 
         turntable.setVolts(autoSpindexState == AutoState.SECOND_CLICK ? pidVolts : state.volts);
 
-        if (!driverWantsAutoSpindex)
+        if (!driverWantsAutoSpindex || autoSpindexState == AutoState.STOP)
             state = State.OFF;
     }
 }
