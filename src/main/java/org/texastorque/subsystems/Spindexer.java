@@ -58,8 +58,8 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
     
     @Override
     public final void update(final TorqueMode mode) {
-        if (intake.isState(Intake.State.INTAKE) && hand.isConeMode())
-            state = State.INTAKE;
+        // if (intake.isState(Intake.State.INTAKE) && hand.isConeMode())
+        //     state = State.INTAKE;
 
         turntable.setVolts(state.volts);
         if (mode.isTeleop())

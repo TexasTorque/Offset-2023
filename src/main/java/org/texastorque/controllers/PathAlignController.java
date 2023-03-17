@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import org.texastorque.Debug;
 import org.texastorque.Field;
 import org.texastorque.Field.AprilTagType;
 import org.texastorque.torquelib.control.TorquePID;
@@ -31,16 +32,15 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public final class PathAlignController extends AbstractController<Optional<TorqueSwerveSpeeds>> {
     public static enum TranslationState {
         NONE(0, 0),
-        GRID_CENTER(ALIGN_X_OFFSET_GRID, 0),
-        GRID_RIGHT(ALIGN_X_OFFSET_GRID, -Units.inchesToMeters(21)),
-        GRID_LEFT(ALIGN_X_OFFSET_GRID, Units.inchesToMeters(26.5)),
-        LOAD_ZONE_RIGHT(ALIGN_X_OFFSET_LOAD_ZONE, -Units.inchesToMeters(30)),
-        LOAD_ZONE_LEFT(ALIGN_X_OFFSET_LOAD_ZONE, Units.inchesToMeters(30));
+        GRID_CENTER(ALIGN_X_OFFSET_GRID, -.15),
+        GRID_RIGHT(ALIGN_X_OFFSET_GRID, -(3.65 - 2.83)),
+        GRID_LEFT(ALIGN_X_OFFSET_GRID, (4.05 - 3.65)),
+        LOAD_ZONE_RIGHT(ALIGN_X_OFFSET_LOAD_ZONE, 0),
+        LOAD_ZONE_LEFT(ALIGN_X_OFFSET_LOAD_ZONE, 0);
 
         public Translation3d transl;
         private double x, y;
@@ -104,16 +104,16 @@ public final class PathAlignController extends AbstractController<Optional<Torqu
     private PathPlannerTrajectory trajectory;
 
     private final Timer timer = new Timer();
-    final double LAST_LEG_X_OFFSET_MAX = Units.inchesToMeters(12);
+    final double LAST_LEG_X_OFFSET_MAX = Units.inchesToMeters(20);
 
-    final double LAST_LEG_X_OFFSET_MIN = Units.inchesToMeters(3);
+    final double LAST_LEG_X_OFFSET_MIN = Units.inchesToMeters(14);
 
     private Pose2d goalPose = new Pose2d();
 
     public PathAlignController(final Supplier<Pose2d> poseSupplier, final Supplier<TorqueSwerveSpeeds> speedsSupplier) {
         xController.setTolerance(0.01);
         yController.setTolerance(0.01);
-        thetaController.setTolerance(Units.degreesToRadians(2));
+        thetaController.setTolerance(Units.degreesToRadians(.5));
         thetaController.enableContinuousInput(-Math.PI, Math.PI);
 
         controller = new PPHolonomicDriveController(xController, yController, thetaController);
@@ -207,8 +207,8 @@ public final class PathAlignController extends AbstractController<Optional<Torqu
 
         // https://github.com/Spectrum3847/2023-X-Ray/blob/78bb093b7675331c04ca4c66c1ebbebec51e0383/src/main/java/frc/robot/trajectories/commands/GeneratePath.java#L58
 
-        SmartDashboard.putNumber("__heading", initialHeading.getDegrees());
-        SmartDashboard.putNumber("__speed", initialSpeed);
+        Debug.log("__heading", initialHeading.getDegrees());
+        Debug.log("__speed", initialSpeed);
 
         final PathPoint startPoint = new PathPoint(current.getTranslation(), Rotation2d.fromRadians(Math.PI), current.getRotation(), initialSpeed);
         final PathPoint midPoint =
