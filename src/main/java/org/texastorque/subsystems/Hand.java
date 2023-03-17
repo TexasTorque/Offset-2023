@@ -6,6 +6,7 @@
  */
 package org.texastorque.subsystems;
 
+import org.texastorque.Debug;
 import org.texastorque.Input;
 import org.texastorque.Ports;
 import org.texastorque.Subsystems;
@@ -23,7 +24,6 @@ import com.ctre.phoenix.sensors.SensorInitializationStrategy;
 import com.ctre.phoenix.sensors.SensorTimeBase;
 
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
 
@@ -152,7 +152,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
             activeState = State.GRAB;
 
         double clawVolts = clawPoseController.calculate(realClawPose, activeState.clawSetpoint);
-        SmartDashboard.putNumber("claw::requestedVolts", clawVolts);
+        Debug.log("requestedVolts", clawVolts);
         clawVolts = TorqueMath.constrain(clawVolts, MAX_CLAW_VOLTS);
         claw.setVolts(clawVolts);
 

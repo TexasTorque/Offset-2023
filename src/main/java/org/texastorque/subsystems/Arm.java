@@ -6,6 +6,7 @@
  */
 package org.texastorque.subsystems;
 
+import org.texastorque.Debug;
 import org.texastorque.Ports;
 import org.texastorque.Subsystems;
 import org.texastorque.torquelib.auto.TorqueCommand;
@@ -27,7 +28,6 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
 
@@ -322,8 +322,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         elevatorVolts = TorqueMath.constrain(elevatorVolts, isComingDown() ? ELEVATOR_MAX_VOLTS_UP : ELEVATOR_MAX_VOLTS_DOWN);
         elevatorVolts = TorqueMath.linearConstraint(elevatorVolts, realElevatorPose, ELEVATOR_MIN, ELEVATOR_MAX); 
         elevator.setVolts(elevatorVolts);
-        SmartDashboard.putNumber("arm::elevatorCurrent", elevator.getCurrent());
-        SmartDashboard.putNumber("arm::elevatorRequestedVolts", elevatorVolts);
+        Debug.log("elevatorCurrent", elevator.getCurrent());
+        Debug.log("elevatorRequestedVolts", elevatorVolts);
     }
 
     // omega with respect to delta x
@@ -348,8 +348,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         rotaryVolts = TorqueMath.constrain(rotaryVolts, ROTARY_MAX_VOLTS);
         // rotary.setVolts(rotaryEncoder.isCANResponsive() && !isState(Arm.State.LOW) ? rotaryVolts : 0);
         rotary.setVolts(rotaryVolts);
-        SmartDashboard.putNumber("arm::rotaryVolts", rotaryVolts);
-        SmartDashboard.putNumber("arm::elevatorCurrent", rotary.getCurrent());
+        Debug.log("rotaryVolts", rotaryVolts);
+        Debug.log("elevatorCurrent", rotary.getCurrent());
     }
 
     // omega with respect to delta theta (radians)

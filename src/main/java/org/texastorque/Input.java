@@ -56,9 +56,9 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         slowModeToggle = new TorqueToggleSupplier(driver::isLeftBumperDown);
         xFactorToggle = new TorqueToggleSupplier(driver::isXButtonDown);
 
-        alignGridLeft = new TorqueBoolSupplier(driver::isLeftTriggerDown);
-        alignGridCenter = new TorqueBoolSupplier(driver::isRightBumperDown);
-        alignGridRight = new TorqueBoolSupplier(driver::isRightTriggerDown);
+        alignGridLeft = new TorqueBoolSupplier(driver::isLeftBumperDown);
+        alignGridCenter = new TorqueBoolSupplier(() -> false);
+        alignGridRight = new TorqueBoolSupplier(driver::isRightBumperDown);
 
         gridOverrideLeft = new TorqueBoolSupplier(operator::isDPADLeftDown);
         gridOverrideRight = new TorqueBoolSupplier(operator::isDPADRightDown);
@@ -67,11 +67,12 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         resetGyroClick = new TorqueClickSupplier(driver::isRightCenterButtonPressed);
         resetPoseClick = new TorqueClickSupplier(driver::isLeftCenterButtonPressed);
         toggleRotationLock = new TorqueToggleSupplier(driver::isAButtonDown, true);
-        autoLevel = new TorqueBoolSupplier(driver::isYButtonDown);
+        // autoLevel = new TorqueBoolSupplier(driver::isYButtonDown);
+        autoLevel = new TorqueBoolSupplier(() -> false);
 
-        wantsIntake = new TorqueBoolSupplier(operator::isRightTriggerDown);
+        wantsIntake = new TorqueBoolSupplier(() -> operator.isRightTriggerDown() || driver.isRightTriggerDown());
         openClaw = new TorqueBoolSupplier(operator::isRightBumperDown);
-        gamePieceModeToggle = new TorqueToggleSupplier(operator::isLeftBumperDown);
+        gamePieceModeToggle = new TorqueToggleSupplier(() -> operator.isLeftBumperDown() || driver.isYButtonDown());
         wantsOuttake = new TorqueBoolSupplier(operator::isLeftCenterButtonDown);
 
         armDoHandoff = new TorqueClickSupplier(operator::isLeftTriggerDown);
