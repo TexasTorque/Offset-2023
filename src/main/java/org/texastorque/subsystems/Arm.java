@@ -46,8 +46,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         }
 
         public boolean atPose(final double elevatorReal, final Rotation2d rotaryReal) {
-            return
-            Math.abs(elevatorReal - elevatorPose) < ELEVATOR_TOLERANCE 
+            return Math.abs(elevatorReal - elevatorPose) < ELEVATOR_TOLERANCE
                     && Math.abs(rotaryReal.minus(rotaryPose).getRadians()) < ROTARY_TOLERANCE;
         }
     }
@@ -55,39 +54,36 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     // TODO: All these setpoints need to be re-tuned -- arm should be fine
     public static enum State {
         GRAB(
-                new ArmPose(5, Rotation2d.fromDegrees(256)),
-                new ArmPose(.238, Rotation2d.fromDegrees(249))
-        ),
+                new ArmPose(5, Rotation2d.fromDegrees(252)),
+                new ArmPose(.238, Rotation2d.fromDegrees(249))),
         AUTOGRAB(
                 new ArmPose(5, Rotation2d.fromDegrees(268)),
-                new ArmPose(0, Rotation2d.fromDegrees(180))
-        ),
+                new ArmPose(0, Rotation2d.fromDegrees(180))),
         AUTOINDEX(
                 new ArmPose(5, Rotation2d.fromDegrees(250)),
-                new ArmPose(0, Rotation2d.fromDegrees(180))
-        ), 
+                new ArmPose(0, Rotation2d.fromDegrees(180))),
         INDEX(
                 new ArmPose(18, Rotation2d.fromDegrees(215)),
-                new ArmPose(18, Rotation2d.fromDegrees(240))
-        ),
+                new ArmPose(18, Rotation2d.fromDegrees(240))),
         WAYPOINT(new ArmPose(0.45, Rotation2d.fromDegrees(90))),
         STOWED(new ArmPose(8, Rotation2d.fromDegrees(175))),
         GRABBED(STOWED),
-        SHELF(new ArmPose(0, Rotation2d.fromDegrees(220))),            
+        SHELF(new ArmPose(0, Rotation2d.fromDegrees(220))),
         MID(
-                new ArmPose(0, Rotation2d.fromDegrees(0)), 
-                new ArmPose(10, Rotation2d.fromDegrees(10))
-        ), 
+                new ArmPose(0, Rotation2d.fromDegrees(0)),
+                new ArmPose(5, Rotation2d.fromDegrees(20))),
         TOP(
-                new ArmPose(30,  Rotation2d.fromDegrees(0)), 
-                new ArmPose(43,  Rotation2d.fromDegrees(10))
-        ), 
-        LOW(new ArmPose(.6, Rotation2d.fromDegrees(0)));
-     
+                new ArmPose(30, Rotation2d.fromDegrees(0)),
+                new ArmPose(43, Rotation2d.fromDegrees(10))),
+        LOW(new ArmPose(.6, Rotation2d.fromDegrees(0))),
+        THROW(new ArmPose(5, Rotation2d.fromDegrees(90)));
+
         public final ArmPose cubePose;
         public final ArmPose conePose;
 
-        private State(final ArmPose both) { this(both, both); }
+        private State(final ArmPose both) {
+            this(both, both);
+        }
 
         private State(final ArmPose cubePose, final ArmPose conePose) {
             this.cubePose = cubePose;
@@ -98,20 +94,25 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
             this(other.cubePose, other.conePose);
         }
 
-        public ArmPose get() { return hand.isCubeMode() ? cubePose : conePose; }
+        public ArmPose get() {
+            return hand.isCubeMode() ? cubePose : conePose;
+        }
     }
 
     private static final double ROTARY_ENCODER_OFFSET = -Units.degreesToRadians(76 + 31),
             ELEVATOR_MAX_VOLTS_UP = 12,
             ELEVATOR_MAX_VOLTS_DOWN = 7,
-            ROTARY_MAX_VOLTS = 12, 
-            ELEVATOR_MIN = 0, 
+            ROTARY_MAX_VOLTS = 12,
+            ELEVATOR_MIN = 0,
             ELEVATOR_MAX = 50; // 54 is the technical max
 
     private static volatile Arm instance;
 
     private static final double RADIANS_ADJUSTMENT_COEF = Units.degreesToRadians(15);
-    public static final synchronized Arm getInstance() { return instance == null ? instance = new Arm() : instance; }
+
+    public static final synchronized Arm getInstance() {
+        return instance == null ? instance = new Arm() : instance;
+    }
 
     @Log.ToString
     private State activeState = State.STOWED;
@@ -128,7 +129,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     @Config
     public final PIDController elevatorPoseController = new PIDController(1.13, 0, 0);
 
-    private final ElevatorFeedforward elevatorPoseFeedForward = new ElevatorFeedforward(0.072294, 0.28979, 0.12498, 0.0019267);
+    private final ElevatorFeedforward elevatorPoseFeedForward = new ElevatorFeedforward(0.072294, 0.28979, 0.12498,
+            0.0019267);
 
     private final TorqueNEO rotary = new TorqueNEO(Ports.ARM_ROTARY_MOTOR);
 
@@ -190,7 +192,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     public boolean isWantingScoringPose() {
         return desiredState == State.MID || desiredState == State.TOP;
     }
-    
+
     @Log.BooleanBox
     public boolean isWantingHighCOG() {
         return isWantingScoringPose();// || isWantingShelf();
@@ -216,11 +218,17 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         return isAtScoringPose() || isAtShelf();
     }
 
-    public void setState(final State state) { this.desiredState = state; }
+    public void setState(final State state) {
+        this.desiredState = state;
+    }
 
-    public State getState() { return desiredState; }
+    public State getState() {
+        return desiredState;
+    }
 
-    public boolean isState(final State state) { return getState() == state; }
+    public boolean isState(final State state) {
+        return getState() == state;
+    }
 
     public TorqueCommand setStateCommand(final State state) {
         return new TorqueExecute(() -> setState(state));
@@ -232,7 +240,9 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     @Log.ToString
-    public boolean isAtDesiredPose() { return activeState.get().atPose(realElevatorPose, realRotaryPose); }
+    public boolean isAtDesiredPose() {
+        return activeState.get().atPose(realElevatorPose, realRotaryPose);
+    }
 
     public boolean isWantingOpenClaw() {
         return (desiredState == State.INDEX && !indexTimeout.get());
@@ -271,7 +281,6 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         if (mode.isAuto() && activeState == State.GRAB)
             activeState = State.AUTOGRAB;
 
-        
         if (isComingDown() && !isElevatorDownEnough()) {
             calculateElevator(activeState);
             calculateRotary(State.WAYPOINT);
@@ -318,9 +327,12 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     private void calculateElevator(final State state) {
         final double elevatorSetpoint = state.get().elevatorPose;
         double elevatorVolts = elevatorPoseController.calculate(realElevatorPose, elevatorSetpoint);
-        elevatorVolts += elevatorPoseFeedForward.calculate(calculateElevatorVelocity(elevatorSetpoint, realElevatorPose), calculateElevatorAcceleration(elevatorSetpoint, realElevatorPose));
-        elevatorVolts = TorqueMath.constrain(elevatorVolts, isComingDown() ? ELEVATOR_MAX_VOLTS_UP : ELEVATOR_MAX_VOLTS_DOWN);
-        elevatorVolts = TorqueMath.linearConstraint(elevatorVolts, realElevatorPose, ELEVATOR_MIN, ELEVATOR_MAX); 
+        elevatorVolts += elevatorPoseFeedForward.calculate(
+                calculateElevatorVelocity(elevatorSetpoint, realElevatorPose),
+                calculateElevatorAcceleration(elevatorSetpoint, realElevatorPose));
+        elevatorVolts = TorqueMath.constrain(elevatorVolts,
+                isComingDown() ? ELEVATOR_MAX_VOLTS_UP : ELEVATOR_MAX_VOLTS_DOWN);
+        elevatorVolts = TorqueMath.linearConstraint(elevatorVolts, realElevatorPose, ELEVATOR_MIN, ELEVATOR_MAX);
         elevator.setVolts(elevatorVolts);
         Debug.log("elevatorCurrent", elevator.getCurrent());
         Debug.log("elevatorRequestedVolts", elevatorVolts);
@@ -328,12 +340,14 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     // omega with respect to delta x
     private double calculateElevatorVelocity(final double wanted, final double actual) {
-        return Math.signum(wanted - actual) * (80. / (1 + Math.pow(Math.E, -.05 * (Math.abs(wanted - actual) - 80. / 2))) - 9.53);
+        return Math.signum(wanted - actual)
+                * (80. / (1 + Math.pow(Math.E, -.05 * (Math.abs(wanted - actual) - 80. / 2))) - 9.53);
     }
 
     // derivative of calculateElevatorVelocity
     private double calculateElevatorAcceleration(final double wanted, final double actual) {
-        return Math.signum(wanted - actual) * (4 * Math.pow(Math.E, -.05 * (wanted - actual - 40)) / Math.pow(Math.pow(Math.E, -.05 * (wanted - actual - 40)) + 1, 2));
+        return Math.signum(wanted - actual) * (4 * Math.pow(Math.E, -.05 * (wanted - actual - 40))
+                / Math.pow(Math.pow(Math.E, -.05 * (wanted - actual - 40)) + 1, 2));
     }
 
     private void calculateRotary(final State state) {
@@ -342,7 +356,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         if (rotaryPos > Math.toRadians(315)) { // wrap around up to prevent overshoot causing a massive spin.
             rotaryPos = rotaryPos - 2 * Math.PI;
         }
-        double rotaryVolts = -rotaryFeedforward.calculate(armSetpoint, calculateRotaryVelocity(armSetpoint, rotaryPos), calculateRotaryAcceleration(armSetpoint, rotaryPos));
+        double rotaryVolts = -rotaryFeedforward.calculate(armSetpoint, calculateRotaryVelocity(armSetpoint, rotaryPos),
+                calculateRotaryAcceleration(armSetpoint, rotaryPos));
         // final boolean stopArm = armSetpoint <= (Math.PI * 0.5) && armSwitch.get();
         rotaryVolts += -rotaryPoseController.calculate(rotaryPos, armSetpoint);
         rotaryVolts = TorqueMath.constrain(rotaryVolts, ROTARY_MAX_VOLTS);
@@ -354,11 +369,13 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     // omega with respect to delta theta (radians)
     private double calculateRotaryVelocity(final double wanted, final double actual) {
-        return Math.signum(wanted - actual) * (15 / (1 + Math.pow(Math.E, -.3 * (Math.abs(wanted-actual) - 12))) - .399);
+        return Math.signum(wanted - actual)
+                * (15 / (1 + Math.pow(Math.E, -.3 * (Math.abs(wanted - actual) - 12))) - .399);
     }
 
     // derivative of calculateRotaryVelocity
     private double calculateRotaryAcceleration(final double wanted, final double actual) {
-        return Math.signum(wanted - actual) * (12 * Math.pow(Math.E, -1.5 * (Math.abs(wanted - actual - 12))) / Math.pow(Math.pow(Math.E, -1.5 * (wanted - actual - 1.3)) + 1, 2));
+        return Math.signum(wanted - actual) * (12 * Math.pow(Math.E, -1.5 * (Math.abs(wanted - actual - 12)))
+                / Math.pow(Math.pow(Math.E, -1.5 * (wanted - actual - 1.3)) + 1, 2));
     }
 }

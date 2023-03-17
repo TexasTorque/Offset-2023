@@ -31,7 +31,7 @@ public final class Ports {
     public static final int CLAW_SWITCH = 0;
     public static final int ARM_SWITCH = 1;
     // PWM
-    public static final int LIGHTS_SUPERSTRUCTURE = 0;
+    public static final int LIGHTS_SUPERSTRUCTURE = 1;
     public static final int LIGHTS_UNDERGLOW = 1;
 
     /**
