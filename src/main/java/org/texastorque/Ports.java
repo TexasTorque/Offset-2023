@@ -13,13 +13,14 @@ public final class Ports {
     // CAN 
 
     public static final SwervePorts FL_MOD = new SwervePorts(3, 4, 10);
-    public static final SwervePorts FR_MOD = new SwervePorts(6, 5, 11);
+    public static final SwervePorts FR_MOD = new SwervePorts(5, 6, 11);
     public static final SwervePorts BL_MOD = new SwervePorts(1, 2, 9);
     public static final SwervePorts BR_MOD = new SwervePorts(7, 8, 12);
 
-    public static final int INTAKE_ROLLER_MOTOR_TOP = 13;
-    public static final int INTAKE_ROLLER_MOTOR_BOTTOM = 21;
-    public static final int INTAKE_ROTARY_MOTOR = 14;
+    public static final int INTAKE_ROLLER_MOTOR_TOP = 38;
+    public static final int INTAKE_ROLLER_MOTOR_BOTTOM = 39;
+    public static final int INTAKE_ROTARY_MOTOR_RIGHT = 32;
+    public static final int INTAKE_ROTARY_MOTOR_LEFT = 31;
     public static final int SPINDEXER_MOTOR = 15;
     public static final int ARM_ELEVATOR_MOTOR = 16;
     public static final int ARM_ROTARY_MOTOR = 17;
@@ -35,5 +36,6 @@ public final class Ports {
 
     // PWM
 
-    public static final int LIGHTS = 0;
+    public static final int LIGHTS_SUPERSTRUCTURE = 0;
+    public static final int LIGHTS_UNDERGLOW = 1;
 }

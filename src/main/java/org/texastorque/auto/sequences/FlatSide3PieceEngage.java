@@ -19,8 +19,8 @@ import org.texastorque.torquelib.auto.commands.TorqueSequenceRunner;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 
-public final class FlatSide3PieceLevel extends TorqueSequence implements Subsystems {
-    public FlatSide3PieceLevel() {
+public final class FlatSide3PieceEngage extends TorqueSequence implements Subsystems {
+    public FlatSide3PieceEngage() {
 
         // Hack - not needed w/ april tags
         drivebase.resetPose(new Pose2d(1.8, 4.96, Rotation2d.fromRadians(Math.PI)));
