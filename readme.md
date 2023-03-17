@@ -1,6 +1,6 @@
-# Offset-2023
+# Takeoff-2023
 
-Codebase for **Offset**, Texas Torque's competition robot for the 2023 FRC season: Charged Up!
+Codebase for **Takeoff**, Texas Torque's practice robot for the 2023 FRC season: Charged Up!
 
 ## Subsystems
 

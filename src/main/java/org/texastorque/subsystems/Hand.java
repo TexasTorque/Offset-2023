@@ -151,6 +151,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
 
         SmartDashboard.putNumber("claw::requestedPose", activeState.clawSetpoint);
         SmartDashboard.putNumber("Claw Encoder", clawEncoder.getPosition());
+
         double clawVolts = clawPoseController.calculate(realClawPose, activeState.clawSetpoint);
         SmartDashboard.putNumber("claw::requestedVolts", clawVolts);
         clawVolts = TorqueMath.constrain(clawVolts, MAX_CLAW_VOLTS);

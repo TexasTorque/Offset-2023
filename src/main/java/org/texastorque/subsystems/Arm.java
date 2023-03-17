@@ -55,6 +55,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         GRAB(
                 new ArmPose(.15, Rotation2d.fromDegrees(250)),
                 new ArmPose(0, Rotation2d.fromDegrees(240))),
+
         INDEX(
                 new ArmPose(.4, Rotation2d.fromDegrees(230)),
                 new ArmPose(.4, Rotation2d.fromDegrees(242))),
@@ -68,6 +69,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         TOP(
                 new ArmPose(1.3, Rotation2d.fromDegrees(0)),
                 new ArmPose(1.3, Rotation2d.fromDegrees(5))),
+
         LOW(new ArmPose(.55, Rotation2d.fromDegrees(0)));
 
         public final ArmPose cubePose;
@@ -97,6 +99,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
             ROTARY_MAX_VOLTS = 12,
             ELEVATOR_MIN = 0,
             ELEVATOR_MAX = 50; // 54 is the technical max
+
 
     private static volatile Arm instance;
 
@@ -280,6 +283,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     private void updateFeedback() {
         realElevatorPose = elevator.getPosition();
+        SmartDashboard.putNumber("rotaryCanCoder", -rotaryEncoder.getPosition());
         final double rotaryRadians = TorqueMath.constrain0to2PI(-rotaryEncoder.getPosition() - ROTARY_ENCODER_OFFSET);
         realRotaryPose = Rotation2d.fromRadians(rotaryRadians);
     }
@@ -295,6 +299,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
                 isComingDown ? ELEVATOR_MAX_VOLTS_UP : ELEVATOR_MAX_VOLTS_DOWN);
         elevatorVolts = TorqueMath.linearConstraint(elevatorVolts, realElevatorPose, ELEVATOR_MIN, ELEVATOR_MAX);
         elevator.setVolts(elevatorVolts);
+
         SmartDashboard.putNumber("arm::elevatorCurrent", elevator.getCurrent());
         SmartDashboard.putNumber("arm::elevatorRequestedVolts", elevatorVolts);
     }
@@ -339,5 +344,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     private double calculateRotaryAcceleration(final double wanted, final double actual) {
         return Math.signum(wanted - actual) * (12 * Math.pow(Math.E, -1.5 * (Math.abs(wanted - actual - 12)))
                 / Math.pow(Math.pow(Math.E, -1.5 * (wanted - actual - 1.3)) + 1, 2));
+
     }
+
 }
