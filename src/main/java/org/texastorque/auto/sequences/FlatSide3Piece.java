@@ -13,28 +13,37 @@ import org.texastorque.subsystems.Arm;
 import org.texastorque.subsystems.Hand;
 import org.texastorque.subsystems.Hand.GamePiece;
 import org.texastorque.torquelib.auto.TorqueSequence;
+import org.texastorque.torquelib.auto.commands.TorqueContinuous;
+import org.texastorque.torquelib.auto.commands.TorqueExecute;
 import org.texastorque.torquelib.auto.commands.TorqueSequenceRunner;
-
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
+import org.texastorque.torquelib.auto.commands.TorqueWaitUntil;
+import org.texastorque.torquelib.util.TorqueUtil;
 
 public final class FlatSide3Piece extends TorqueSequence implements Subsystems {
+    private double start = 0;
+
     public FlatSide3Piece() {
-       // Hack - not needed w/ april tags
-       drivebase.resetPose(new Pose2d(1.8, 4.96, Rotation2d.fromRadians(Math.PI)));
+        addBlock(new TorqueExecute(() -> start = TorqueUtil.time()));
 
-       addBlock(hand.setStateCommand(Hand.State.CLOSE), hand.setGamePieceModeCommand(GamePiece.CONE));
+        addBlock(hand.setStateCommand(Hand.State.CLOSE), hand.setGamePieceModeCommand(GamePiece.CONE));
 
-       addBlock(new TorqueSequenceRunner(new Score(Arm.State.TOP)));
+        addBlock(new TorqueSequenceRunner(new Score(Arm.State.TOP)));
 
-       addBlock(hand.setGamePieceModeCommand(GamePiece.CUBE));
+        addBlock(hand.setGamePieceModeCommand(GamePiece.CUBE));
 
-       addBlock(new FollowEventPath("flat-side-get-first", 4.5, 4.5)); 
+        addBlock(new FollowEventPath("flat-side-get-first"));
 
-       addBlock(new TorqueSequenceRunner(new Score(Arm.State.TOP)));
+        addBlock(new TorqueWaitUntil(arm::isAtDesiredPose));
 
-       addBlock(new FollowEventPath("flat-side-get-second", 4.5, 4.5));
+        addBlock(new TorqueSequenceRunner(new Score(Arm.State.TOP)));
 
-       addBlock(new TorqueSequenceRunner(new Score(Arm.State.MID)));
+        addBlock(new FollowEventPath("flat-side-get-second"));
+
+        addBlock(new TorqueWaitUntil(arm::isAtDesiredPose));
+
+        addBlock(new TorqueSequenceRunner(new Score(Arm.State.MID)), new TorqueContinuous(() -> {
+            if (TorqueUtil.time() - start > 14.75)
+                hand.setState(Hand.State.OPEN);
+        }));
     }
 }

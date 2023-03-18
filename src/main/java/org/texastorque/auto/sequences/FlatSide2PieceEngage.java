@@ -29,7 +29,6 @@ public final class FlatSide2PieceEngage extends TorqueSequence implements Subsys
         addBlock(new FollowEventPath("flat-side-get-first"));
 
         addBlock(new TorqueWaitUntil(arm::isAtDesiredPose));
-        // addBlock(new TorqueWaitForSeconds(1));
 
         addBlock(new TorqueSequenceRunner(new Score(Arm.State.TOP)));
 

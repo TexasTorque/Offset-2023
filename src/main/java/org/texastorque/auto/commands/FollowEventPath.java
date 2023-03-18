@@ -55,7 +55,7 @@ public final class FollowEventPath extends TorqueCommand implements Subsystems {
     }
 
     public FollowEventPath(final String name, final Map<String, TorqueCommand> commands, final double maxSpeed, final double maxAcceleration) {
-        omegaController = new PIDController(Math.PI * .4, 0, .0); //kP_intake = .4PI
+        omegaController = new PIDController(Math.PI * .75, 0, .0); //kP_intake = .4PI
 
         xController.setTolerance(0.01);
         yController.setTolerance(0.01);

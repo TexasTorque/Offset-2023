@@ -6,6 +6,7 @@
  */
 package org.texastorque.subsystems;
 
+import org.texastorque.Debug;
 import org.texastorque.Input;
 import org.texastorque.Ports;
 import org.texastorque.Subsystems;
@@ -23,7 +24,6 @@ import com.ctre.phoenix.sensors.SensorInitializationStrategy;
 import com.ctre.phoenix.sensors.SensorTimeBase;
 
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
 
@@ -34,10 +34,9 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
     }
 
     public static enum State {
-        GRAB(2.97),
-        BIG(2.97),
+        GRAB(3.3),
         OPEN(2.97),
-        CLOSE(3.9);
+        CLOSE(4);
 
         public final double clawSetpoint;
 
@@ -136,6 +135,10 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
         gamePieceMode = GamePiece.CONE;
     }
 
+    public final boolean isClosedEnough() {
+        return realClawPose >= 3.8;
+    }
+
     @Override
     public final void update(final TorqueMode mode) {
         activeState = desiredState;
@@ -144,15 +147,12 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
         if (arm.isWantingOpenClaw())
             activeState = State.OPEN;
         if (arm.isWantGrabbyClaw())
+            activeState = State.OPEN;
+        if (activeState == State.OPEN && arm.isState(Arm.State.SHELF))
             activeState = State.GRAB;
-        if (activeState == State.OPEN && arm.isWantingScoringPose()) {
-            activeState = State.BIG;
-        }
 
-        SmartDashboard.putNumber("claw::requestedPose", activeState.clawSetpoint);
-        SmartDashboard.putNumber("Claw Encoder", claw.getPosition());
         double clawVolts = clawPoseController.calculate(realClawPose, activeState.clawSetpoint);
-        SmartDashboard.putNumber("claw::requestedVolts", clawVolts);
+        Debug.log("requestedVolts", clawVolts);
         clawVolts = TorqueMath.constrain(clawVolts, MAX_CLAW_VOLTS);
         claw.setVolts(clawVolts);
 

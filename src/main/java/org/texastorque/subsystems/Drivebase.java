@@ -50,7 +50,8 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         ROBOT_RELATIVE(null),
         ALIGN(FIELD_RELATIVE),
         ZERO(FIELD_RELATIVE),
-        BALANCE(FIELD_RELATIVE);
+        BALANCE(FIELD_RELATIVE),
+        XF(FIELD_RELATIVE);
 
         public final State parent;
 
@@ -86,22 +87,24 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
      * model's state estimates less. This matrix is in the form [x, y, theta]ᵀ,
      * with units in meters and radians, then meters.
      */
-    private static final Vector<N3> STATE_STDS = VecBuilder.fill(0.05, 0.05, Units.degreesToRadians(20));
+    private static final Vector<N3> STATE_STDS = VecBuilder.fill(0.05, 0.05, Units.degreesToRadians(5));
 
     /**
      * Standard deviations of the vision measurements. Increase these numbers to
      * trust global measurements from vision less. This matrix is in the form
      * [x, y, theta]ᵀ, with units in meters and radians.
      */
-    private static final Vector<N3> VISION_STDS = VecBuilder.fill(0.1, 0.1, Units.degreesToRadians(5));
+    private static final Vector<N3> VISION_STDS = VecBuilder.fill(0.1, 0.1, Units.degreesToRadians(10));
+
+    // (forward from center, left from center, up from center)
 
     private static final Transform3d LEFT_CAMERA_TO_CENTER =
-            new Transform3d(new Translation3d(Units.inchesToMeters(10.5), Units.inchesToMeters(7.5), Units.inchesToMeters(32.5625)),
-                    new Rotation3d(0, 0, 0));
+            new Transform3d(new Translation3d(Units.inchesToMeters(5.539), Units.inchesToMeters(-7.961), Units.inchesToMeters(43.3)),
+                    new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(0), Units.degreesToRadians(35.895))); 
 
     private static final Transform3d RIGHT_CAMERA_TO_CENTER =
-            new Transform3d(new Translation3d(Units.inchesToMeters(8.5), -Units.inchesToMeters(7.5), Units.inchesToMeters(21.5)), 
-                    new Rotation3d(0, 0, 0));
+            new Transform3d(new Translation3d(Units.inchesToMeters(5.464), Units.inchesToMeters(-12.803), Units.inchesToMeters(43.3)), 
+                    new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(0), Units.degreesToRadians(-35.895))); 
 
     public static SwerveModulePosition invertSwerveModuleDistance(final SwerveModulePosition pose) {
         return new SwerveModulePosition(-pose.distanceMeters, pose.angle);
@@ -155,9 +158,8 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
      * Constructor called on initialization.
      */
     private Drivebase() {
-        // Do this for each camera
-        cameraLeft = new TorqueVision("camera_left", Field.getCurrentFieldLayout(), LEFT_CAMERA_TO_CENTER);
-        cameraRight = new TorqueVision("camera_right", Field.getCurrentFieldLayout(), RIGHT_CAMERA_TO_CENTER);
+        cameraLeft = new TorqueVision("jacob", Field.getCurrentFieldLayout(), LEFT_CAMERA_TO_CENTER);
+        cameraRight = new TorqueVision("justus", Field.getCurrentFieldLayout(), RIGHT_CAMERA_TO_CENTER);
 
         teleopOmegaController.enableContinuousInput(-Math.PI, Math.PI);
         lastRotationRadians = gyro.getRotation2d().getRadians();
@@ -170,7 +172,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         config.maxAngularAcceleration = MAX_ANGULAR_ACCELERATION;
 
         fl = new TorqueSwerveModule2022("Front Left", Ports.FL_MOD, -1.510968022048473 + Math.PI, config);
-        fr = new TorqueSwerveModule2022("Front Right", Ports.FR_MOD, 0.747021734228341, config);
+        fr = new TorqueSwerveModule2022("Front Right", Ports.FR_MOD, 0.875901259481907, config);
         bl = new TorqueSwerveModule2022("Back Left", Ports.BL_MOD, 2.147568762302399 + Math.PI, config);
         br = new TorqueSwerveModule2022("Back Right", Ports.BR_MOD, -0.751661766563551, config);
 
@@ -227,6 +229,8 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
         if (state == State.ZERO) {
             zeroModules();
+        } else if (state == State.XF) {
+            xFactor();
         } else {
             if (arm.isWantingHighCOG())
                 speedSetting = SpeedSetting.SLOW;
@@ -305,7 +309,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
     private void updateFeedback() {
         if (updateWithTags || DriverStation.isTeleop()) {
-            cameraLeft.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
+            // cameraLeft.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
             cameraRight.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
         }
 
@@ -327,6 +331,13 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         fr.setDesiredState(new SwerveModuleState(0, swerveStates[1].angle));
         bl.setDesiredState(new SwerveModuleState(0, swerveStates[2].angle));
         br.setDesiredState(new SwerveModuleState(0, swerveStates[3].angle));
+    }
+
+    private void xFactor() {
+        fl.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(45)));
+        fr.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(90 + 45)));
+        bl.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(90 + 45)));
+        br.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(45)));
     }
 
     private void calculateTeleop() {

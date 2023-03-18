@@ -6,6 +6,14 @@
   "configurations": [
     {
       "type": "java",
+      "name": "Log",
+      "request": "launch",
+      "mainClass": "org.texastorque.Log",
+      "projectName": "Offset-2023",
+      "args": ["-G"]  
+    },
+    {
+      "type": "java",
       "name": "Launch Arm",
       "request": "launch",
       "mainClass": "org.texastorque.subsystems.Arm",
