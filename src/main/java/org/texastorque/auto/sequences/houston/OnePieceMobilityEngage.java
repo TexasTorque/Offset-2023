@@ -22,8 +22,8 @@ import org.texastorque.torquelib.sensors.TorqueNavXGyro;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 
-public final class OneConeMobilityEngage extends TorqueSequence implements Subsystems {
-    public OneConeMobilityEngage() {
+public final class OnePieceMobilityEngage extends TorqueSequence implements Subsystems {
+    public OnePieceMobilityEngage() {
         addBlock(new TorqueExecute(() -> drivebase.updateWithTags = false));
         
         drivebase.resetPose(new Pose2d(0, 0, Rotation2d.fromRadians(Math.PI))); // not needed
