@@ -76,7 +76,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
                 new ArmPose(30, Rotation2d.fromDegrees(0)),
                 new ArmPose(43, Rotation2d.fromDegrees(10))),
         LOW(new ArmPose(.6, Rotation2d.fromDegrees(0))),
-        THROW(new ArmPose(5, Rotation2d.fromDegrees(90)));
+        THROW(new ArmPose(50, Rotation2d.fromDegrees(0)));
 
         public final ArmPose cubePose;
         public final ArmPose conePose;
@@ -281,7 +281,11 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         if (mode.isAuto() && activeState == State.GRAB)
             activeState = State.AUTOGRAB;
 
-        if (isComingDown() && !isElevatorDownEnough()) {
+        if (desiredState == State.THROW) {
+            calculateElevator(State.THROW);
+            calculateRotary(State.THROW);
+            lastState = State.TOP;
+        } else if (isComingDown() && !isElevatorDownEnough()) {
             calculateElevator(activeState);
             calculateRotary(State.WAYPOINT);
         } else if (isGoingUp() && !isArmOutEnough()) {
@@ -292,6 +296,10 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
             calculateRotary(activeState);
             lastState = activeState;
         }
+    }
+
+    public boolean isReadyToThrow() {
+        return desiredState == State.THROW && realRotaryPose.getDegrees() <= 100;
     }
 
     public void setSetpointAdjustment(final double setpointAdjustment) {

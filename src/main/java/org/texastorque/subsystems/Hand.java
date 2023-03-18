@@ -72,7 +72,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
 
     private final TorqueNEO claw = new TorqueNEO(Ports.CLAW_MOTOR);
 
-    private final TorqueCANCoder clawEncoder = new TorqueCANCoder(Ports.CLAW_ENCODER); 
+    private final TorqueCANCoder clawEncoder = new TorqueCANCoder(Ports.CLAW_ENCODER);
 
     private final TorqueRequestableTimeout retractArmTimeout = new TorqueRequestableTimeout();
 
@@ -144,6 +144,8 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
         activeState = desiredState;
         updateFeedback();
 
+        if (arm.isReadyToThrow())
+            activeState = State.OPEN;
         if (arm.isWantingOpenClaw())
             activeState = State.OPEN;
         if (arm.isWantGrabbyClaw())
