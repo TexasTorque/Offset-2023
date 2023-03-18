@@ -55,27 +55,30 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
         public final State parent;
 
-        private State(final State parent) { this.parent = parent == null ? this : parent; }
+        private State(final State parent) {
+            this.parent = parent == null ? this : parent;
+        }
     }
 
     public enum SpeedSetting {
         FAST(1.0), SLOW(.5);
 
         public final double speed;
+
         private SpeedSetting(final double speed) {
             this.speed = speed;
         }
     }
 
     private static volatile Drivebase instance;
-    
-    public static final double WIDTH = Units.inchesToMeters(21.745), // m (swerve to swerve)
-            LENGTH = Units.inchesToMeters(21.745),                   // m (swerve to swerve)
 
-            MAX_VELOCITY = 4.522,                       // m/s
-            MAX_ACCELERATION = 8.958,                   // m/s^2
-            MAX_ANGULAR_VELOCITY = 2 * Math.PI,         // rad/s
-            MAX_ANGULAR_ACCELERATION = 2 * Math.PI,     // rad/s^2
+    public static final double WIDTH = Units.inchesToMeters(21.745), // m (swerve to swerve)
+            LENGTH = Units.inchesToMeters(21.745), // m (swerve to swerve)
+
+            MAX_VELOCITY = 4.522, // m/s
+            MAX_ACCELERATION = 8.958, // m/s^2
+            MAX_ANGULAR_VELOCITY = 2 * Math.PI, // rad/s
+            MAX_ANGULAR_ACCELERATION = 2 * Math.PI, // rad/s^2
             WHEEL_DIAMETER = Units.inchesToMeters(4.0); // m
 
     public static final Pose2d INITIAL_POS = new Pose2d(0, 0, Rotation2d.fromRadians(0));
@@ -98,19 +101,21 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
     // (forward from center, left from center, up from center)
 
-    private static final Transform3d LEFT_CAMERA_TO_CENTER =
-            new Transform3d(new Translation3d(Units.inchesToMeters(5.539), Units.inchesToMeters(-7.961), Units.inchesToMeters(43.3)),
-                    new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(0), Units.degreesToRadians(35.895))); 
+    private static final Transform3d LEFT_CAMERA_TO_CENTER = new Transform3d(
+            new Translation3d(Units.inchesToMeters(5.539), Units.inchesToMeters(-7.961), Units.inchesToMeters(43.3)),
+            new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(0), Units.degreesToRadians(35.895)));
 
-    private static final Transform3d RIGHT_CAMERA_TO_CENTER =
-            new Transform3d(new Translation3d(Units.inchesToMeters(5.464), Units.inchesToMeters(-12.803), Units.inchesToMeters(43.3)), 
-                    new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(0), Units.degreesToRadians(-35.895))); 
+    private static final Transform3d RIGHT_CAMERA_TO_CENTER = new Transform3d(
+            new Translation3d(Units.inchesToMeters(5.464), Units.inchesToMeters(-12.803), Units.inchesToMeters(43.3)),
+            new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(0), Units.degreesToRadians(-35.895)));
 
     public static SwerveModulePosition invertSwerveModuleDistance(final SwerveModulePosition pose) {
         return new SwerveModulePosition(-pose.distanceMeters, pose.angle);
     }
 
-    public static synchronized final Drivebase getInstance() { return instance == null ? instance = new Drivebase() : instance; }
+    public static synchronized final Drivebase getInstance() {
+        return instance == null ? instance = new Drivebase() : instance;
+    }
 
     public SpeedSetting speedSetting = SpeedSetting.FAST;
 
@@ -119,8 +124,9 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
     private State requestedState = State.ROBOT_RELATIVE;
 
-    private final Translation2d LOC_FL = new Translation2d(SIZE, -SIZE), LOC_FR = new Translation2d(SIZE, SIZE), LOC_BL = new Translation2d(-SIZE, -SIZE),
-                                LOC_BR = new Translation2d(-SIZE, SIZE);
+    private final Translation2d LOC_FL = new Translation2d(SIZE, -SIZE), LOC_FR = new Translation2d(SIZE, SIZE),
+            LOC_BL = new Translation2d(-SIZE, -SIZE),
+            LOC_BR = new Translation2d(-SIZE, SIZE);
     // This is the kinematics object that calculates the desired wheel speeds
     private final SwerveDriveKinematics kinematics;
 
@@ -154,11 +160,12 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
     public final TorqueVision cameraLeft, cameraRight;
     public boolean updateWithTags = true;
+
     /**
      * Constructor called on initialization.
      */
     private Drivebase() {
-        cameraLeft = new TorqueVision("jacob", Field.getCurrentFieldLayout(), LEFT_CAMERA_TO_CENTER);
+        cameraLeft = new TorqueVision("omar", Field.getCurrentFieldLayout(), LEFT_CAMERA_TO_CENTER);
         cameraRight = new TorqueVision("justus", Field.getCurrentFieldLayout(), RIGHT_CAMERA_TO_CENTER);
 
         teleopOmegaController.enableContinuousInput(-Math.PI, Math.PI);
@@ -178,26 +185,42 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
         kinematics = new SwerveDriveKinematics(LOC_BL, LOC_BR, LOC_FL, LOC_FR);
 
-        poseEstimator = new SwerveDrivePoseEstimator(kinematics, gyro.getHeadingCCW(), getModulePositions(), INITIAL_POS, STATE_STDS, VISION_STDS);
+        poseEstimator = new SwerveDrivePoseEstimator(kinematics, gyro.getHeadingCCW(), getModulePositions(),
+                INITIAL_POS, STATE_STDS, VISION_STDS);
 
         swerveStates = new SwerveModuleState[4];
-        for (int i = 0; i < swerveStates.length; i++) swerveStates[i] = new SwerveModuleState();
+        for (int i = 0; i < swerveStates.length; i++)
+            swerveStates[i] = new SwerveModuleState();
     }
-    public void setState(final State state) { this.state = state; }
-    public State getState() { return requestedState; }
 
-    public boolean isState(final State state) { return getState() == state; }
+    public void setState(final State state) {
+        this.state = state;
+    }
+
+    public State getState() {
+        return requestedState;
+    }
+
+    public boolean isState(final State state) {
+        return getState() == state;
+    }
 
     public void setAlignState(final AlignState alignment) {
         state = alignment == AlignState.NONE ? state.parent : State.ALIGN;
         alignmentController.setAlignment(alignment);
     }
 
-    public void setGridOverride(final GridState override) { alignmentController.setGridOverride(override); } 
+    public void setGridOverride(final GridState override) {
+        alignmentController.setGridOverride(override);
+    }
 
-    public final boolean isPathAlignDone() { return alignmentController.isDone(); }
+    public final boolean isPathAlignDone() {
+        return alignmentController.isDone();
+    }
 
-    public final boolean isAutoLevelDone() { return autoLevelController.isDone(); }
+    public final boolean isAutoLevelDone() {
+        return autoLevelController.isDone();
+    }
 
     @Override
     public final void initialize(final TorqueMode mode) {
@@ -216,11 +239,14 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     }
 
     public SwerveModulePosition[] getModulePositions() {
-        return new SwerveModulePosition[] {invertSwerveModuleDistance(fl.getPosition()), invertSwerveModuleDistance(fr.getPosition()),
-                                           invertSwerveModuleDistance(bl.getPosition()), invertSwerveModuleDistance(br.getPosition())};
-    } 
+        return new SwerveModulePosition[] { invertSwerveModuleDistance(fl.getPosition()),
+                invertSwerveModuleDistance(fr.getPosition()),
+                invertSwerveModuleDistance(bl.getPosition()), invertSwerveModuleDistance(br.getPosition()) };
+    }
 
-    public void convertToFieldRelative() { inputSpeeds = inputSpeeds.toFieldRelativeSpeeds(gyro.getHeadingCCW()); }
+    public void convertToFieldRelative() {
+        inputSpeeds = inputSpeeds.toFieldRelativeSpeeds(gyro.getHeadingCCW());
+    }
 
     @Override
     public final void update(final TorqueMode mode) {
@@ -237,7 +263,8 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
             if (state == State.ALIGN) {
                 final Optional<TorqueSwerveSpeeds> speedsWrapper = alignmentController.calculate();
-                if (speedsWrapper.isPresent()) inputSpeeds = speedsWrapper.get();
+                if (speedsWrapper.isPresent())
+                    inputSpeeds = speedsWrapper.get();
 
             } else if (state == State.BALANCE) {
                 inputSpeeds = autoLevelController.calculate();
@@ -252,7 +279,8 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
                 convertToFieldRelative();
             }
 
-            if (state != State.ROBOT_RELATIVE) {}
+            if (state != State.ROBOT_RELATIVE) {
+            }
 
             swerveStates = kinematics.toSwerveModuleStates(inputSpeeds);
 
@@ -261,7 +289,6 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
             if (inputSpeeds.hasZeroVelocity()) {
                 preseveModulePositions();
             } else {
-
                 fl.setDesiredState(swerveStates[0]);
                 fr.setDesiredState(swerveStates[1]);
                 bl.setDesiredState(swerveStates[2]);
@@ -280,13 +307,21 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         poseEstimator.resetPosition(gyro.getHeadingCCW(), getModulePositions(), pose);
     }
 
-    public void resetPose(final Rotation2d rotation) { resetPose(new Pose2d(getPose().getTranslation(), rotation)); } 
+    public void resetPose(final Rotation2d rotation) {
+        resetPose(new Pose2d(getPose().getTranslation(), rotation));
+    }
 
-    public void setAngle(final Rotation2d rotation) { gyro.setOffsetCW(rotation); }
+    public void setAngle(final Rotation2d rotation) {
+        gyro.setOffsetCW(rotation);
+    }
 
-    public void resetPose(final Translation2d translation) { resetPose(new Pose2d(translation, gyro.getHeadingCCW())); }
+    public void resetPose(final Translation2d translation) {
+        resetPose(new Pose2d(translation, gyro.getHeadingCCW()));
+    }
 
-    public void resetGyro() { gyro.setOffsetCW(Rotation2d.fromRadians(0)); }
+    public void resetGyro() {
+        gyro.setOffsetCW(Rotation2d.fromRadians(0));
+    }
 
     @Log.ToString(name = "Robot Pose")
     public Pose2d getPose() {
@@ -315,8 +350,9 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
         poseEstimator.update(gyro.getHeadingCCW(), getModulePositions());
 
-        fieldMap.setRobotPose(DriverStation.getAlliance() == DriverStation.Alliance.Blue ? poseEstimator.getEstimatedPosition()
-                                                                                         : Field.reflectPosition(poseEstimator.getEstimatedPosition()));
+        fieldMap.setRobotPose(
+                DriverStation.getAlliance() == DriverStation.Alliance.Blue ? poseEstimator.getEstimatedPosition()
+                        : Field.reflectPosition(poseEstimator.getEstimatedPosition()));
     }
 
     private void zeroModules() {

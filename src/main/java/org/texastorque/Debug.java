@@ -13,6 +13,7 @@ import org.texastorque.auto.AutoManager;
 
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import edu.wpi.first.wpilibj.shuffleboard.WidgetType;
 import edu.wpi.first.wpilibj.util.Color;
 
 public final class Debug implements Subsystems {
@@ -25,7 +26,7 @@ public final class Debug implements Subsystems {
 
         final ShuffleboardTab dashboard = Shuffleboard.getTab("COMPETITION");
 
-        dashboard.add("FIELD", drivebase.fieldMap).withPosition(0, 0).withSize(7, 4);
+        dashboard.add("FIELD", drivebase.fieldMap).withWidget("Field").withPosition(0, 0).withSize(7, 4);
 
         dashboard.add("AUTO SELECTOR", AutoManager.getInstance().getAutoSelector()).withPosition(7, 0).withSize(4, 2);
 

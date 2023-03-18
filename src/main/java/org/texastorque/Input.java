@@ -32,11 +32,16 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
     private final static double DEADBAND = 0.125;
 
-    public static final synchronized Input getInstance() { return instance == null ? instance = new Input() : instance; }
+    public static final synchronized Input getInstance() {
+        return instance == null ? instance = new Input() : instance;
+    }
 
-    private final TorqueBoolSupplier isZeroingWheels, slowModeToggle, alignGridLeft, alignGridCenter, alignGridRight, gridOverrideLeft, gridOverrideRight,
-            gridOverrideCenter, resetGyroClick, resetPoseClick, toggleRotationLock, autoLevel, wantsIntake, gamePieceModeToggle, openClaw, armToBottom,
-            armToShelf, armToMid, armToTop, forksUp, forksDown, spindexerRight, spindexerLeft, armDoHandoff, armToLow, stopManualDrive, wantsOuttake, adjustAutoAlignRight, adjustAutoAlignLeft, xFactorToggle;
+    private final TorqueBoolSupplier isZeroingWheels, slowModeToggle, alignGridLeft, alignGridCenter, alignGridRight,
+            gridOverrideLeft, gridOverrideRight,
+            gridOverrideCenter, resetGyroClick, resetPoseClick, toggleRotationLock, autoLevel, wantsIntake,
+            gamePieceModeToggle, openClaw, armToBottom,
+            armToShelf, armToMid, armToTop, forksUp, forksDown, armDoHandoff, armToLow,
+            stopManualDrive, wantsOuttake, adjustAutoAlignRight, adjustAutoAlignLeft, xFactorToggle, autoSpindex;
 
     private final TorqueRequestableTimeout driverTimeout = new TorqueRequestableTimeout();
 
@@ -45,8 +50,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
     private final TorqueRequestableTimeout clawTimeout = new TorqueRequestableTimeout();
 
     private final TorqueTraversableSelection<Arm.State> handoffStates = new TorqueTraversableSelection<Arm.State>(
-        Arm.State.STOWED, Arm.State.INDEX, Arm.State.GRAB, Arm.State.GRABBED
-    );
+            Arm.State.STOWED, Arm.State.INDEX, Arm.State.GRAB, Arm.State.GRABBED);
 
     private Input() {
         driver = new TorqueController(0, .001);
@@ -84,9 +88,10 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
         forksUp = new TorqueBoolSupplier(driver::isDPADUpDown);
         forksDown = new TorqueBoolSupplier(driver::isDPADDownDown);
-
-        spindexerRight = new TorqueBoolSupplier(operator::isRightBumperDown);
-        spindexerLeft = new TorqueBoolSupplier(operator::isLeftBumperDown);
+        //
+        //        spindexerRight = new TorqueBoolSupplier(operator.getLeftXAxis() < 0);
+        //        spindexerLeft = new TorqueBoolSupplier(operator::isLeftBumperDown);
+        autoSpindex = new TorqueBoolSupplier(operator::isDPADUpDown);
 
         stopManualDrive = new TorqueBoolSupplier(operator::isRightCenterButtonDown);
 
@@ -94,9 +99,13 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         adjustAutoAlignLeft = new TorqueClickSupplier(driver::isDPADLeftDown);
     }
 
-    public void setDriverRumbleFor(final double duration) { driverTimeout.set(duration); }
+    public void setDriverRumbleFor(final double duration) {
+        driverTimeout.set(duration);
+    }
 
-    public void setOperatorRumbleFor(final double duration) { operatorTimeout.set(duration); }
+    public void setOperatorRumbleFor(final double duration) {
+        operatorTimeout.set(duration);
+    }
 
     public void update() {
         updateDrivebaseSpeeds();
@@ -125,7 +134,8 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
         openClaw.onTrue(() -> hand.setState(Hand.State.OPEN));
 
-        gamePieceModeToggle.onTrueOrFalse(() -> hand.setGamePieceMode(GamePiece.CONE), () -> hand.setGamePieceMode(GamePiece.CUBE));
+        gamePieceModeToggle.onTrueOrFalse(() -> hand.setGamePieceMode(GamePiece.CONE),
+                () -> hand.setGamePieceMode(GamePiece.CUBE));
 
         armToShelf.onTrue(() -> arm.setState(Arm.State.SHELF));
         armToMid.onTrue(() -> arm.setState(Arm.State.MID));
@@ -138,6 +148,14 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
             arm.setState(Arm.State.STOWED);
             handoffStates.set(0);
         });
+        //
+        //        spindexerLeft.onTrue(() -> {
+        //            spindexer.setState(Spindexer.State.FAST_CW);
+        //        });
+        //
+        //        spindexerRight.onTrue(() -> {
+        //            spindexer.setState(Spindexer.State.FAST_CCW);
+        //        });
 
         // arm.setSetpointAdjustment(operator.getRightYAxis());
 
@@ -184,22 +202,26 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
             else
                 spindexer.setState(Spindexer.State.SLOW_CW);
         }
+
+        spindexer.setAutoSpindex(autoSpindex.get());
     }
 
     private void updateDrivebaseSpeeds() {
-        drivebase.speedSetting = slowModeToggle.get() ? SpeedSetting.SLOW : SpeedSetting.FAST;
+        drivebase.speedSetting = SpeedSetting.FAST;
 
-        final double xVelocity = TorqueMath.scaledLinearDeadband(driver.getLeftYAxis(), DEADBAND) * Drivebase.MAX_VELOCITY;
-        final double yVelocity = TorqueMath.scaledLinearDeadband(driver.getLeftXAxis(), DEADBAND) * Drivebase.MAX_VELOCITY;
+        final double xVelocity = TorqueMath.scaledLinearDeadband(driver.getLeftYAxis(), DEADBAND)
+                * Drivebase.MAX_VELOCITY;
+        final double yVelocity = TorqueMath.scaledLinearDeadband(driver.getLeftXAxis(), DEADBAND)
+                * Drivebase.MAX_VELOCITY;
 
         if (!driver.isRightStickClickDown()) {
-            final double rotationVelocity = TorqueMath.scaledLinearDeadband(-driver.getRightXAxis(), DEADBAND) * Drivebase.MAX_ANGULAR_VELOCITY;
+            final double rotationVelocity = TorqueMath.scaledLinearDeadband(-driver.getRightXAxis(), DEADBAND)
+                    * Drivebase.MAX_ANGULAR_VELOCITY;
             drivebase.inputSpeeds = new TorqueSwerveSpeeds(xVelocity, yVelocity, rotationVelocity);
         } else {
             drivebase.inputSpeeds = new TorqueSwerveSpeeds(xVelocity, yVelocity, 0);
             forks.setDirection(TorqueMath.scaledLinearDeadband(-driver.getRightYAxis(), DEADBAND));
         }
-
 
         // drivebase.requestedRotation = Math.PI +
         // Math.atan2(driver.getRightXAxis(), driver.getRightYAxis()); if
