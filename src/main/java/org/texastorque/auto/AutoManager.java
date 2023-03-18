@@ -7,6 +7,7 @@
 package org.texastorque.auto;
 
 
+import org.texastorque.auto.sequences.houston.OneConeMobilityEngage;
 import org.texastorque.auto.sequences.waco.DumbBothSide1PieceMobility;
 import org.texastorque.auto.sequences.waco.DumbBumpySide1PieceEngage;
 import org.texastorque.auto.sequences.waco.DumbFlatSide1PieceEngage;
@@ -38,6 +39,8 @@ public final class AutoManager extends TorqueAutoManager {
         addSequence(new DumbMiddleSide1PieceEngage());
         addSequence(new DumbFlatSide1PieceEngage());
         addSequence(new DumbBumpySide1PieceEngage());
+
+        addSequence(new OneConeMobilityEngage());
 
     }
 }
