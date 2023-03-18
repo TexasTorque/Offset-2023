@@ -6,11 +6,34 @@
   "configurations": [
     {
       "type": "java",
+      "name": "Ports",
+      "request": "launch",
+      "mainClass": "org.texastorque.Ports",
+      "projectName": "Offset-2023"
+    },
+    {
+      "type": "java",
+      "name": "Field",
+      "request": "launch",
+      "mainClass": "org.texastorque.Field",
+      "projectName": "Offset-2023"
+    },
+    {
+      "type": "java",
+      "name": "Debug",
+      "request": "launch",
+      "mainClass": "org.texastorque.Debug",
+      "projectName": "Offset-2023"
+    },
+    {
+      "type": "java",
       "name": "Log",
       "request": "launch",
       "mainClass": "org.texastorque.Log",
       "projectName": "Offset-2023",
-      "args": ["-G"]  
+      "args": [
+        "-G"
+      ]
     },
     {
       "type": "java",
