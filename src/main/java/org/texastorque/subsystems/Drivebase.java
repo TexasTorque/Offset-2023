@@ -10,6 +10,7 @@ import java.util.Optional;
 
 import org.texastorque.Field;
 import org.texastorque.Ports;
+import org.texastorque.Robot;
 import org.texastorque.Subsystems;
 import org.texastorque.controllers.AutoLevelController;
 import org.texastorque.controllers.PathAlignController;
@@ -161,6 +162,11 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     public final TorqueVision cameraLeft, cameraRight;
     public boolean updateWithTags = true;
 
+    private final double FL_OFFSET = Robot.isCompetition() ? -1.510968022048473 + Math.PI : -.53686679,
+            FR_OFFSET = Robot.isCompetition() ? 0.875901259481907 : 1.365240141749382 + Math.PI,
+            BL_OFFSET = Robot.isCompetition() ? 2.147568762302399 + Math.PI : 1.135143488645554,
+            BR_OFFSET = Robot.isCompetition() ? -0.751661766563551 : 2.069323200489386 + Math.PI;
+
     /**
      * Constructor called on initialization.
      */
@@ -178,10 +184,10 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         config.maxAngularVelocity = MAX_ANGULAR_VELOCITY;
         config.maxAngularAcceleration = MAX_ANGULAR_ACCELERATION;
 
-        fl = new TorqueSwerveModule2022("Front Left", Ports.FL_MOD, -1.510968022048473 + Math.PI, config);
-        fr = new TorqueSwerveModule2022("Front Right", Ports.FR_MOD, 0.875901259481907, config);
-        bl = new TorqueSwerveModule2022("Back Left", Ports.BL_MOD, 2.147568762302399 + Math.PI, config);
-        br = new TorqueSwerveModule2022("Back Right", Ports.BR_MOD, -0.751661766563551, config);
+        fl = new TorqueSwerveModule2022("Front Left", Ports.FL_MOD, FL_OFFSET, config);
+        fr = new TorqueSwerveModule2022("Front Right", Ports.FR_MOD, FR_OFFSET, config);
+        bl = new TorqueSwerveModule2022("Back Left", Ports.BL_MOD, BL_OFFSET, config);
+        br = new TorqueSwerveModule2022("Back Right", Ports.BR_MOD, BR_OFFSET, config);
 
         kinematics = new SwerveDriveKinematics(LOC_BL, LOC_BR, LOC_FL, LOC_FR);
 

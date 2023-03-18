@@ -9,6 +9,7 @@ package org.texastorque.subsystems;
 import org.texastorque.Debug;
 import org.texastorque.Input;
 import org.texastorque.Ports;
+import org.texastorque.Robot;
 import org.texastorque.Subsystems;
 import org.texastorque.torquelib.auto.TorqueCommand;
 import org.texastorque.torquelib.auto.commands.TorqueExecute;
@@ -34,9 +35,9 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
     }
 
     public static enum State {
-        GRAB(3.3),
-        OPEN(2.97),
-        CLOSE(4);
+        GRAB(Robot.isCompetition() ? 3.3 : 4.46),
+        OPEN(Robot.isCompetition() ? 2.97 : 4.46),
+        CLOSE(Robot.isCompetition() ? 4 : 5.24);
 
         public final double clawSetpoint;
 

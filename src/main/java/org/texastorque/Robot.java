@@ -10,6 +10,21 @@ import org.texastorque.auto.AutoManager;
 import org.texastorque.torquelib.base.TorqueRobotBase;
 
 public final class Robot extends TorqueRobotBase implements Subsystems {
+    public static enum RobotType {
+        COMPETITION,
+        PRACTICE;
+
+        public boolean isCompetition() {
+            return this == COMPETITION;
+        }
+    }
+
+    public static final RobotType robot = RobotType.COMPETITION;
+
+    public static final boolean isCompetition() {
+        return robot.isCompetition();
+    }
+
     public Robot() {
         super(Debug.DO_LOGGING, Input.getInstance(), AutoManager.getInstance());
 

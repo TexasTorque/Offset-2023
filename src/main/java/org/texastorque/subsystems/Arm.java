@@ -8,6 +8,7 @@ package org.texastorque.subsystems;
 
 import org.texastorque.Debug;
 import org.texastorque.Ports;
+import org.texastorque.Robot;
 import org.texastorque.Subsystems;
 import org.texastorque.torquelib.auto.TorqueCommand;
 import org.texastorque.torquelib.auto.commands.TorqueExecute;
@@ -51,51 +52,129 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         }
     }
 
-    // TODO: All these setpoints need to be re-tuned -- arm should be fine
-    public static enum State {
-        GRAB(
-                new ArmPose(5, Rotation2d.fromDegrees(252)),
-                new ArmPose(.238, Rotation2d.fromDegrees(249))),
-        AUTOGRAB(
-                new ArmPose(5, Rotation2d.fromDegrees(268)),
-                new ArmPose(0, Rotation2d.fromDegrees(180))),
-        AUTOINDEX(
-                new ArmPose(5, Rotation2d.fromDegrees(250)),
-                new ArmPose(0, Rotation2d.fromDegrees(180))),
-        INDEX(
-                new ArmPose(18, Rotation2d.fromDegrees(215)),
-                new ArmPose(18, Rotation2d.fromDegrees(240))),
-        WAYPOINT(new ArmPose(0.45, Rotation2d.fromDegrees(90))),
-        STOWED(new ArmPose(8, Rotation2d.fromDegrees(175))),
-        GRABBED(STOWED),
-        SHELF(new ArmPose(0, Rotation2d.fromDegrees(220))),
-        MID(
-                new ArmPose(0, Rotation2d.fromDegrees(0)),
-                new ArmPose(5, Rotation2d.fromDegrees(20))),
-        TOP(
-                new ArmPose(30, Rotation2d.fromDegrees(0)),
-                new ArmPose(43, Rotation2d.fromDegrees(10))),
-        LOW(new ArmPose(.6, Rotation2d.fromDegrees(0))),
-        THROW(new ArmPose(50, Rotation2d.fromDegrees(0)));
-
+    public static class RobotArmState {
         public final ArmPose cubePose;
         public final ArmPose conePose;
 
-        private State(final ArmPose both) {
-            this(both, both);
+        public RobotArmState(final ArmPose bothPose) {
+            this(bothPose, bothPose);
         }
 
-        private State(final ArmPose cubePose, final ArmPose conePose) {
+        public RobotArmState(final ArmPose cubePose, final ArmPose conePose) {
             this.cubePose = cubePose;
             this.conePose = conePose;
         }
+    }
+
+    // GRAB(
+    //            new ArmPose(5, Rotation2d.fromDegrees(252)),
+    //            new ArmPose(.238, Rotation2d.fromDegrees(249))),
+    //    AUTOGRAB(
+    //            new ArmPose(5, Rotation2d.fromDegrees(268)),
+    //            new ArmPose(0, Rotation2d.fromDegrees(180))),
+    //    AUTOINDEX(
+    //            new ArmPose(5, Rotation2d.fromDegrees(250)),
+    //            new ArmPose(0, Rotation2d.fromDegrees(180))),
+    //    INDEX(
+    //            new ArmPose(18, Rotation2d.fromDegrees(215)),
+    //            new ArmPose(18, Rotation2d.fromDegrees(240))),
+    //    WAYPOINT(new ArmPose(0.45, Rotation2d.fromDegrees(90))),
+    //    STOWED(new ArmPose(8, Rotation2d.fromDegrees(175))),
+    //    GRABBED(STOWED),
+    //    SHELF(new ArmPose(0, Rotation2d.fromDegrees(220))),
+    //    MID(
+    //            new ArmPose(0, Rotation2d.fromDegrees(0)),
+    //            new ArmPose(5, Rotation2d.fromDegrees(20))),
+    //    TOP(
+    //            new ArmPose(30, Rotation2d.fromDegrees(0)),
+    //            new ArmPose(43, Rotation2d.fromDegrees(10))),
+    //    LOW(new ArmPose(.6, Rotation2d.fromDegrees(0))),
+    //    THROW(new ArmPose(50, Rotation2d.fromDegrees(0)));
+
+    public static enum State {
+        GRAB(
+                new RobotArmState(
+                        new ArmPose(5, Rotation2d.fromDegrees(252)),
+                        new ArmPose(.238, Rotation2d.fromDegrees(249))),
+                new RobotArmState(
+                        new ArmPose(.15, Rotation2d.fromDegrees(250)),
+                        new ArmPose(0, Rotation2d.fromDegrees(240)))),
+        INDEX(
+                new RobotArmState(
+                        new ArmPose(18, Rotation2d.fromDegrees(215)),
+                        new ArmPose(18, Rotation2d.fromDegrees(240))),
+                new RobotArmState(
+                        new ArmPose(.4, Rotation2d.fromDegrees(230)),
+                        new ArmPose(.4, Rotation2d.fromDegrees(242)))),
+        WAYPOINT(
+                new RobotArmState(
+                        new ArmPose(0.45, Rotation2d.fromDegrees(90))),
+                new RobotArmState(
+                        new ArmPose(0.45, Rotation2d.fromDegrees(250)))),
+        STOWED(
+                new RobotArmState(
+                        new ArmPose(8, Rotation2d.fromDegrees(175))),
+                new RobotArmState(
+                        new ArmPose(.2, Rotation2d.fromDegrees(175)))),
+        GRABBED(STOWED),
+        AUTOGRAB(
+                new RobotArmState(
+                        new ArmPose(5, Rotation2d.fromDegrees(268)),
+                        new ArmPose(0, Rotation2d.fromDegrees(180))),
+                new RobotArmState(
+                        new ArmPose(5, Rotation2d.fromDegrees(268)),
+                        new ArmPose(0, Rotation2d.fromDegrees(180)))),
+        SHELF(
+                new RobotArmState(
+                        new ArmPose(0, Rotation2d.fromDegrees(220))),
+                new RobotArmState(
+                        new ArmPose(.55, Rotation2d.fromDegrees(0)))),
+        MID(
+                new RobotArmState(
+                        new ArmPose(0, Rotation2d.fromDegrees(0)),
+                        new ArmPose(5, Rotation2d.fromDegrees(20))),
+                new RobotArmState(
+                        new ArmPose(.1, Rotation2d.fromDegrees(0)),
+                        new ArmPose(.275, Rotation2d.fromDegrees(5)))),
+        TOP(
+                new RobotArmState(
+                        new ArmPose(30, Rotation2d.fromDegrees(0)),
+                        new ArmPose(43, Rotation2d.fromDegrees(10))),
+                new RobotArmState(
+                        new ArmPose(1.3, Rotation2d.fromDegrees(0)),
+                        new ArmPose(1.3, Rotation2d.fromDegrees(5)))),
+        LOW(
+                new RobotArmState(
+                        new ArmPose(.6, Rotation2d.fromDegrees(0))),
+                new RobotArmState(
+                        new ArmPose(.55, Rotation2d.fromDegrees(0)))),
+        THROW(
+                new RobotArmState(
+                        new ArmPose(50, Rotation2d.fromDegrees(0))),
+                new RobotArmState(
+                        new ArmPose(50, Rotation2d.fromDegrees(0))));
+
+        public final RobotArmState competitonPose;
+        public final RobotArmState practicePose;
+
+        private State(final RobotArmState both) {
+            this(both, both);
+        }
+
+        private State(final RobotArmState competitonPose, final RobotArmState practicePose) {
+            this.competitonPose = competitonPose;
+            this.practicePose = practicePose;
+        }
 
         private State(final State other) {
-            this(other.cubePose, other.conePose);
+            this(other.competitonPose, other.practicePose);
         }
 
         public ArmPose get() {
-            return hand.isCubeMode() ? cubePose : conePose;
+            return Robot.isCompetition()
+                    ? hand.isCubeMode() ? this.competitonPose.cubePose : this.competitonPose.conePose
+                    : hand.isCubeMode() ? this.practicePose.cubePose : this.practicePose.conePose;
+
         }
     }
 
@@ -135,7 +214,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     private final TorqueNEO rotary = new TorqueNEO(Ports.ARM_ROTARY_MOTOR);
 
     @Config
-    public final PIDController rotaryPoseController = new PIDController(1.89, 0, 0);
+    public final PIDController rotaryPoseController = Robot.isCompetition() ? new PIDController(1.89, 0, 0)
+            : new PIDController(.5 * Math.PI, 0 * Math.PI, 0 * Math.PI);;
 
     public final ArmFeedforward rotaryFeedforward = new ArmFeedforward(0.18362, 0.22356, 4, 4.4775);
 
