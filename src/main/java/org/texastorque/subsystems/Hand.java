@@ -50,8 +50,6 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
 
     private static final double MAX_CLAW_VOLTS = 12;
 
-    private static final double CLAW_ENCODER_OFFSET = -1477;
-
     public static final synchronized Hand getInstance() {
         return instance == null ? instance = new Hand() : instance;
     }
@@ -71,7 +69,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
 
     private final TorqueNEO claw = new TorqueNEO(Ports.CLAW_MOTOR);
 
-    private final TorqueCANCoder clawEncoder = new TorqueCANCoder(Ports.CLAW_ENCODER); 
+    private final TorqueCANCoder clawEncoder = new TorqueCANCoder(Ports.CLAW_ENCODER);
 
     private final TorqueRequestableTimeout retractArmTimeout = new TorqueRequestableTimeout();
 
@@ -144,7 +142,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
         double clawVolts = clawPoseController.calculate(realClawPose, activeState.clawSetpoint);
         SmartDashboard.putNumber("claw::requestedVolts", clawVolts);
         clawVolts = TorqueMath.constrain(clawVolts, MAX_CLAW_VOLTS);
-        claw.setVolts(clawVolts);
+        // claw.setVolts(clawVolts);
 
         if (lastState != activeState) {
             if (activeState == State.OPEN)
@@ -164,7 +162,6 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
     }
 
     private void updateFeedback() {
-        // realClawPose = clawEncoder.getPosition() - CLAW_ENCODER_OFFSET;
-        realClawPose = claw.getPosition();
+        realClawPose = clawEncoder.getPosition();
     }
 }

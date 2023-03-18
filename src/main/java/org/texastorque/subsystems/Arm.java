@@ -295,7 +295,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         elevatorVolts += elevatorPoseFeedForward.calculate(activeState.get().elevatorPose, 0);
         elevatorVolts = TorqueMath.constrain(elevatorVolts, ELEVATOR_MAX_VOLTS);
         elevatorVolts = TorqueMath.linearConstraint(elevatorVolts, -realElevatorPose, ELEVATOR_MIN, ELEVATOR_MAX);
-        elevator.setVolts(-elevatorVolts);
+      //  elevator.setVolts(-elevatorVolts);
         SmartDashboard.putNumber("arm::elevatorCurrent", elevator.getCurrent());
     }
 
@@ -319,7 +319,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
         rotaryVolts += -rotaryPoseController.calculate(rotaryPos, armSetpoint);
         rotaryVolts = TorqueMath.constrain(rotaryVolts, ROTARY_MAX_VOLTS);
-        rotary.setVolts(rotaryEncoder.isCANResponsive() && !isState(Arm.State.LOW) ? rotaryVolts : 0);
+        // rotary.setVolts(rotaryEncoder.isCANResponsive() && !isState(Arm.State.LOW) ? rotaryVolts : 0);
         //rotary.setVolts(rotaryVolts);
     }
 

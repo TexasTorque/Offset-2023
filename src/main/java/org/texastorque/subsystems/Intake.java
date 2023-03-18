@@ -33,17 +33,14 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
         }
 
         public boolean atPose(final double rotaryReal) {
-            return  Math.abs(rotaryReal - rotaryPose) < ROTARY_TOLERANCE;
+            return Math.abs(rotaryReal - rotaryPose) < ROTARY_TOLERANCE;
         }
     }
 
-    // Reduction probably changes!
     public static enum State {
-        // INTAKE(new IndexerPose(6, -6.04762 - .3095), new IndexerPose(6, -6.04762 - .3095)),
-        // PRIME(new IndexerPose(0, -2.1428 - .3095)),
 
         // cube cone
-        INTAKE(new IndexerPose(12, 6, ROT_INTAKE), new IndexerPose(12, 12, ROT_INTAKE)),
+        INTAKE(new IndexerPose(8, 6, ROT_INTAKE), new IndexerPose(8, 12, ROT_INTAKE)),
         AUTOINTAKE(new IndexerPose(3, 3, ROT_INTAKE), new IndexerPose(3, 3, ROT_INTAKE)),
         OUTAKE(new IndexerPose(-4, -4, ROT_INTAKE), new IndexerPose(-8, -9, ROT_INTAKE)),
         PRIME(new IndexerPose(0, 0, ROT_PRIME)),
@@ -52,25 +49,31 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
         public final IndexerPose cubePose;
         public final IndexerPose conePose;
 
-        private State(final IndexerPose both) { this(both, both); }
+        private State(final IndexerPose both) {
+            this(both, both);
+        }
 
         private State(final IndexerPose cubePose, final IndexerPose conePose) {
             this.cubePose = cubePose;
             this.conePose = conePose;
         }
 
-        public IndexerPose get() { return hand.isCubeMode() ? cubePose : conePose; }
+        public IndexerPose get() {
+            return hand.isCubeMode() ? cubePose : conePose;
+        }
     }
-    private static final double ROT_INTAKE = -13;
-    private static final double ROT_PRIME = -7;
+
+    private static final double ROT_INTAKE = 13.5;
+    private static final double ROT_PRIME = 5;
     private static final double ROT_UP = 0;
 
     private static volatile Intake instance;
 
     public static final double ROTARY_MAX_VOLTS = 4, ROLLER_MAX_VOLTS = 6;
 
-    private static final double ROLLER_SLOWDOWN = .1;
-    public static final synchronized Intake getInstance() { return instance == null ? instance = new Intake() : instance; }
+    public static final synchronized Intake getInstance() {
+        return instance == null ? instance = new Intake() : instance;
+    }
 
     @Log.ToString
     private State activeState = State.UP;
@@ -82,8 +85,8 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
     public double realRotaryPose = 0;
 
     private final TorqueNEO topRollers = new TorqueNEO(Ports.INTAKE_ROLLER_MOTOR_TOP);
-    //private final TorqueNEO bottomRollers = new TorqueNEO(Ports.INTAKE_ROLLER_MOTOR_BOTTOM);
-    private final TorqueNEO rotary = new TorqueNEO(Ports.INTAKE_ROTARY_MOTOR_LEFT);
+    private final TorqueNEO rotaryLeft = new TorqueNEO(Ports.INTAKE_ROTARY_MOTOR_LEFT);
+    private final TorqueNEO rotaryRight = new TorqueNEO(Ports.INTAKE_ROTARY_MOTOR_RIGHT);
 
     @Config
     public final PIDController rotaryPoseController = new PIDController(2.4, 0, 0);
@@ -94,69 +97,64 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
         topRollers.setBreakMode(false);
         topRollers.burnFlash();
 
-        // bottomRollers.setCurrentLimit(25);
-        // bottomRollers.setVoltageCompensation(12.6);
-        // bottomRollers.setBreakMode(false);
-        // bottomRollers.burnFlash();
+        rotaryLeft.setCurrentLimit(33);
+        rotaryLeft.setVoltageCompensation(12.6);
+        rotaryLeft.setBreakMode(true);
+        rotaryLeft.burnFlash();
 
-        rotary.setCurrentLimit(33);
-        rotary.setVoltageCompensation(12.6);
-        rotary.addFollower(Ports.INTAKE_ROTARY_MOTOR_RIGHT, true);
-        // must happen after add followers
-        rotary.setBreakMode(true);
-        rotary.burnFlash();
+        rotaryRight.setCurrentLimit(33);
+        rotaryRight.setVoltageCompensation(12.6);
+        rotaryRight.setBreakMode(true);
+        rotaryRight.burnFlash();
     }
 
-    public void setState(final State state) { this.desiredState = state; }
+    public void setState(final State state) {
+        this.desiredState = state;
+    }
 
-    public State getState() { return desiredState; }
+    public State getState() {
+        return desiredState;
+    }
 
-    public boolean isState(final State state) { return getState() == state; }
+    public boolean isState(final State state) {
+        return getState() == state;
+    }
 
     public TorqueCommand setStateCommand(final State state) {
         return new TorqueExecute(() -> setState(state));
     }
 
     @Override
-    public final void initialize(final TorqueMode mode) {}
+    public final void initialize(final TorqueMode mode) {
+    }
 
     @Override
     public final void update(final TorqueMode mode) {
         activeState = desiredState;
 
-        realRotaryPose = rotary.getPosition();
+        realRotaryPose = rotaryLeft.getPosition();
 
         if (desiredState == State.UP && arm.isPerformingHandoff())
             activeState = State.PRIME;
 
-        SmartDashboard.putNumber("indexer::rotaryPose", rotary.getPosition());
-        SmartDashboard.putNumber("indexer::topRollersPose", topRollers.getPosition());
+        SmartDashboard.putNumber("indexer::rotaryPose", rotaryLeft.getPosition());
         SmartDashboard.putNumber("intake::topRollersCurrent", topRollers.getCurrent());
-       // SmartDashboard.putNumber("indexer::botRollersPose", bottomRollers.getPosition());
-
-        final double rollerSlowdown = ROLLER_SLOWDOWN * TorqueMath.constrain(drivebase.inputSpeeds.getVelocityMagnitude(), 1, Drivebase.MAX_VELOCITY);
+        SmartDashboard.putNumber("intake::rotaryCurrent", rotaryLeft.getCurrent());
 
         double topRollerVolts = activeState.get().topRollerVolts;
-        // if (hand.isCubeMode()) topRollerVolts /= rollerSlowdown;
         topRollers.setVolts(-topRollerVolts);
-        SmartDashboard.putNumber("intake::topRollersSpeed", topRollers.getVelocity());
 
-        double bottomRollerVolts = -activeState.get().bottomRollerVolts;
-        // if (hand.isCubeMode()) bottomRollerVolts /= rollerSlowdown;
-       // bottomRollers.setVolts(bottomRollerVolts);
-        //SmartDashboard.putNumber("intake::bottomRollersSpeed", bottomRollers.getVelocity());
-
-        SmartDashboard.putNumber("intake::requestedRotaryPose", activeState.get().rotaryPose);
-        double requestedRotaryVolts = TorqueMath.constrain(rotaryPoseController.calculate(realRotaryPose, activeState.get().rotaryPose), ROTARY_MAX_VOLTS);
+        double requestedRotaryVolts = TorqueMath.constrain(
+                rotaryPoseController.calculate(realRotaryPose, activeState.get().rotaryPose), ROTARY_MAX_VOLTS);
         if (activeState == State.INTAKE || activeState == State.OUTAKE) {
-            requestedRotaryVolts += .25;
+            requestedRotaryVolts -= .25;
         }
-        SmartDashboard.putNumber("intake::requestedRotaryVolts", requestedRotaryVolts);
-        SmartDashboard.putNumber("intake::rotaryCurrent", rotary.getCurrent());
-        //rotary.setVolts(requestedRotaryVolts);
 
-        // if (mode.isTeleop())
-            // desiredState = State.UP;
+        rotaryLeft.setVolts(requestedRotaryVolts);
+        rotaryRight.setVolts(-requestedRotaryVolts);
+
+        if (mode.isTeleop())
+            desiredState = State.UP;
     }
 
     @Log.BooleanBox
