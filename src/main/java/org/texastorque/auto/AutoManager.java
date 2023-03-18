@@ -7,12 +7,12 @@
 package org.texastorque.auto;
 
 
-import org.texastorque.auto.sequences.DumbBothSide1PieceMobility;
-import org.texastorque.auto.sequences.DumbBumpySide1PieceEngage;
-import org.texastorque.auto.sequences.DumbFlatSide1PieceEngage;
-import org.texastorque.auto.sequences.DumbMiddleSide1PieceEngage;
-import org.texastorque.auto.sequences.FlatSide2PieceEngage;
-import org.texastorque.auto.sequences.FlatSide3Piece;
+import org.texastorque.auto.sequences.waco.DumbBothSide1PieceMobility;
+import org.texastorque.auto.sequences.waco.DumbBumpySide1PieceEngage;
+import org.texastorque.auto.sequences.waco.DumbFlatSide1PieceEngage;
+import org.texastorque.auto.sequences.waco.DumbMiddleSide1PieceEngage;
+import org.texastorque.auto.sequences.waco.FlatSide2PieceEngage;
+import org.texastorque.auto.sequences.waco.FlatSide3Piece;
 import org.texastorque.torquelib.auto.TorqueAutoManager;
 
 public final class AutoManager extends TorqueAutoManager {

@@ -4,7 +4,7 @@
  * This file is part of Torque-2023, which is not licensed for distribution.
  * For more details, see ./license.txt or write <jus@justusl.com>.
  */
-package org.texastorque.auto.sequences;
+package org.texastorque.auto.sequences.waco;
 
 import org.texastorque.Subsystems;
 import org.texastorque.auto.commands.FollowEventPath;

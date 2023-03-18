@@ -4,7 +4,7 @@
  * This file is part of Torque-2023, which is not licensed for distribution.
  * For more details, see ./license.txt or write <jus@justusl.com>.
  */
-package org.texastorque.auto.sequences;
+package org.texastorque.auto.sequences.waco;
 
 import org.texastorque.Subsystems;
 import org.texastorque.auto.commands.FollowEventPath;
@@ -14,25 +14,18 @@ import org.texastorque.subsystems.Drivebase;
 import org.texastorque.subsystems.Hand;
 import org.texastorque.subsystems.Hand.GamePiece;
 import org.texastorque.torquelib.auto.TorqueSequence;
+import org.texastorque.torquelib.auto.commands.TorqueExecute;
 import org.texastorque.torquelib.auto.commands.TorqueSequenceRunner;
 
-public final class BumpySide2PieceEngage extends TorqueSequence implements Subsystems {
-    public BumpySide2PieceEngage() {
+public final class DumbFlatSide1PieceEngage extends TorqueSequence implements Subsystems {
+    public DumbFlatSide1PieceEngage() {
+        addBlock(new TorqueExecute(() -> drivebase.updateWithTags = false));
+        
         addBlock(hand.setStateCommand(Hand.State.CLOSE), hand.setGamePieceModeCommand(GamePiece.CONE));
 
         addBlock(new TorqueSequenceRunner(new Score(Arm.State.TOP)));
 
-        addBlock(hand.setGamePieceModeCommand(GamePiece.CUBE));
-
-        addBlock(new FollowEventPath("bumpy-side-get-first", 4.5, 4.5)); 
-
-        addBlock(new TorqueSequenceRunner(new Score(Arm.State.TOP)));
-
-        addBlock(new FollowEventPath("bumpy-side-get-second", 4.5, 4.5));
-
-        addBlock(new TorqueSequenceRunner(new Score(Arm.State.MID))); 
-
-        addBlock(new FollowEventPath("bumpy-side-go-level"));
+        addBlock(new FollowEventPath("flat-side-mobility-engage", 3.5, 3.5));
 
         addBlock(drivebase.setStateCommand(Drivebase.State.BALANCE));
     }
