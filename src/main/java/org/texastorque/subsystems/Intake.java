@@ -13,6 +13,7 @@ import org.texastorque.torquelib.auto.TorqueCommand;
 import org.texastorque.torquelib.auto.commands.TorqueExecute;
 import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
+import org.texastorque.torquelib.control.TorqueRequestableTimeout;
 import org.texastorque.torquelib.motors.TorqueNEO;
 import org.texastorque.torquelib.util.TorqueMath;
 
@@ -47,6 +48,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
         AUTOINTAKE(new IndexerPose(3, 3, ROT_INTAKE), new IndexerPose(3, 3, ROT_INTAKE)),
         OUTAKE(new IndexerPose(-4, -4, ROT_INTAKE), new IndexerPose(-8, -9, ROT_INTAKE)),
         PRIME(new IndexerPose(0, 0, ROT_PRIME)),
+        PRIME_ROLL(new IndexerPose(6, 6, ROT_PRIME), new IndexerPose(9, 12, ROT_PRIME)),
         UP(new IndexerPose(0, 0, ROT_UP));
 
         public final IndexerPose cubePose;
@@ -79,6 +81,9 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
     private State desiredState = State.UP;
 
     @Log.ToString
+    private State lastState = State.UP;
+
+    @Log.ToString
     public double realRotaryPose = 0;
 
     private final TorqueNEO topRollers = new TorqueNEO(Ports.INTAKE_ROLLER_MOTOR_TOP);
@@ -87,6 +92,8 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
 
     @Config
     public final PIDController rotaryPoseController = new PIDController(2.4, 0, 0);
+
+    private final TorqueRequestableTimeout primeRollTimeout = new TorqueRequestableTimeout();
 
     private Intake() {
         topRollers.setCurrentLimit(30);
@@ -126,6 +133,12 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
 
         realRotaryPose = rotary.getPosition();
 
+        // if (desiredState == State.PRIME || lastState == State.INTAKE)
+        //     primeRollTimeout.set(1);
+
+        // if (primeRollTimeout.get())
+        //     activeState = State.PRIME_ROLL;
+
         if (desiredState == State.UP && arm.isPerformingHandoff())
             activeState = State.PRIME;
 
@@ -157,6 +170,8 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
 
         // if (mode.isTeleop())
             // desiredState = State.UP;
+
+        lastState = activeState;
     }
 
     @Log.BooleanBox

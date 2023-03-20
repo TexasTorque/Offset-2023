@@ -101,14 +101,12 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     private static final double ROTARY_ENCODER_OFFSET = -Units.degreesToRadians(76 + 31),
             ELEVATOR_MAX_VOLTS_UP = 12,
-            ELEVATOR_MAX_VOLTS_DOWN = 7,
+            ELEVATOR_MAX_VOLTS_DOWN = 12,
             ROTARY_MAX_VOLTS = 12,
             ELEVATOR_MIN = 0,
             ELEVATOR_MAX = 50; // 54 is the technical max
 
     private static volatile Arm instance;
-
-    private static final double RADIANS_ADJUSTMENT_COEF = Units.degreesToRadians(15);
 
     public static final synchronized Arm getInstance() {
         return instance == null ? instance = new Arm() : instance;
@@ -156,6 +154,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         elevator.setCurrentLimit(30);
         elevator.setVoltageCompensation(12.6);
         elevator.setBreakMode(true);
+        elevator.invertMotor(false);
         elevator.burnFlash();
 
         rotary.setCurrentLimit(60);
