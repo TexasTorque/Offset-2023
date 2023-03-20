@@ -269,10 +269,10 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
             } else if (state == State.BALANCE) {
                 inputSpeeds = autoLevelController.calculate();
                 convertToFieldRelative();
-            }
 
-            if (mode.isTeleop())
+            } else if (mode.isTeleop()) {
                 inputSpeeds = inputSpeeds.times(speedSetting.speed);
+            }
 
             if (state == State.FIELD_RELATIVE) {
                 calculateTeleop();
@@ -289,10 +289,11 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
             if (inputSpeeds.hasZeroVelocity()) {
                 preseveModulePositions();
             } else {
-                fl.setDesiredState(swerveStates[0]);
-                fr.setDesiredState(swerveStates[1]);
-                bl.setDesiredState(swerveStates[2]);
-                br.setDesiredState(swerveStates[3]);
+                final boolean useSmartMode = mode.isAuto() || state == State.ALIGN;
+                fl.setDesiredState(swerveStates[0], useSmartMode);
+                fr.setDesiredState(swerveStates[1], useSmartMode);
+                bl.setDesiredState(swerveStates[2], useSmartMode);
+                br.setDesiredState(swerveStates[3], useSmartMode);
             }
         }
 
