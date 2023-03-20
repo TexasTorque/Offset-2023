@@ -77,7 +77,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
     private final TorqueRequestableTimeout retractArmTimeout = new TorqueRequestableTimeout();
 
     private Hand() {
-        claw.setCurrentLimit(10);
+        claw.setCurrentLimit(7);
         claw.setVoltageCompensation(12.6);
         claw.setBreakMode(true);
         claw.burnFlash();

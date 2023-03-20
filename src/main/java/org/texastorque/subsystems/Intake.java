@@ -63,7 +63,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
 
         public IndexerPose get() { return hand.isCubeMode() ? cubePose : conePose; }
     }
-    private static final double ROT_INTAKE = -14;
+    private static final double ROT_INTAKE = -12.85;
     private static final double ROT_PRIME = -7;
     private static final double ROT_UP = 0;
 
@@ -162,7 +162,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
         Debug.log("requestedRotaryPose", activeState.get().rotaryPose);
         double requestedRotaryVolts = TorqueMath.constrain(rotaryPoseController.calculate(realRotaryPose, activeState.get().rotaryPose), ROTARY_MAX_VOLTS);
         if (activeState == State.INTAKE || activeState == State.OUTAKE) {
-            requestedRotaryVolts += .25;
+            requestedRotaryVolts += 1;
         }
         Debug.log("requestedRotaryVolts", requestedRotaryVolts);
         Debug.log("rotaryCurrent", rotary.getCurrent());

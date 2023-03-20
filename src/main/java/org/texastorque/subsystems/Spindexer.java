@@ -53,7 +53,7 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
     private final DigitalInput limitSwitch = new DigitalInput(0);
     private AutoState autoSpindexState = AutoState.SEARCH;
     private final PIDController turntablePID = new PIDController(3, 0, 0);
-    private boolean initAutoSpindex = false, initGrabPose = false, test;
+    private boolean initAutoSpindex = false, initGrabPose = false;
 
     private Spindexer() {
         turntable.setCurrentLimit(35);

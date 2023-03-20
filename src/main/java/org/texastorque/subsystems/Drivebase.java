@@ -102,12 +102,12 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     // (forward from center, left from center, up from center)
 
     private static final Transform3d LEFT_CAMERA_TO_CENTER = new Transform3d(
-            new Translation3d(Units.inchesToMeters(5.539), Units.inchesToMeters(-7.961), Units.inchesToMeters(43.3)),
-            new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(0), Units.degreesToRadians(35.895)));
+            new Translation3d(Units.inchesToMeters(5.800), Units.inchesToMeters(-8.517), Units.inchesToMeters(43.3)),
+            new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(0), Units.degreesToRadians(35.895 / 2)));
 
     private static final Transform3d RIGHT_CAMERA_TO_CENTER = new Transform3d(
-            new Translation3d(Units.inchesToMeters(5.464), Units.inchesToMeters(-12.803), Units.inchesToMeters(43.3)),
-            new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(0), Units.degreesToRadians(-35.895)));
+            new Translation3d(Units.inchesToMeters(5.760), Units.inchesToMeters(-12.707), Units.inchesToMeters(43.3)),
+            new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(0), Units.degreesToRadians(-35.895 / 2)));
 
     public static SwerveModulePosition invertSwerveModuleDistance(final SwerveModulePosition pose) {
         return new SwerveModulePosition(-pose.distanceMeters, pose.angle);
@@ -269,10 +269,10 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
             } else if (state == State.BALANCE) {
                 inputSpeeds = autoLevelController.calculate();
                 convertToFieldRelative();
-            }
 
-            if (mode.isTeleop())
+            } else if (mode.isTeleop()) {
                 inputSpeeds = inputSpeeds.times(speedSetting.speed);
+            }
 
             if (state == State.FIELD_RELATIVE) {
                 calculateTeleop();
@@ -289,10 +289,11 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
             if (inputSpeeds.hasZeroVelocity()) {
                 preseveModulePositions();
             } else {
-                fl.setDesiredState(swerveStates[0]);
-                fr.setDesiredState(swerveStates[1]);
-                bl.setDesiredState(swerveStates[2]);
-                br.setDesiredState(swerveStates[3]);
+                final boolean useSmartMode = mode.isAuto() || state == State.ALIGN;
+                fl.setDesiredState(swerveStates[0], useSmartMode);
+                fr.setDesiredState(swerveStates[1], useSmartMode);
+                bl.setDesiredState(swerveStates[2], useSmartMode);
+                br.setDesiredState(swerveStates[3], useSmartMode);
             }
         }
 

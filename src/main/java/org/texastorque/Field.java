@@ -84,11 +84,14 @@ public final class Field {
         return AprilTagType.GRID;
     }
 
-    private static final Map<Integer, Pose3d> reflectAprilTags() {
-        final Map<Integer, Pose3d> newMap = new HashMap<>();
-        for (final Map.Entry<Integer, Pose3d> aprilTag : APRIL_TAG_ORIGINALS.entrySet()) {
-            newMap.put(aprilTag.getKey(), reflectPosition(aprilTag.getValue()));
-        }
-        return newMap;
+
+   private static final Map<Integer, Pose3d> reflectAprilTags() {
+    final Map<Integer, Pose3d> newMap = new HashMap<>();
+    for (final Map.Entry<Integer, Pose3d> aprilTag : APRIL_TAG_ORIGINALS.entrySet()) {
+        newMap.put(aprilTag.getKey(), reflectPosition(aprilTag.getValue()));
     }
+    return newMap;
 }
+}
+
+
