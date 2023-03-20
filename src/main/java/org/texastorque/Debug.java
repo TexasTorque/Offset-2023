@@ -10,10 +10,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.texastorque.auto.AutoManager;
+import org.texastorque.torquelib.util.TorqueUtil;
 
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
-import edu.wpi.first.wpilibj.shuffleboard.WidgetType;
 import edu.wpi.first.wpilibj.util.Color;
 
 public final class Debug implements Subsystems {
@@ -54,8 +54,8 @@ public final class Debug implements Subsystems {
     }
 
     private static ShuffleboardTab getTab() {
-        // final String[] parts = TorqueUtil.getStackTraceElement(4).getClassName().split(".");
-        // return Shuffleboard.getTab(parts[parts.length - 1]);
-        return Shuffleboard.getTab("Debug");
+        final String className = TorqueUtil.getStackTraceElement(4).getClassName();
+        final String tabName = className.substring(className.lastIndexOf('.') + 1);
+        return Shuffleboard.getTab(tabName);
     }
 }
