@@ -23,6 +23,13 @@ public final class EventMap implements Subsystems {
             hand.setState(Hand.State.OPEN);
         }));
 
+
+        map.put("intake-up", new TorqueExecute(() -> {
+            intake.setState(Intake.State.UP);
+            arm.setState(Arm.State.STOWED);
+            hand.setState(Hand.State.CLOSE);
+        }));
+
         map.put("pickup", new TorqueSequenceRunner(new Handoff()));
 
         // Legacy

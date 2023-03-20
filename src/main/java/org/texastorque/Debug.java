@@ -20,6 +20,7 @@ public final class Debug implements Subsystems {
     public static final boolean DO_LOGGING = true;
 
     private static final Map<String, Double> numbers = new HashMap<>();
+    private static final Map<String, String> strings = new HashMap<>();
 
     public static void initDashboard() {
         Shuffleboard.update();
@@ -44,8 +45,12 @@ public final class Debug implements Subsystems {
     }
 
     public static void log(final String key, final String string) {
-        // if (DO_LOGGING)
-        //     getTab().addString(key, () -> string);
+        if (DO_LOGGING) {
+            if (!strings.containsKey(key)) {
+                getTab().addString(key, () -> strings.get(key));
+            }
+            strings.put(key, string);
+        }
     }
 
     public static void log(final String key, final Object object) {

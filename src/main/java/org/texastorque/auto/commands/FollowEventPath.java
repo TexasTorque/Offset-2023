@@ -70,7 +70,7 @@ public final class FollowEventPath extends TorqueCommand implements Subsystems {
         this.commands = commands;
         running = new ArrayList<TorqueCommand>();
 
-           }
+    }
 
     public void addEvent(final String name, final TorqueCommand command) { commands.put(name, command); }
 

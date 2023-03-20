@@ -8,6 +8,7 @@ package org.texastorque.subsystems;
 
 import java.util.Optional;
 
+import org.texastorque.Debug;
 import org.texastorque.Field;
 import org.texastorque.Ports;
 import org.texastorque.Subsystems;
@@ -344,8 +345,10 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     }
 
     private void updateFeedback() {
+        Debug.log("gyro pitch", TorqueNavXGyro.getInstance().getPitch());
+
         if (updateWithTags || DriverStation.isTeleop()) {
-            // cameraLeft.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
+            cameraLeft.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
             cameraRight.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
         }
 

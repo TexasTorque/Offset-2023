@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import org.texastorque.Debug;
 import org.texastorque.Field;
 import org.texastorque.Field.AprilTagType;
 import org.texastorque.torquelib.control.TorquePID;
@@ -35,9 +36,9 @@ import edu.wpi.first.wpilibj.Timer;
 public final class PathAlignController extends AbstractController<Optional<TorqueSwerveSpeeds>> {
     public static enum TranslationState {
         NONE(0, 0),
-        GRID_CENTER(ALIGN_X_OFFSET_GRID, -.15),
-        GRID_RIGHT(ALIGN_X_OFFSET_GRID, -(3.65 - 2.75)),
-        GRID_LEFT(ALIGN_X_OFFSET_GRID, (4.05 - 3.75 - .076)),
+        GRID_CENTER(ALIGN_X_OFFSET_GRID, 0),
+        GRID_RIGHT(ALIGN_X_OFFSET_GRID, -(5.3244 - 4.711)),
+        GRID_LEFT(ALIGN_X_OFFSET_GRID, (5.901 - 5.3244)),
         LOAD_ZONE(2.25, -1.25);
 
         public Translation3d transl;
@@ -85,12 +86,12 @@ public final class PathAlignController extends AbstractController<Optional<Torqu
     private static final double DISTANCE_TOLERANCE_TIGHT = Units.inchesToMeters(1);
     private static final double DISTANCE_TOLERANCE_LOOSE = Units.inchesToMeters(3);
 
-    public static double ALIGN_X_OFFSET_GRID = (15.589758 - 14.72) + Units.inchesToMeters(3);
+    public static double ALIGN_X_OFFSET_GRID = (15.589758 - 14.72) + Units.inchesToMeters(1) + (2.194459414051292 - 1.97415);
 
     public static double ALIGN_X_OFFSET_LOAD_ZONE = 1;
 
-    private final PIDController xController = TorquePID.create(2).build();
-    private final PIDController yController = TorquePID.create(5).build();
+    private final PIDController xController = TorquePID.create(.5).build();
+    private final PIDController yController = TorquePID.create(.5).build();
 
     private final PIDController thetaController = new PIDController(2 * Math.PI, 0, 0);
     private final PPHolonomicDriveController controller;
@@ -106,9 +107,9 @@ public final class PathAlignController extends AbstractController<Optional<Torqu
     private PathPlannerTrajectory trajectory;
 
     private final Timer timer = new Timer();
-    final double LAST_LEG_X_OFFSET_MAX = Units.inchesToMeters(28);
+    final double LAST_LEG_X_OFFSET_MAX = Units.inchesToMeters(22);
 
-    final double LAST_LEG_X_OFFSET_MIN = Units.inchesToMeters(28);
+    final double LAST_LEG_X_OFFSET_MIN = Units.inchesToMeters(22);
 
     private Pose2d goalPose = new Pose2d();
 
@@ -214,6 +215,9 @@ public final class PathAlignController extends AbstractController<Optional<Torqu
 
         // final Pose2d 
         goalPose = translationState.get().calculate(aprilPose);
+        Debug.log("state", alignment.toString());
+        Debug.log("goalX", goalPose.getX());
+        Debug.log("goalY", goalPose.getY());
 
         final double offset = Math.min(Math.max(current.getX(), LAST_LEG_X_OFFSET_MIN), LAST_LEG_X_OFFSET_MAX);
 

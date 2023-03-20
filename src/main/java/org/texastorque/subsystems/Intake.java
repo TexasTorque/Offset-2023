@@ -133,16 +133,16 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
 
         realRotaryPose = rotary.getPosition();
 
-        // if (desiredState == State.PRIME || lastState == State.INTAKE)
-        //     primeRollTimeout.set(1);
-
-        // if (primeRollTimeout.get())
-        //     activeState = State.PRIME_ROLL;
-
         if (desiredState == State.UP && arm.isPerformingHandoff())
             activeState = State.PRIME;
 
-        Debug.log("rotaryPose", rotary.getPosition());
+        if (activeState == State.PRIME && lastState == State.INTAKE)
+            primeRollTimeout.set(1);
+
+        if (primeRollTimeout.get())
+            activeState = State.PRIME_ROLL;
+
+         Debug.log("rotaryPose", rotary.getPosition());
         Debug.log("topRollersPose", topRollers.getPosition());
         Debug.log("botRollersPose", bottomRollers.getPosition());
 
