@@ -44,7 +44,8 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
         AUTOINTAKE(new IndexerPose(3, 3, ROT_INTAKE), new IndexerPose(3, 3, ROT_INTAKE)),
         OUTAKE(new IndexerPose(-4, -4, ROT_INTAKE), new IndexerPose(-8, -9, ROT_INTAKE)),
         PRIME(new IndexerPose(0, 0, ROT_PRIME)),
-        UP(new IndexerPose(0, 0, ROT_UP));
+        UP(new IndexerPose(0, 0, ROT_UP)), 
+        PRIME_ROLL(new IndexerPose(8, 0, ROT_PRIME));
 
         public final IndexerPose cubePose;
         public final IndexerPose conePose;
@@ -64,7 +65,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
     }
 
     private static final double ROT_INTAKE = 13.5;
-    private static final double ROT_PRIME = 5;
+    private static final double ROT_PRIME = 8;
     private static final double ROT_UP = 0;
 
     private static volatile Intake instance;
@@ -89,7 +90,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
     private final TorqueNEO rotaryRight = new TorqueNEO(Ports.INTAKE_ROTARY_MOTOR_RIGHT);
 
     @Config
-    public final PIDController rotaryPoseController = new PIDController(2.4, 0, 0);
+    public final PIDController rotaryPoseController = new PIDController(1.5, 0, 0);
 
     private Intake() {
         topRollers.setCurrentLimit(40);
