@@ -20,7 +20,6 @@ import org.texastorque.torquelib.auto.commands.TorqueContinuous;
 import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.sensors.TorqueNavXGyro;
-import org.texastorque.torquelib.sensors.TorqueVision;
 import org.texastorque.torquelib.swerve.TorqueSwerveModule2022;
 import org.texastorque.torquelib.swerve.TorqueSwerveModule2022.SwerveConfig;
 import org.texastorque.torquelib.swerve.TorqueSwerveSpeeds;
@@ -149,15 +148,15 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
     private final AutoLevelController autoLevelController = new AutoLevelController(this::getPose);
 
-    public final TorqueVision cameraLeft, cameraRight;
+    //public final TorqueVision cameraLeft, cameraRight;
     public boolean updateWithTags = true;
     /**
      * Constructor called on initialization.
      */
     private Drivebase() {
         // Do this for each camera
-        cameraLeft = new TorqueVision("camera_left", Field.getCurrentFieldLayout(), LEFT_CAMERA_TO_CENTER);
-        cameraRight = new TorqueVision("camera_right", Field.getCurrentFieldLayout(), RIGHT_CAMERA_TO_CENTER);
+       // cameraLeft = new TorqueVision("camera_left", Field.getCurrentFieldLayout(), LEFT_CAMERA_TO_CENTER);
+   //     cameraRight = new TorqueVision("camera_right", Field.getCurrentFieldLayout(), RIGHT_CAMERA_TO_CENTER);
 
         teleopOmegaController.enableContinuousInput(-Math.PI, Math.PI);
         lastRotationRadians = gyro.getRotation2d().getRadians();
@@ -213,8 +212,8 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
             state = State.FIELD_RELATIVE;
         });
         updateWithTags = true;
-        cameraLeft.setFieldLayout(Field.getCurrentFieldLayout());
-        cameraRight.setFieldLayout(Field.getCurrentFieldLayout());
+    //    cameraLeft.setFieldLayout(Field.getCurrentFieldLayout());
+    //    cameraRight.setFieldLayout(Field.getCurrentFieldLayout());
     }
 
     public SwerveModulePosition[] getModulePositions() {
@@ -309,8 +308,8 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
     private void updateFeedback() {
         if (updateWithTags) {
-            cameraLeft.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
-            cameraRight.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
+            // cameraLeft.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
+            // cameraRight.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
         }
 
         poseEstimator.update(gyro.getHeadingCCW(), getModulePositions());

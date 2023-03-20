@@ -135,8 +135,8 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         gamePieceModeToggle.onTrueOrFalse(() -> hand.setGamePieceMode(GamePiece.CONE),
                 () -> hand.setGamePieceMode(GamePiece.CUBE));
 
-        driverWantsModeShift.onTrueOrFalse(() -> hand.setGamePieceMode(GamePiece.CONE),
-                () -> hand.setGamePieceMode(GamePiece.CUBE));
+        // driverWantsModeShift.onTrueOrFalse(() -> hand.setGamePieceMode(GamePiece.CONE),
+        //         () -> hand.setGamePieceMode(GamePiece.CUBE));
 
         driverWantsIntake.onTrueOrFalse(() -> {
             if (!clawTimeout.get() && arm.isStowed()) {

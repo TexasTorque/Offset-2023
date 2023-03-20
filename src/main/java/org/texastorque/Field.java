@@ -72,11 +72,11 @@ public final class Field {
         return DriverStation.getAlliance() == DriverStation.Alliance.Blue ? APRIL_TAG_ORIGINALS : reflectAprilTags();
     }
 
-    public static List<AprilTag> getAprilTagsList() {
-        return getAprilTagsMap().entrySet().stream().map(entry -> new AprilTag(entry.getKey(), entry.getValue())).toList();
-    }
+    // public static List<AprilTag> getAprilTagsList() {
+    //     return getAprilTagsMap().entrySet().stream().map(entry -> new AprilTag(entry.getKey(), entry.getValue())).toList();
+    // }
 
-    public static AprilTagFieldLayout getCurrentFieldLayout() { return new AprilTagFieldLayout(getAprilTagsList(), FIELD_LENGTH, FIELD_WIDTH); }
+    //public static AprilTagFieldLayout getCurrentFieldLayout() { return new AprilTagFieldLayout(getAprilTagsList(), FIELD_LENGTH, FIELD_WIDTH); }
 
     public static AprilTagType getAprilTagType(final int id) {
         if (id <= 0 || id > 8) return AprilTagType.INVALID;
