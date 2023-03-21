@@ -39,7 +39,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
             gridOverrideCenter, resetGyroClick, resetPoseClick, toggleRotationLock, wantsIntake,
             gamePieceModeToggle, openClaw, armToBottom,
             armToShelf, armToMid, armToTop, armDoHandoff, armThrow,
-            wantsOuttake, xFactorToggle, autoSpindex;
+            wantsOuttake, xFactorToggle, autoSpindex, wantsTipCone;
 
     private final TorqueRequestableTimeout driverTimeout = new TorqueRequestableTimeout();
 
@@ -73,6 +73,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         openClaw = new TorqueBoolSupplier(operator::isRightBumperDown);
         gamePieceModeToggle = new TorqueToggleSupplier(() -> operator.isLeftBumperDown() || driver.isYButtonDown());
         wantsOuttake = new TorqueBoolSupplier(operator::isLeftCenterButtonDown);
+        wantsTipCone = new TorqueBoolSupplier(operator::isLeftStickClickDown);
 
         armDoHandoff = new TorqueClickSupplier(operator::isLeftTriggerDown);
         armToShelf = new TorqueClickSupplier(operator::isXButtonDown);
@@ -113,7 +114,6 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         gridOverrideCenter.onTrue(() -> drivebase.setGridOverride(GridState.CENTER));
         gridOverrideRight.onTrue(() -> drivebase.setGridOverride(GridState.RIGHT));
 
-        // autoLevel.onTrue(() -> drivebase.setState(Drivebase.State.BALANCE));
         xFactorToggle.onTrue(() -> drivebase.setState(Drivebase.State.XF));
         isZeroingWheels.onTrue(() -> drivebase.setState(Drivebase.State.ZERO));
 
@@ -131,16 +131,6 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
             arm.setState(Arm.State.STOWED);
             handoffStates.set(0);
         });
-        //
-        //        spindexerLeft.onTrue(() -> {
-        //            spindexer.setState(Spindexer.State.FAST_CW);
-        //        });
-        //
-        //        spindexerRight.onTrue(() -> {
-        //            spindexer.setState(Spindexer.State.FAST_CCW);
-        //        });
-
-        // arm.setSetpointAdjustment(operator.getRightYAxis());
 
         armDoHandoff.onTrue(() -> arm.setState(handoffStates.calculate(false, true)));
 
@@ -160,11 +150,13 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         });
 
         wantsOuttake.onTrue(() -> intake.setState(Intake.State.OUTAKE));
+        wantsTipCone.onTrue(() -> intake.setState(Intake.State.UP_ROLL));
 
         // forksUp.onTrue(() -> forks.setDirection(TorqueDirection.FORWARD));
         // forksDown.onTrue(() -> forks.setDirection(TorqueDirection.REVERSE));
 
-        // forks.setDirection(TorqueMath.scaledLinearDeadband(-operator.getRightYAxis(), DEADBAND));
+        // forks.setDirection(TorqueMath.scaledLinearDeadband(-operator.getRightYAxis(),
+        // DEADBAND));
 
         updateSpindexer();
     }
