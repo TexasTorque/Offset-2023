@@ -53,7 +53,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     // TODO: All these setpoints need to be re-tuned -- arm should be fine
     public static enum State {
         GRAB(
-                new ArmPose(5, Rotation2d.fromDegrees(252)),
+                new ArmPose(5, Rotation2d.fromDegrees(254)),
                 new ArmPose(.238, Rotation2d.fromDegrees(249))),
         AUTOGRAB(
                 new ArmPose(5, Rotation2d.fromDegrees(268)),
@@ -63,7 +63,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
                 new ArmPose(0, Rotation2d.fromDegrees(180))),
         INDEX(
                 new ArmPose(18, Rotation2d.fromDegrees(215)),
-                new ArmPose(18, Rotation2d.fromDegrees(240))),
+                new ArmPose(20, Rotation2d.fromDegrees(230))),
         WAYPOINT(new ArmPose(0.45, Rotation2d.fromDegrees(90))),
         STOWED(new ArmPose(8, Rotation2d.fromDegrees(175))),
         GRABBED(STOWED),
@@ -293,7 +293,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     public boolean isReadyToThrow() {
-        return desiredState == State.THROW && realRotaryPose.getDegrees() <= 100;
+        return desiredState == State.THROW && realRotaryPose.getDegrees() <= 145;
     }
 
     public void setSetpointAdjustment(final double setpointAdjustment) {

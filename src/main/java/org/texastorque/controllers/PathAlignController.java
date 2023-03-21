@@ -93,7 +93,7 @@ public final class PathAlignController extends AbstractController<Optional<Torqu
     private final PIDController xController = TorquePID.create(.5).build();
     private final PIDController yController = TorquePID.create(.5).build();
 
-    private final PIDController thetaController = new PIDController(2 * Math.PI, 0, 0);
+    private final PIDController thetaController = new PIDController(1 * Math.PI, 0, 0);
     private final PPHolonomicDriveController controller;
 
     private AlignState alignment = AlignState.NONE;

@@ -6,6 +6,7 @@
  */
 package org.texastorque.subsystems;
 
+import org.texastorque.Debug;
 import org.texastorque.Ports;
 import org.texastorque.Subsystems;
 import org.texastorque.torquelib.base.TorqueMode;
@@ -14,7 +15,6 @@ import org.texastorque.torquelib.control.TorquePID;
 import org.texastorque.torquelib.motors.TorqueNEO;
 import org.texastorque.torquelib.motors.TorqueNEO.SmartMotionProfile;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import io.github.oblarg.oblog.annotations.Log;
 
 public final class Forks extends TorqueSubsystem implements Subsystems {
@@ -59,13 +59,12 @@ public final class Forks extends TorqueSubsystem implements Subsystems {
     
     @Override
     public final void update(final TorqueMode mode) {
-        // rotary.setVolts( direction * ROTARY_MAX_VOLTS);
         rotary.setSmartVelocity(maxVelocity * direction);
-        SmartDashboard.putNumber("forks::current", rotary.getCurrent());
-        SmartDashboard.putNumber("forks::direction", direction);
-        SmartDashboard.putNumber("forks::velocity", rotary.getVelocity());
+        Debug.log("current", rotary.getCurrent());
+        Debug.log("direction", direction);
+        Debug.log("velocity", rotary.getVelocity());
 
-        SmartDashboard.putNumber("forks::volts", maxVelocity * direction);
+        Debug.log("volts", maxVelocity * direction);
 
         direction = 0;
     }
