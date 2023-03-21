@@ -40,8 +40,8 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
             gridOverrideLeft, gridOverrideRight,
             gridOverrideCenter, resetGyroClick, resetPoseClick, toggleRotationLock, autoLevel, wantsIntake,
             gamePieceModeToggle, openClaw, armToBottom,
-            armToShelf, armToMid, armToTop, forksUp, forksDown, armDoHandoff, armToLow,
-            stopManualDrive, wantsOuttake, adjustAutoAlignRight, adjustAutoAlignLeft, xFactorToggle, autoSpindex;
+            armToShelf, armToMid, armToTop, forksUp, forksDown, armDoHandoff, wantsOuttake,
+            adjustAutoAlignRight, adjustAutoAlignLeft, xFactorToggle, autoSpindex, tipCone;
 
     private final TorqueRequestableTimeout driverTimeout = new TorqueRequestableTimeout();
 
@@ -75,6 +75,8 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         autoLevel = new TorqueBoolSupplier(() -> false);
 
         wantsIntake = new TorqueBoolSupplier(() -> operator.isRightTriggerDown() || driver.isRightTriggerDown());
+        tipCone = new TorqueBoolSupplier(operator::isRightCenterButtonDown);
+
         openClaw = new TorqueBoolSupplier(operator::isRightBumperDown);
         gamePieceModeToggle = new TorqueToggleSupplier(() -> operator.isLeftBumperDown() || driver.isYButtonDown());
         wantsOuttake = new TorqueBoolSupplier(operator::isLeftCenterButtonDown);
@@ -83,17 +85,13 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         armToShelf = new TorqueClickSupplier(operator::isXButtonDown);
         armToMid = new TorqueClickSupplier(operator::isBButtonDown);
         armToTop = new TorqueClickSupplier(operator::isYButtonDown);
-        armToLow = new TorqueClickSupplier(operator::isLeftCenterButtonDown);
+
         armToBottom = new TorqueClickSupplier(operator::isAButtonDown);
 
         forksUp = new TorqueBoolSupplier(driver::isDPADUpDown);
         forksDown = new TorqueBoolSupplier(driver::isDPADDownDown);
-        //
-        //        spindexerRight = new TorqueBoolSupplier(operator.getLeftXAxis() < 0);
-        //        spindexerLeft = new TorqueBoolSupplier(operator::isLeftBumperDown);
-        autoSpindex = new TorqueBoolSupplier(operator::isDPADUpDown);
 
-        stopManualDrive = new TorqueBoolSupplier(operator::isRightCenterButtonDown);
+        autoSpindex = new TorqueBoolSupplier(operator::isDPADUpDown);
 
         adjustAutoAlignRight = new TorqueClickSupplier(driver::isDPADRightDown);
         adjustAutoAlignLeft = new TorqueClickSupplier(driver::isDPADLeftDown);
@@ -128,7 +126,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         gridOverrideCenter.onTrue(() -> drivebase.setGridOverride(GridState.CENTER));
         gridOverrideRight.onTrue(() -> drivebase.setGridOverride(GridState.RIGHT));
 
-        // autoLevel.onTrue(() -> drivebase.setState(Drivebase.State.BALANCE));
+        autoLevel.onTrue(() -> drivebase.setState(Drivebase.State.BALANCE));
         xFactorToggle.onTrue(() -> drivebase.setState(Drivebase.State.XF));
         isZeroingWheels.onTrue(() -> drivebase.setState(Drivebase.State.ZERO));
 
@@ -148,16 +146,6 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
             arm.setState(Arm.State.STOWED);
             handoffStates.set(0);
         });
-        //
-        //        spindexerLeft.onTrue(() -> {
-        //            spindexer.setState(Spindexer.State.FAST_CW);
-        //        });
-        //
-        //        spindexerRight.onTrue(() -> {
-        //            spindexer.setState(Spindexer.State.FAST_CCW);
-        //        });
-
-        // arm.setSetpointAdjustment(operator.getRightYAxis());
 
         armDoHandoff.onTrue(() -> arm.setState(handoffStates.calculate(false, true)));
 
@@ -178,10 +166,13 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
         wantsOuttake.onTrue(() -> intake.setState(Intake.State.OUTAKE));
 
+        tipCone.onTrue(() -> intake.setState(Intake.State.UP_ROLL));
+
         // forksUp.onTrue(() -> forks.setDirection(TorqueDirection.FORWARD));
         // forksDown.onTrue(() -> forks.setDirection(TorqueDirection.REVERSE));
 
-        // forks.setDirection(TorqueMath.scaledLinearDeadband(-operator.getRightYAxis(), DEADBAND));
+        // forks.setDirection(TorqueMath.scaledLinearDeadband(-operator.getRightYAxis(),
+        // DEADBAND));
 
         updateSpindexer();
     }
@@ -223,9 +214,5 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
             forks.setDirection(TorqueMath.scaledLinearDeadband(-driver.getRightYAxis(), DEADBAND));
         }
 
-        // drivebase.requestedRotation = Math.PI +
-        // Math.atan2(driver.getRightXAxis(), driver.getRightYAxis()); if
-        // (drivebase.requestedRotation == Math.PI)
-        //     drivebase.requestedRotation = 0;
     }
 }

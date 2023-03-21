@@ -13,7 +13,6 @@ import org.texastorque.Subsystems;
 import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.util.TorqueUtil;
-
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -82,9 +81,9 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
     private final AddressableLEDBuffer buff;
 
     private LightAction solidGreen = new Solid(() -> Color.kGreen), solidAlliance = new Solid(() -> getAllianceColor()),
-                        blinkGreen = new Blink(() -> Color.kGreen, 6), blinkAlliance = new Blink(() -> getAllianceColor(), 6),
+                        blinkGreen = new Blink(() -> Color.kGreen, 6),
                         solidPurple = new Solid(() -> Color.kPurple), solidYellow = new Solid(() -> Color.kYellow),
-                        blinkPurple = new Blink(() -> Color.kPurple, 6), blinkYellow = new Blink(() -> Color.kYellow, 6), rainbow = new Rainbow();
+                        rainbow = new Rainbow();
 
     private Lights() {
         superstructureLEDs = new AddressableLED(Ports.LIGHTS_SUPERSTRUCTURE);

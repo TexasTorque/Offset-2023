@@ -23,7 +23,7 @@ import io.github.oblarg.oblog.annotations.Log;
 public final class Spindexer extends TorqueSubsystem implements Subsystems {
 
     public static enum State {
-        SLOW_CW(-4), FAST_CW(-4), SLOW_CCW(2), FAST_CCW(8), OFF(0);
+        SLOW_CW(-4), FAST_CW(-4), SLOW_CCW(4), FAST_CCW(8), OFF(0);
 
         public final double volts;
 
@@ -44,7 +44,7 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
 
     @Log.ToString
     private State state = State.OFF;
-    private boolean driverWantsAutoSpindex = false, runAutoSpindex = false;
+    private boolean driverWantsAutoSpindex = false;
     private double secondClickPose = 0, pidVolts = 0, firstClickTimer, grabPoseTimer;
 
     private final double TICKS_TO_ALIGN = 1;
@@ -94,7 +94,7 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
                 state = State.SLOW_CW;
                 if (limitSwitch.get()) {
                     autoSpindexState = AutoState.FIRST_CLICK;
-                    firstClickTimer = Timer.getFPGATimestamp() / 1000;
+                    firstClickTimer = Timer.getFPGATimestamp();
                 }
 
             } else if (autoSpindexState == AutoState.FIRST_CLICK) {
@@ -103,10 +103,10 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
                     autoSpindexState = AutoState.FALSE_SWITCH;
             } else if (autoSpindexState == AutoState.FALSE_SWITCH) {
                 state = State.SLOW_CW;
-                if (limitSwitch.get() && Timer.getFPGATimestamp() / 1000 - firstClickTimer > 0.0001) {
+                if (limitSwitch.get() && Timer.getFPGATimestamp() - firstClickTimer > 0.1) {
                     secondClickPose = turntable.getPosition();
                     autoSpindexState = AutoState.SECOND_CLICK;
-                } else if (Timer.getFPGATimestamp() / 1000 - firstClickTimer > 0.0005)
+                } else if (Timer.getFPGATimestamp() - firstClickTimer > 0.5)
                     autoSpindexState = AutoState.SEARCH;
             } else if (autoSpindexState == AutoState.SECOND_CLICK) {
                 pidVolts = turntablePID.calculate(turntable.getPosition(), secondClickPose - TICKS_TO_ALIGN);

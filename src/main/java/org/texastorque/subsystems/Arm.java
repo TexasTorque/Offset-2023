@@ -27,7 +27,6 @@ import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.DigitalInput;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
 
@@ -139,8 +138,6 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     private final TorqueCANCoder rotaryEncoder = new TorqueCANCoder(Ports.ARM_ROTARY_ENCODER);
 
-    private final DigitalInput armSwitch;
-
     private final TorqueRequestableTimeout grabTimeout = new TorqueRequestableTimeout();
 
     @Log.BooleanBox
@@ -169,8 +166,6 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         cancoderConfig.initializationStrategy = SensorInitializationStrategy.BootToAbsolutePosition;
         rotaryEncoder.configAllSettings(cancoderConfig);
 
-        armSwitch = new DigitalInput(Ports.ARM_SWITCH);
-
         activeState = State.STOWED;
     }
 
@@ -194,7 +189,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     @Log.BooleanBox
     public boolean isWantingHighCOG() {
-        return isWantingScoringPose();// || isWantingShelf();
+        return isWantingScoringPose();
     }
 
     @Log.BooleanBox
@@ -258,7 +253,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         updateFeedback();
 
         // if (mode.isTeleop() && isComingDown() && !hand.isClosedEnough())
-        //     activeState = lastState;
+        // activeState = lastState;
 
         if (activeState == State.INDEX && lastState != State.INDEX) {
             indexTimeout.set(.25);
@@ -368,7 +363,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         // final boolean stopArm = armSetpoint <= (Math.PI * 0.5) && armSwitch.get();
         rotaryVolts += -rotaryPoseController.calculate(rotaryPos, armSetpoint);
         rotaryVolts = TorqueMath.constrain(rotaryVolts, ROTARY_MAX_VOLTS);
-        // rotary.setVolts(rotaryEncoder.isCANResponsive() && !isState(Arm.State.LOW) ? rotaryVolts : 0);
+        // rotary.setVolts(rotaryEncoder.isCANResponsive() && !isState(Arm.State.LOW) ?
+        // rotaryVolts : 0);
         rotary.setVolts(rotaryVolts);
         Debug.log("rotaryVolts", rotaryVolts);
         Debug.log("elevatorCurrent", rotary.getCurrent());
