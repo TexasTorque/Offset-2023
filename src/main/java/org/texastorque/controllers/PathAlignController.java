@@ -9,17 +9,20 @@ package org.texastorque.controllers;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
+
 import org.texastorque.Field;
 import org.texastorque.Field.AprilTagType;
 import org.texastorque.auto.commands.FollowEventPath;
 import org.texastorque.torquelib.control.TorquePID;
 import org.texastorque.torquelib.swerve.TorqueSwerveSpeeds;
+
 import com.pathplanner.lib.PathConstraints;
 import com.pathplanner.lib.PathPlanner;
 import com.pathplanner.lib.PathPlannerTrajectory;
 import com.pathplanner.lib.PathPlannerTrajectory.PathPlannerState;
 import com.pathplanner.lib.PathPoint;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -52,12 +55,14 @@ public final class PathAlignController extends AbstractController<Optional<Torqu
             return (new Pose3d(pose.getTranslation().plus(transl), pose.getRotation())).toPose2d();
         }
     }
+
     public static enum AlignState {
         NONE,
         CENTER,
         RIGHT,
         LEFT;
     }
+
     public static enum GridState {
         NONE(-1, -1),
         LEFT(1, 6),
@@ -71,10 +76,13 @@ public final class PathAlignController extends AbstractController<Optional<Torqu
             this.blueID = blueID;
         }
 
-        public int getID() { return DriverStation.getAlliance() == DriverStation.Alliance.Blue ? blueID : redID; }
+        public int getID() {
+            return DriverStation.getAlliance() == DriverStation.Alliance.Blue ? blueID : redID;
+        }
     }
 
-    public static final PathConstraints MAX_PATH_CONSTRAINTS = new PathConstraints(FollowEventPath.MAX_VELOCITY_PATH, FollowEventPath.MAX_ACCELERATION_PATH);
+    public static final PathConstraints MAX_PATH_CONSTRAINTS = new PathConstraints(FollowEventPath.MAX_VELOCITY_PATH,
+            FollowEventPath.MAX_ACCELERATION_PATH);
 
     private static final double DISTANCE_TOLERANCE_TIGHT = Units.inchesToMeters(1);
     private static final double DISTANCE_TOLERANCE_LOOSE = Units.inchesToMeters(3);
@@ -123,30 +131,37 @@ public final class PathAlignController extends AbstractController<Optional<Torqu
 
     public void incrementGoalPoseY(final double offset) {
         goalPose = new Pose2d(goalPose.getX(), goalPose.getY() + offset, goalPose.getRotation());
-        
-    }
-    public void setAlignment(final AlignState alignment) { this.alignment = alignment; }
 
-    public void setGridOverride(final GridState gridOverride) { this.gridOverride = gridOverride; }
+    }
+
+    public void setAlignment(final AlignState alignment) {
+        this.alignment = alignment;
+    }
+
+    public void setGridOverride(final GridState gridOverride) {
+        this.gridOverride = gridOverride;
+    }
 
     public void resetIf(final boolean notInLoop) {
         alignment = AlignState.NONE;
         gridOverride = GridState.NONE;
 
-        if (notInLoop) trajectory = null;
+        if (notInLoop)
+            trajectory = null;
     }
 
-    public boolean isDone() { return isDone(DISTANCE_TOLERANCE_LOOSE); }
+    public boolean isDone() {
+        return isDone(DISTANCE_TOLERANCE_LOOSE);
+    }
 
     public Optional<TorqueSwerveSpeeds> calculate() {
         final Pose2d current = poseSupplier.get();
 
-        if (trajectory == null) generateTrajectory(current);
+        if (trajectory == null)
+            generateTrajectory(current);
 
         final double elapsed = timer.get();
-        final PathPlannerState desired = (PathPlannerState)trajectory.sample(elapsed);
-
-        final boolean done = timer.hasElapsed(trajectory.getTotalTimeSeconds());
+        final PathPlannerState desired = (PathPlannerState) trajectory.sample(elapsed);
 
         final TorqueSwerveSpeeds speeds = TorqueSwerveSpeeds.fromChassisSpeeds(controller.calculate(current, desired));
 
@@ -160,7 +175,8 @@ public final class PathAlignController extends AbstractController<Optional<Torqu
 
         for (final Map.Entry<Integer, Pose3d> aprilPose : Field.getAprilTagsMap().entrySet()) {
 
-            final double distance = robotPose.getTranslation().getDistance(aprilPose.getValue().toPose2d().getTranslation());
+            final double distance = robotPose.getTranslation()
+                    .getDistance(aprilPose.getValue().toPose2d().getTranslation());
             final int id = aprilPose.getKey();
 
             if (distance < currentClosestDistance && Field.OUR_TAG_IDS.containsKey(id)) {
@@ -171,7 +187,10 @@ public final class PathAlignController extends AbstractController<Optional<Torqu
 
         return closestID;
     }
-    private int getTargetID() { return gridOverride == GridState.NONE ? findClosestAprilTagID() : gridOverride.getID(); }
+
+    private int getTargetID() {
+        return gridOverride == GridState.NONE ? findClosestAprilTagID() : gridOverride.getID();
+    }
 
     private Optional<TranslationState> getTranslationState(final int targetID) {
         final AprilTagType tagType = Field.getAprilTagType(targetID);
@@ -193,32 +212,36 @@ public final class PathAlignController extends AbstractController<Optional<Torqu
 
         final Optional<TranslationState> translationState = getTranslationState(targetID);
 
-        // final Pose2d 
+        // final Pose2d
         goalPose = translationState.get().calculate(aprilPose);
 
         final double offset = Math.min(Math.max(current.getX(), LAST_LEG_X_OFFSET_MIN), LAST_LEG_X_OFFSET_MAX);
 
-        final double initialSpeed = speedsSupplier.get().getVelocityMagnitude();
         final Rotation2d initialHeading = speedsSupplier.get().getHeading();
 
         // https://github.com/Spectrum3847/2023-X-Ray/blob/78bb093b7675331c04ca4c66c1ebbebec51e0383/src/main/java/frc/robot/trajectories/commands/GeneratePath.java#L58
 
-        final PathPoint startPoint = new PathPoint(current.getTranslation(), initialHeading, current.getRotation());//, initialSpeed);
-        final PathPoint midPoint =
-                new PathPoint(new Translation2d(goalPose.getX() + offset, goalPose.getY()), Rotation2d.fromRadians(Math.PI), Rotation2d.fromRadians(Math.PI));
-        final PathPoint endPoint = new PathPoint(goalPose.getTranslation(), Rotation2d.fromRadians(Math.PI), Rotation2d.fromRadians(Math.PI), 0);
+        final PathPoint startPoint = new PathPoint(current.getTranslation(), initialHeading, current.getRotation());// ,
+                                                                                                                    // initialSpeed);
+        final PathPoint midPoint = new PathPoint(new Translation2d(goalPose.getX() + offset, goalPose.getY()),
+                Rotation2d.fromRadians(Math.PI), Rotation2d.fromRadians(Math.PI));
+        final PathPoint endPoint = new PathPoint(goalPose.getTranslation(), Rotation2d.fromRadians(Math.PI),
+                Rotation2d.fromRadians(Math.PI), 0);
 
         trajectory = PathPlanner.generatePath(MAX_PATH_CONSTRAINTS, startPoint, midPoint, endPoint);
-        
+
         timer.reset();
         timer.start();
         return true;
     }
 
-    private final boolean isSuperDone() { return isDone(DISTANCE_TOLERANCE_TIGHT); }
+    private final boolean isSuperDone() {
+        return isDone(DISTANCE_TOLERANCE_TIGHT);
+    }
 
     private boolean isDone(final double tolerance) {
-        if (trajectory == null) return false;
+        if (trajectory == null)
+            return false;
         final Pose2d endPoint = trajectory.getEndState().poseMeters;
         return endPoint.getTranslation().getDistance(poseSupplier.get().getTranslation()) <= tolerance;
     }

@@ -13,6 +13,7 @@ import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.control.TorquePID;
 import org.texastorque.torquelib.motors.TorqueNEO;
 import org.texastorque.torquelib.motors.TorqueNEO.SmartMotionProfile;
+
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import io.github.oblarg.oblog.annotations.Log;
 
@@ -20,9 +21,10 @@ public final class Forks extends TorqueSubsystem implements Subsystems {
     private static volatile Forks instance;
 
     public static final double ROTARY_MAX_VOLTS = 8;
-    
 
-    public static final synchronized Forks getInstance() { return instance == null ? instance = new Forks() : instance; }
+    public static final synchronized Forks getInstance() {
+        return instance == null ? instance = new Forks() : instance;
+    }
 
     private final TorqueNEO rotary = new TorqueNEO(Ports.FORKS_MOTOR);
 
@@ -33,12 +35,11 @@ public final class Forks extends TorqueSubsystem implements Subsystems {
     private final double maxVelocity = Math.toRadians(100) * 60 * encoderToOutputGearing;
     private final double maxAcceleration = 48 * 60 * encoderToOutputGearing;
 
-
     private Forks() {
         rotary.setCurrentLimit(60);
         rotary.setVoltageCompensation(12.6);
         rotary.setBreakMode(true);
-        SmartMotionProfile smp = new SmartMotionProfile(maxVelocity , 0, maxAcceleration, 1000);
+        SmartMotionProfile smp = new SmartMotionProfile(maxVelocity, 0, maxAcceleration, 1000);
         rotary.configureSmartMotion(smp);
         rotary.configurePID(TorquePID.create(.00002).build());
         rotary.burnFlash();
@@ -49,9 +50,9 @@ public final class Forks extends TorqueSubsystem implements Subsystems {
     }
 
     @Override
-    public final void initialize(final TorqueMode mode) {}
+    public final void initialize(final TorqueMode mode) {
+    }
 
-    
     @Override
     public final void update(final TorqueMode mode) {
         rotary.setSmartVelocity(maxVelocity * direction);

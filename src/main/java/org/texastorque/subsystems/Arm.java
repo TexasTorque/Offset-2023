@@ -25,8 +25,6 @@ import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
@@ -52,7 +50,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     public static enum State {
-         GRAB(
+        GRAB(
                 new ArmPose(.15, Rotation2d.fromDegrees(245)),
                 new ArmPose(0, Rotation2d.fromDegrees(245))),
 
@@ -100,10 +98,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
             ELEVATOR_MIN = 0,
             ELEVATOR_MAX = 50; // 54 is the technical max
 
-
     private static volatile Arm instance;
-
-    private static final double RADIANS_ADJUSTMENT_COEF = Units.degreesToRadians(15);
 
     public static final synchronized Arm getInstance() {
         return instance == null ? instance = new Arm() : instance;
@@ -125,7 +120,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     private final TorqueNEO elevator = new TorqueNEO(Ports.ARM_ELEVATOR_MOTOR);
     @Config
     public final PIDController elevatorPoseController = new PIDController(15, 0, 0);
-        private final ElevatorFeedforward elevatorPoseFeedForward = new ElevatorFeedforward(0, 0, 0);
+    private final ElevatorFeedforward elevatorPoseFeedForward = new ElevatorFeedforward(0, 0, 0);
 
     private final TorqueNEO rotary = new TorqueNEO(Ports.ARM_ROTARY_MOTOR);
 
@@ -135,8 +130,6 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     public final ArmFeedforward rotaryFeedforward = new ArmFeedforward(0.18362, 0.22356, 4, 4.4775);
 
     private final TorqueCANCoder rotaryEncoder = new TorqueCANCoder(Ports.ARM_ROTARY_ENCODER);
-
-    private final DigitalInput armSwitch;
 
     private final TorqueRequestableTimeout grabTimeout = new TorqueRequestableTimeout();
 
@@ -165,8 +158,6 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         cancoderConfig.sensorTimeBase = SensorTimeBase.PerSecond;
         cancoderConfig.initializationStrategy = SensorInitializationStrategy.BootToAbsolutePosition;
         rotaryEncoder.configAllSettings(cancoderConfig);
-
-        armSwitch = new DigitalInput(Ports.ARM_SWITCH);
 
         activeState = State.STOWED;
     }
@@ -321,7 +312,6 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     private void calculateRotary() {
         double armSetpoint = activeState.get().rotaryPose.getRadians();
         double rotaryPos = realRotaryPose.getRadians();
-       
 
         double rotaryVolts = -rotaryFeedforward.calculate(armSetpoint, calculateRotaryVelocity(armSetpoint, rotaryPos),
                 calculateRotaryAcceleration(armSetpoint, rotaryPos));
@@ -331,7 +321,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         // rotary.setVolts(rotaryEncoder.isCANResponsive() && !isState(Arm.State.LOW) ?
         // rotaryVolts : 0);
 
-         if (rotaryPos > Math.toRadians(315)) { // wrap around up to prevent overshoot causing a massive spin.
+        if (rotaryPos > Math.toRadians(315)) { // wrap around up to prevent overshoot causing a massive spin.
             rotaryVolts = -2;
         }
         rotary.setVolts(rotaryVolts);
