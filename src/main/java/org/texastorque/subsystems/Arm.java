@@ -27,6 +27,7 @@ import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
 
@@ -50,10 +51,9 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         }
     }
 
-    // TODO: All these setpoints need to be re-tuned -- arm should be fine
     public static enum State {
         GRAB(
-                new ArmPose(5, Rotation2d.fromDegrees(252)),
+                new ArmPose(5, Rotation2d.fromDegrees(254)),
                 new ArmPose(.238, Rotation2d.fromDegrees(249))),
         AUTOGRAB(
                 new ArmPose(5, Rotation2d.fromDegrees(268)),
@@ -141,7 +141,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     private final TorqueRequestableTimeout grabTimeout = new TorqueRequestableTimeout();
 
     @Log.BooleanBox
-    private boolean grabbing = false;
+    private boolean grabbing = false, wantsThrow = false, alreadyPulled = false;
 
     public double setpointAdjustment = 0;
 
@@ -246,14 +246,15 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         return desiredState == State.GRAB;
     }
 
+    public void setWantsThrow(boolean wantsThrow) {
+        this.wantsThrow = wantsThrow;
+    }
+
     @Override
     public final void update(final TorqueMode mode) {
         activeState = desiredState;
 
         updateFeedback();
-
-        // if (mode.isTeleop() && isComingDown() && !hand.isClosedEnough())
-        // activeState = lastState;
 
         if (activeState == State.INDEX && lastState != State.INDEX) {
             indexTimeout.set(.25);
@@ -267,6 +268,15 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
             }
             grabbing = false;
         }
+
+        if (wantsThrow) {
+            if (!alreadyPulled) {
+                activeState = State.GRAB;
+                alreadyPulled = isAtState(State.GRAB);
+            } else
+                activeState = State.THROW;
+        } else
+            alreadyPulled = false;
 
         if (grabTimeout.get()) {
             activeState = State.GRAB;
@@ -293,7 +303,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     public boolean isReadyToThrow() {
-        return desiredState == State.THROW && realRotaryPose.getDegrees() <= 100;
+        return desiredState == State.THROW && realRotaryPose.getDegrees() <= 120;
     }
 
     public void setSetpointAdjustment(final double setpointAdjustment) {
@@ -368,6 +378,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         rotary.setVolts(rotaryVolts);
         Debug.log("rotaryVolts", rotaryVolts);
         Debug.log("elevatorCurrent", rotary.getCurrent());
+        SmartDashboard.putBoolean("rotaryCANResponsiveness", rotaryEncoder.isCANResponsive());
     }
 
     // omega with respect to delta theta (radians)

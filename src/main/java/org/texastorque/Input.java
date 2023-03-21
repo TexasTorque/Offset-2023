@@ -39,7 +39,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
             gridOverrideCenter, resetGyroClick, resetPoseClick, toggleRotationLock, wantsIntake,
             gamePieceModeToggle, openClaw, armToBottom,
             armToShelf, armToMid, armToTop, armDoHandoff, armThrow,
-            wantsOuttake, xFactorToggle, autoSpindex, wantsTipCone, tipCone;
+            wantsOuttake, xFactorToggle, autoSpindex, wantsTipCone;
 
     private final TorqueRequestableTimeout driverTimeout = new TorqueRequestableTimeout();
 
@@ -70,7 +70,6 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         toggleRotationLock = new TorqueToggleSupplier(driver::isAButtonDown, true);
 
         wantsIntake = new TorqueBoolSupplier(() -> operator.isRightTriggerDown() || driver.isRightTriggerDown());
-        tipCone = new TorqueBoolSupplier(operator::isRightCenterButtonDown);
 
         openClaw = new TorqueBoolSupplier(operator::isRightBumperDown);
         gamePieceModeToggle = new TorqueToggleSupplier(() -> operator.isLeftBumperDown() || driver.isYButtonDown());
@@ -128,7 +127,8 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         armToShelf.onTrue(() -> arm.setState(Arm.State.SHELF));
         armToMid.onTrue(() -> arm.setState(Arm.State.MID));
         armToTop.onTrue(() -> arm.setState(Arm.State.TOP));
-        armThrow.onTrue(() -> arm.setState(Arm.State.THROW));
+
+        arm.setWantsThrow(armThrow.get());
 
         armToBottom.onTrue(() -> {
             arm.setState(Arm.State.STOWED);
@@ -153,9 +153,10 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         });
 
         wantsOuttake.onTrue(() -> intake.setState(Intake.State.OUTAKE));
-        wantsTipCone.onTrue(() -> intake.setState(Intake.State.UP_ROLL));
-
-        tipCone.onTrue(() -> intake.setState(Intake.State.UP_ROLL));
+        wantsTipCone.onTrue(() -> {
+            intake.setState(Intake.State.UP_ROLL);
+            spindexer.setState(Spindexer.State.FAST_CW);
+        });
 
         // forksUp.onTrue(() -> forks.setDirection(TorqueDirection.FORWARD));
         // forksDown.onTrue(() -> forks.setDirection(TorqueDirection.REVERSE));
