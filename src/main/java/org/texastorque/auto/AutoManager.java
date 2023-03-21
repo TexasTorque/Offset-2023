@@ -7,6 +7,9 @@
 package org.texastorque.auto;
 
 import org.texastorque.auto.sequences.houston.OnePieceMobilityEngage;
+import org.texastorque.auto.sequences.houston.OnePiecePickupEngage;
+import org.texastorque.auto.sequences.houston.ThreePieceMobility;
+import org.texastorque.auto.sequences.houston.TwoPieceMobility;
 import org.texastorque.auto.sequences.houston.TwoPieceMobilityEngage;
 import org.texastorque.torquelib.auto.TorqueAutoManager;
 
@@ -35,6 +38,9 @@ public final class AutoManager extends TorqueAutoManager {
         // addSequence(new DumbBumpySide1PieceEngage());
 
         addSequence(new OnePieceMobilityEngage());
+        addSequence(new OnePiecePickupEngage());
+        addSequence(new TwoPieceMobility());
         addSequence(new TwoPieceMobilityEngage());
+        addSequence(new ThreePieceMobility());
     }
 }
