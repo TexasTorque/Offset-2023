@@ -145,7 +145,6 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
                 handoffStates.set(1);
                 arm.setState(Arm.State.INDEX);
             }
-
             intake.setState(Intake.State.INTAKE);
         }, () -> {
             clawTimeout.set(.2);
@@ -153,6 +152,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         });
 
         wantsOuttake.onTrue(() -> intake.setState(Intake.State.OUTAKE));
+
         wantsTipCone.onTrue(() -> {
             intake.setState(Intake.State.UP_ROLL);
             spindexer.setState(Spindexer.State.FAST_CW);

@@ -12,6 +12,7 @@ import org.texastorque.auto.commands.DriveUntil;
 import org.texastorque.auto.commands.FollowEventPath;
 import org.texastorque.auto.routines.Score;
 import org.texastorque.subsystems.Arm;
+import org.texastorque.subsystems.Drivebase;
 import org.texastorque.subsystems.Hand;
 import org.texastorque.subsystems.Hand.GamePiece;
 import org.texastorque.torquelib.auto.TorqueSequence;
@@ -47,10 +48,10 @@ public final class OnePieceMobilityEngage extends TorqueSequence implements Subs
 
         addBlock(new TorqueExecute(() -> Debug.log("state", "doing path")));
 
-        addBlock(new FollowEventPath("off-station", 1.5, 1));
+        addBlock(new FollowEventPath("off-station", 2, 2));
 
-        addBlock(new DriveUntil(-.3, () -> TorqueNavXGyro.getInstance().getPitch() > -5));
+        // addBlock(new DriveUntil(-.3, () -> TorqueNavXGyro.getInstance().getPitch() > -5));
 
-        // addBlock(drivebase.setStateCommand(Drivebase.State.BALANCE));
+        addBlock(drivebase.setStateCommand(Drivebase.State.BALANCE));
     }
 }

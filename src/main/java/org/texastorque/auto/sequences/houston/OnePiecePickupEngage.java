@@ -12,6 +12,7 @@ import org.texastorque.auto.commands.DriveUntil;
 import org.texastorque.auto.commands.FollowEventPath;
 import org.texastorque.auto.routines.Score;
 import org.texastorque.subsystems.Arm;
+import org.texastorque.subsystems.Drivebase;
 import org.texastorque.subsystems.Hand;
 import org.texastorque.subsystems.Hand.GamePiece;
 import org.texastorque.subsystems.Intake;
@@ -56,8 +57,8 @@ public final class OnePiecePickupEngage extends TorqueSequence implements Subsys
 
         addBlock(new DriveUntil(2, () -> TorqueNavXGyro.getInstance().getPitch() > 5));
 
-        addBlock(new DriveUntil(.3, () -> TorqueNavXGyro.getInstance().getPitch() < 5));
+        // addBlock(new DriveUntil(.3, () -> TorqueNavXGyro.getInstance().getPitch() < 5));
 
-        // addBlock(drivebase.setStateCommand(Drivebase.State.BALANCE));
+        addBlock(drivebase.setStateCommand(Drivebase.State.BALANCE));
     }
 }

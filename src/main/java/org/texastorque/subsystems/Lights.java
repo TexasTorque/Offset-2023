@@ -13,6 +13,7 @@ import org.texastorque.Subsystems;
 import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.util.TorqueUtil;
+
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -70,6 +71,8 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
 
     private static final int LENGTH = 50;
 
+    public static final Color getAllianceColorLight() { return DriverStation.getAlliance() == Alliance.Blue ? Color.kLightBlue : Color.kPink; }
+
     public static final Color getAllianceColor() { return DriverStation.getAlliance() == Alliance.Blue ? Color.kBlue : Color.kRed; }
 
     public static final Color getAllianceColorFIRST() { return DriverStation.getAlliance() == Alliance.Blue ? Color.kFirstBlue : Color.kFirstRed; }
@@ -81,8 +84,10 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
     private final AddressableLEDBuffer buff;
 
     private LightAction solidGreen = new Solid(() -> Color.kGreen), solidAlliance = new Solid(() -> getAllianceColor()),
+                        blinkLightAlliance = new Blink(() -> getAllianceColorLight(), 6),
                         blinkGreen = new Blink(() -> Color.kGreen, 6),
                         solidPurple = new Solid(() -> Color.kPurple), solidYellow = new Solid(() -> Color.kYellow),
+                        blinkPurple = new Blink(() -> Color.kPurple, 6), blinkYellow = new Blink(() -> Color.kYellow, 6),
                         rainbow = new Rainbow();
 
     private Lights() {
@@ -106,13 +111,18 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
         if (drivebase.isState(Drivebase.State.BALANCE)) {
             if (drivebase.isAutoLevelDone()) {
                 if (mode.isAuto()) return rainbow;
-                return blinkGreen;
+                return blinkLightAlliance;
             }
             return solidGreen;
         }
 
-        if (hand.isCubeMode()) return solidPurple;
-        else if (hand.isConeMode()) return solidYellow;
+        final boolean blinkColor = spindexer.isAutoSpindexing() || intake.isIntaking();
+
+        if (hand.isCubeMode()) {
+            return blinkColor ? blinkPurple : solidPurple;
+        } else if (hand.isConeMode()) {
+            return blinkColor ? blinkYellow : solidYellow;
+        }
 
         return solidAlliance;
     }
