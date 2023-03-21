@@ -39,7 +39,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
             gridOverrideCenter, resetGyroClick, resetPoseClick, toggleRotationLock, wantsIntake,
             gamePieceModeToggle, openClaw, armToBottom,
             armToShelf, armToMid, armToTop, armDoHandoff, armThrow,
-            wantsOuttake, xFactorToggle, autoSpindex, wantsTipCone;
+            wantsOuttake, xFactorToggle, autoSpindex, wantsTipCone, tipCone;
 
     private final TorqueRequestableTimeout driverTimeout = new TorqueRequestableTimeout();
 
@@ -70,6 +70,8 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         toggleRotationLock = new TorqueToggleSupplier(driver::isAButtonDown, true);
 
         wantsIntake = new TorqueBoolSupplier(() -> operator.isRightTriggerDown() || driver.isRightTriggerDown());
+        tipCone = new TorqueBoolSupplier(operator::isRightCenterButtonDown);
+
         openClaw = new TorqueBoolSupplier(operator::isRightBumperDown);
         gamePieceModeToggle = new TorqueToggleSupplier(() -> operator.isLeftBumperDown() || driver.isYButtonDown());
         wantsOuttake = new TorqueBoolSupplier(operator::isLeftCenterButtonDown);
@@ -79,6 +81,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         armToShelf = new TorqueClickSupplier(operator::isXButtonDown);
         armToMid = new TorqueClickSupplier(operator::isBButtonDown);
         armToTop = new TorqueClickSupplier(operator::isYButtonDown);
+
         armThrow = new TorqueClickSupplier(operator::isRightCenterButtonDown);
         armToBottom = new TorqueClickSupplier(operator::isAButtonDown);
 
@@ -151,6 +154,8 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
         wantsOuttake.onTrue(() -> intake.setState(Intake.State.OUTAKE));
         wantsTipCone.onTrue(() -> intake.setState(Intake.State.UP_ROLL));
+
+        tipCone.onTrue(() -> intake.setState(Intake.State.UP_ROLL));
 
         // forksUp.onTrue(() -> forks.setDirection(TorqueDirection.FORWARD));
         // forksDown.onTrue(() -> forks.setDirection(TorqueDirection.REVERSE));
