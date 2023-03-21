@@ -26,7 +26,7 @@ public final class TwoPieceMobilityEngage extends TorqueSequence implements Subs
 
         addBlock(hand.setGamePieceModeCommand(GamePiece.CUBE));
 
-        addBlock(new FollowEventPath("flat-side-get-first"));
+        addBlock(new FollowEventPath("flat-side-get-first-2"));
 
         addBlock(new TorqueWaitUntil(arm::isAtDesiredPose));
 

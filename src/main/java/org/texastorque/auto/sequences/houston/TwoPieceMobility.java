@@ -31,7 +31,7 @@ public final class TwoPieceMobility extends TorqueSequence implements Subsystems
 
         addBlock(new TorqueSequenceRunner(new Score(Arm.State.TOP)));
 
-        addBlock(new FollowEventPath("flat-side-get-ready"));
+        // addBlock(new FollowEventPath("flat-side-get-ready"));
 
 
         // addBlock(arm.setStateCommand(Arm.State.STOWED));

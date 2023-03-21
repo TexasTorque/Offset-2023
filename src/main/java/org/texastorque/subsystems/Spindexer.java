@@ -47,7 +47,7 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
     private boolean driverWantsAutoSpindex = false;
     private double secondClickPose = 0, pidVolts = 0, firstClickTimer, grabPoseTimer;
 
-    private final double TICKS_TO_ALIGN = 2;
+    private final double TICKS_TO_ALIGN = 1;
 
     private final TorqueNEO turntable = new TorqueNEO(Ports.SPINDEXER_MOTOR);
     private final DigitalInput limitSwitch = new DigitalInput(0);
@@ -84,11 +84,8 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
 
     @Override
     public final void update(final TorqueMode mode) {
-        SmartDashboard.putBoolean("limitSwitch", limitSwitch.get());
-        SmartDashboard.putString("autoState", autoSpindexState.toString());
-
-        if (intake.isState(Intake.State.UP_ROLL))
-            state = State.FAST_CW;
+        SmartDashboard.putBoolean("spindexer::limitSwitch", limitSwitch.get());
+        SmartDashboard.putString("spindexer::autoState", autoSpindexState.toString());
 
         if (driverWantsAutoSpindex) {
             if (!initAutoSpindex) {
@@ -116,11 +113,9 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
                 } else if (Timer.getFPGATimestamp() - firstClickTimer > 0.5)
                     autoSpindexState = AutoState.SEARCH;
             } else if (autoSpindexState == AutoState.SECOND_CLICK) {
-                // Commented out because of an issue with the limit switch
+                pidVolts = turntablePID.calculate(turntable.getPosition(), secondClickPose - TICKS_TO_ALIGN);
 
-                // pidVolts = turntablePID.calculate(turntable.getPosition(), secondClickPose - TICKS_TO_ALIGN);
-                
-                // if (Math.abs(turntable.getPosition()) - (Math.abs(secondClickPose) - TICKS_TO_ALIGN) < 2) {
+                if (Math.abs(turntable.getPosition()) - (Math.abs(secondClickPose) - TICKS_TO_ALIGN) < 2) {
                     autoSpindexState = AutoState.STOP;
 
                     if (initGrabPose) {
@@ -129,7 +124,7 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
                         initGrabPose = false;
                     }
 
-                // }
+                }
             } else if (autoSpindexState == AutoState.STOP) {
                 if (Timer.getFPGATimestamp() - grabPoseTimer > 0.5) {
                     arm.setState(Arm.State.GRABBED);
@@ -140,7 +135,7 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
             initGrabPose = true;
         }
 
-        turntable.setVolts(state.volts);
+        turntable.setVolts(autoSpindexState == AutoState.SECOND_CLICK ? pidVolts : state.volts);
 
         if (!driverWantsAutoSpindex || autoSpindexState == AutoState.STOP)
             state = State.OFF;
