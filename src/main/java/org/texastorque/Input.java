@@ -6,8 +6,6 @@
  */
 package org.texastorque;
 
-import org.texastorque.controllers.PathAlignController.AlignState;
-import org.texastorque.controllers.PathAlignController.GridState;
 import org.texastorque.subsystems.Arm;
 import org.texastorque.subsystems.Drivebase;
 import org.texastorque.subsystems.Drivebase.SpeedSetting;
@@ -15,7 +13,6 @@ import org.texastorque.subsystems.Hand;
 import org.texastorque.subsystems.Hand.GamePiece;
 import org.texastorque.subsystems.Intake;
 import org.texastorque.subsystems.Spindexer;
-import org.texastorque.torquelib.base.TorqueDirection;
 import org.texastorque.torquelib.base.TorqueInput;
 import org.texastorque.torquelib.control.TorqueBoolSupplier;
 import org.texastorque.torquelib.control.TorqueClickSupplier;
@@ -59,6 +56,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
         isZeroingWheels = new TorqueBoolSupplier(driver::isBButtonDown);
         slowModeToggle = new TorqueToggleSupplier(driver::isLeftBumperDown);
+        xFactorToggle = new TorqueToggleSupplier(driver::isXButtonDown);
 
         //alignGridLeft = new TorqueBoolSupplier(driver::isLeftTriggerDown);
         //alignGridCenter = new TorqueBoolSupplier(driver::isRightBumperDown);
@@ -124,9 +122,9 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
         alignGridRight.onTrue(() -> drivebase.setAlignState(AlignState.RIGHT));
 
-        gridOverrideLeft.onTrue(() -> drivebase.setGridOverride(GridState.LEFT));
-        gridOverrideCenter.onTrue(() -> drivebase.setGridOverride(GridState.CENTER));
-        gridOverrideRight.onTrue(() -> drivebase.setGridOverride(GridState.RIGHT));
+        // gridOverrideLeft.onTrue(() -> drivebase.setGridOverride(GridState.LEFT));
+        // gridOverrideCenter.onTrue(() -> drivebase.setGridOverride(GridState.CENTER));
+        // gridOverrideRight.onTrue(() -> drivebase.setGridOverride(GridState.RIGHT));
 
         isZeroingWheels.onTrue(() -> drivebase.setState(Drivebase.State.ZERO));
 
@@ -150,6 +148,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
             intake.setState(Intake.State.UP);
         });
 
+
         armToShelf.onTrue(() -> arm.setState(Arm.State.SHELF));
         armToMid.onTrue(() -> arm.setState(Arm.State.MID));
         armToTop.onTrue(() -> arm.setState(Arm.State.TOP));
@@ -162,7 +161,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
             handoffStates.set(0);
         });
 
-        arm.setSetpointAdjustment(operator.getRightYAxis());
+        // arm.setSetpointAdjustment(operator.getRightYAxis());
 
         armDoHandoff.onTrue(() -> arm.setState(handoffStates.calculate(false, true)));
 
@@ -183,8 +182,11 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
         wantsOuttake.onTrue(() -> intake.setState(Intake.State.OUTAKE));
 
-        forksUp.onTrue(() -> forks.setDirection(TorqueDirection.FORWARD));
-        forksDown.onTrue(() -> forks.setDirection(TorqueDirection.REVERSE));
+        // forksUp.onTrue(() -> forks.setDirection(TorqueDirection.FORWARD));
+        // forksDown.onTrue(() -> forks.setDirection(TorqueDirection.REVERSE));
+
+        // forks.setDirection(TorqueMath.scaledLinearDeadband(-operator.getRightYAxis(),
+        // DEADBAND));
 
         primeRoll.onTrue(() -> intake.setState(Intake.State.PRIME_ROLL));
 
@@ -194,7 +196,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
     private void updateSpindexer() {
         final double fast = operator.getLeftYAxis();
         if (Math.abs(fast) > DEADBAND) {
-            if (fast > 0)
+            if (fast < 0)
                 spindexer.setState(Spindexer.State.FAST_CCW);
             else
                 spindexer.setState(Spindexer.State.FAST_CW);
@@ -202,7 +204,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
         final double slow = operator.getLeftXAxis();
         if (Math.abs(slow) > DEADBAND) {
-            if (slow > 0)
+            if (slow < 0)
                 spindexer.setState(Spindexer.State.SLOW_CCW);
             else
                 spindexer.setState(Spindexer.State.SLOW_CW);
@@ -226,6 +228,6 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         // drivebase.requestedRotation = Math.PI +
         // Math.atan2(driver.getRightXAxis(), driver.getRightYAxis()); if
         // (drivebase.requestedRotation == Math.PI)
-        //     drivebase.requestedRotation = 0;
+        // drivebase.requestedRotation = 0;
     }
 }

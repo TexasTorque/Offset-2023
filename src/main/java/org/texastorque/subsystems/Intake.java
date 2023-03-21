@@ -42,6 +42,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
         // cube cone
         INTAKE(new IndexerPose(8, 6, ROT_INTAKE), new IndexerPose(8, 12, ROT_INTAKE)),
         AUTOINTAKE(new IndexerPose(3, 3, ROT_INTAKE), new IndexerPose(3, 3, ROT_INTAKE)),
+
         OUTAKE(new IndexerPose(-4, -4, ROT_INTAKE), new IndexerPose(-8, -9, ROT_INTAKE)),
         PRIME(new IndexerPose(0, 0, ROT_PRIME)),
         UP(new IndexerPose(0, 0, ROT_UP)), 
@@ -66,6 +67,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
 
     private static final double ROT_INTAKE = 13.5;
     private static final double ROT_PRIME = 8;
+
     private static final double ROT_UP = 0;
 
     private static volatile Intake instance;
@@ -92,6 +94,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
     @Config
     public final PIDController rotaryPoseController = new PIDController(1.5, 0, 0);
 
+
     private Intake() {
         topRollers.setCurrentLimit(40);
         topRollers.setVoltageCompensation(12.6);
@@ -107,6 +110,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
         rotaryRight.setVoltageCompensation(12.6);
         rotaryRight.setBreakMode(true);
         rotaryRight.burnFlash();
+
     }
 
     public void setState(final State state) {
@@ -153,6 +157,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
 
         rotaryLeft.setVolts(requestedRotaryVolts);
         rotaryRight.setVolts(-requestedRotaryVolts);
+
 
         if (mode.isTeleop())
             desiredState = State.UP;

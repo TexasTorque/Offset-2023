@@ -12,6 +12,7 @@ import org.texastorque.torquelib.auto.TorqueCommand;
 import org.texastorque.torquelib.auto.commands.TorqueExecute;
 import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
+import org.texastorque.torquelib.control.TorqueClick;
 import org.texastorque.torquelib.motors.TorqueNEO;
 
 import edu.wpi.first.math.controller.PIDController;
@@ -23,7 +24,8 @@ import io.github.oblarg.oblog.annotations.Log;
 public final class Spindexer extends TorqueSubsystem implements Subsystems {
 
     public static enum State {
-        SLOW_CW(-4), FAST_CW(-8), SLOW_CCW(2), FAST_CCW(8), OFF(0);
+        SLOW_CW(-4), FAST_CW(-8), SLOW_CCW(4), FAST_CCW(8), OFF(0);
+
 
         public final double volts;
 
@@ -55,11 +57,13 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
     private AutoState autoSpindexState = AutoState.SEARCH;
     private boolean initAutoSpindex = false, initGrabPose = false;
 
+
     private Spindexer() {
         turntable.setCurrentLimit(35);
         turntable.setVoltageCompensation(12.6);
         turntable.setBreakMode(true);
         turntable.burnFlash();
+
     }
 
     public final void setState(final State state) {
@@ -136,5 +140,6 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
 
         if (!driverWantsAutoSpindex || autoSpindexState == AutoState.STOP)
             state = State.OFF;
+
     }
 }

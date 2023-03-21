@@ -322,6 +322,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         double armSetpoint = activeState.get().rotaryPose.getRadians();
         double rotaryPos = realRotaryPose.getRadians();
        
+
         double rotaryVolts = -rotaryFeedforward.calculate(armSetpoint, calculateRotaryVelocity(armSetpoint, rotaryPos),
                 calculateRotaryAcceleration(armSetpoint, rotaryPos));
         // final boolean stopArm = armSetpoint <= (Math.PI * 0.5) && armSwitch.get();
@@ -338,6 +339,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         SmartDashboard.putNumber("arm::rotaryVolts", rotaryVolts);
         SmartDashboard.putNumber("arm::elevatorCurrent", rotary.getCurrent());
         SmartDashboard.putNumber("arm::cancoder", rotaryEncoder.getPosition());
+
     }
 
     // omega with respect to delta theta (radians)

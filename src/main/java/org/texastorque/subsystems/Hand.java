@@ -39,6 +39,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
         OPEN(4.63),
         CLOSE(5.6);
 
+
         public final double clawSetpoint;
 
         private State(final double clawSetpoint) {
@@ -69,7 +70,9 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
     @Log.ToString
     public double realClawPose = 0;
     @Config
+
     public final PIDController clawPoseController = new PIDController(10, 0, 0);
+
 
     private final TorqueNEO claw = new TorqueNEO(Ports.CLAW_MOTOR);
 
@@ -78,7 +81,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
     private final TorqueRequestableTimeout retractArmTimeout = new TorqueRequestableTimeout();
 
     private Hand() {
-        claw.setCurrentLimit(20);
+        claw.setCurrentLimit(10);
         claw.setVoltageCompensation(12.6);
         claw.setBreakMode(true);
         claw.burnFlash();
@@ -150,6 +153,9 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
         if (activeState == State.OPEN && arm.isWantingScoringPose()) {
             activeState = State.BIG;
         }
+
+        SmartDashboard.putNumber("claw::requestedPose", activeState.clawSetpoint);
+        SmartDashboard.putNumber("Claw Encoder", clawEncoder.getPosition());
 
         double clawVolts = clawPoseController.calculate(realClawPose, activeState.clawSetpoint);
         clawVolts = TorqueMath.constrain(clawVolts, MAX_CLAW_VOLTS);

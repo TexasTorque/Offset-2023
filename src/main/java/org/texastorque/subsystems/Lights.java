@@ -67,7 +67,7 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
 
     private static volatile Lights instance;
 
-    private static final int LENGTH = 20;
+    private static final int LENGTH = 50;
 
     public static final Color getAllianceColor() { return DriverStation.getAlliance() == Alliance.Blue ? Color.kBlue : Color.kRed; }
 
@@ -75,7 +75,7 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
 
     public static final synchronized Lights getInstance() { return instance == null ? instance = new Lights() : instance; }
 
-    private final AddressableLED leds;
+    private final AddressableLED superstructureLEDs;
 
     private final AddressableLEDBuffer buff;
 
@@ -85,14 +85,15 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
                         blinkPurple = new Blink(() -> Color.kPurple, 6), blinkYellow = new Blink(() -> Color.kYellow, 6), rainbow = new Rainbow();
 
     private Lights() {
-        leds = new AddressableLED(Ports.LIGHTS);
-        leds.setLength(LENGTH);
+        superstructureLEDs = new AddressableLED(Ports.LIGHTS_SUPERSTRUCTURE);
+        superstructureLEDs.setLength(LENGTH);
+
         buff = new AddressableLEDBuffer(LENGTH);
     }
 
     @Override
     public final void initialize(final TorqueMode mode) {
-        leds.start();
+        superstructureLEDs.start();
     }
 
     public final LightAction getColor(final TorqueMode mode) {
@@ -118,6 +119,6 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
     @Override
     public final void update(final TorqueMode mode) {
         getColor(mode).run(buff);
-        leds.setData(buff);
+        superstructureLEDs.setData(buff);
     }
 }

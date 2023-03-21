@@ -20,6 +20,7 @@ public final class Ports {
     public static final int INTAKE_ROLLER_MOTOR_TOP = 13;
     public static final int INTAKE_ROTARY_MOTOR_RIGHT = 21;
     public static final int INTAKE_ROTARY_MOTOR_LEFT = 23;
+
     public static final int SPINDEXER_MOTOR = 15;
     public static final int ARM_ELEVATOR_MOTOR = 16;
     public static final int ARM_ROTARY_MOTOR = 17;
@@ -35,5 +36,6 @@ public final class Ports {
 
     // PWM
 
-    public static final int LIGHTS = 0;
+    public static final int LIGHTS_SUPERSTRUCTURE = 0;
+    public static final int LIGHTS_UNDERGLOW = 1;
 }
