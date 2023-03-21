@@ -29,6 +29,7 @@ public final class Forks extends TorqueSubsystem implements Subsystems {
     private final TorqueNEO rotary = new TorqueNEO(Ports.FORKS_MOTOR);
 
     @Log.ToString
+    // private TorqueDirection direction = TorqueDirection.OFF;
     private double direction = 0;
 
     private final double encoderToOutputGearing = 302.4;
@@ -58,9 +59,8 @@ public final class Forks extends TorqueSubsystem implements Subsystems {
         rotary.setSmartVelocity(maxVelocity * direction);
         SmartDashboard.putNumber("forks::current", rotary.getCurrent());
         SmartDashboard.putNumber("forks::direction", direction);
-        SmartDashboard.putNumber("forks::velocity", rotary.getVelocity());
-
-        SmartDashboard.putNumber("forks::volts", maxVelocity * direction);
+        SmartDashboard.putNumber("velocity", rotary.getVelocity());
+        SmartDashboard.putNumber("volts", maxVelocity * direction);
 
         direction = 0;
     }
