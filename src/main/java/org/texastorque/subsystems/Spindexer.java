@@ -97,7 +97,7 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
                 state = State.SLOW_CW;
                 if (limitSwitch.get()) {
                     autoSpindexState = AutoState.FIRST_CLICK;
-                    firstClickTimer = Timer.getFPGATimestamp() / 1000;
+                    firstClickTimer = Timer.getFPGATimestamp();
                 }
 
             } else if (autoSpindexState == AutoState.FIRST_CLICK) {
@@ -106,10 +106,10 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
                     autoSpindexState = AutoState.FALSE_SWITCH;
             } else if (autoSpindexState == AutoState.FALSE_SWITCH) {
                 state = State.SLOW_CW;
-                if (limitSwitch.get() && Timer.getFPGATimestamp() / 1000 - firstClickTimer > 0.0001) {
+                if (limitSwitch.get() && Timer.getFPGATimestamp() - firstClickTimer > 0.1) {
                     secondClickPose = turntable.getPosition();
                     autoSpindexState = AutoState.SECOND_CLICK;
-                } else if (Timer.getFPGATimestamp() / 1000 - firstClickTimer > 0.0002)
+                } else if (Timer.getFPGATimestamp() - firstClickTimer > 0.25)
                     autoSpindexState = AutoState.SEARCH;
             } else if (autoSpindexState == AutoState.SECOND_CLICK) {
                 pidVolts = turntablePID.calculate(turntable.getPosition(), secondClickPose - TICKS_TO_ALIGN);

@@ -63,10 +63,10 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         SHELF(new ArmPose(0, Rotation2d.fromDegrees(210))),
         MID(
                 new ArmPose(.1, Rotation2d.fromDegrees(0)),
-                new ArmPose(.275, Rotation2d.fromDegrees(5))),
+                new ArmPose(.2, Rotation2d.fromDegrees(5))),
         TOP(
                 new ArmPose(1.3, Rotation2d.fromDegrees(0)),
-                new ArmPose(1.3, Rotation2d.fromDegrees(5))),
+                new ArmPose(1.1, Rotation2d.fromDegrees(5))),
 
         LOW(new ArmPose(.55, Rotation2d.fromDegrees(0)));
 
@@ -93,7 +93,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     private static final double ROTARY_ENCODER_OFFSET = -4.692437745630741,
             ELEVATOR_MAX_VOLTS_UP = 12,
-            ELEVATOR_MAX_VOLTS_DOWN = 7,
+            ELEVATOR_MAX_VOLTS_DOWN = 8,
+            ROTARY_MAX_VOLTS_BACK = 7,
             ROTARY_MAX_VOLTS = 8,
             ELEVATOR_MIN = 0,
             ELEVATOR_MAX = 50; // 54 is the technical max
@@ -317,7 +318,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
                 calculateRotaryAcceleration(armSetpoint, rotaryPos));
         // final boolean stopArm = armSetpoint <= (Math.PI * 0.5) && armSwitch.get();
         rotaryVolts += -rotaryPoseController.calculate(rotaryPos, armSetpoint);
-        rotaryVolts = TorqueMath.constrain(rotaryVolts, ROTARY_MAX_VOLTS);
+        rotaryVolts = TorqueMath.constrain(rotaryVolts, rotaryVolts > 0 ? ROTARY_MAX_VOLTS : ROTARY_MAX_VOLTS_BACK);
         // rotary.setVolts(rotaryEncoder.isCANResponsive() && !isState(Arm.State.LOW) ?
         // rotaryVolts : 0);
 
