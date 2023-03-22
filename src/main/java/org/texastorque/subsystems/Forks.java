@@ -61,7 +61,7 @@ public final class Forks extends TorqueSubsystem implements Subsystems {
     public final void update(final TorqueMode mode) {
         rotary.setSmartVelocity(maxVelocity * direction);
         Debug.log("current", rotary.getCurrent());
-        Debug.log("direction", direction);
+       // Debug.log("direction", direction);
         Debug.log("velocity", rotary.getVelocity());
 
         Debug.log("volts", maxVelocity * direction);

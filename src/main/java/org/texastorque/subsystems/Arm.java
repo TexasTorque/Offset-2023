@@ -54,7 +54,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     public static enum State {
         GRAB(
                 new ArmPose(5, Rotation2d.fromDegrees(254)),
-                new ArmPose(.238, Rotation2d.fromDegrees(249))),
+                new ArmPose(.238, Rotation2d.fromDegrees(251))),
         AUTOGRAB(
                 new ArmPose(5, Rotation2d.fromDegrees(268)),
                 new ArmPose(0, Rotation2d.fromDegrees(180))),
@@ -100,7 +100,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     private static final double ROTARY_ENCODER_OFFSET = -Units.degreesToRadians(76 + 31),
             ELEVATOR_MAX_VOLTS_UP = 12,
-            ELEVATOR_MAX_VOLTS_DOWN = 12,
+            ELEVATOR_MAX_VOLTS_DOWN = 9,
             ROTARY_MAX_VOLTS = 12,
             ELEVATOR_MIN = 0,
             ELEVATOR_MAX = 50; // 54 is the technical max

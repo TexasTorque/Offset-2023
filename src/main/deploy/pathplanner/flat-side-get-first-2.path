@@ -7,8 +7,60 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.0328167931656824,
-        "y": 4.425522231928914
+        "x": 2.346689315347246,
+        "y": 4.677102307129007
+      },
+      "holonomicAngle": 180.0,
+      "isReversal": false,
+      "velOverride": null,
+      "isLocked": false,
+      "isStopPoint": false,
+      "stopEvent": {
+        "names": [
+          "intake-down"
+        ],
+        "executionBehavior": "parallel",
+        "waitBehavior": "none",
+        "waitTime": 0
+      }
+    },
+    {
+      "anchorPoint": {
+        "x": 7.035227080439896,
+        "y": 4.562747727492601
+      },
+      "prevControl": {
+        "x": 5.205553806257399,
+        "y": 4.53987681156532
+      },
+      "nextControl": {
+        "x": 5.205553806257399,
+        "y": 4.53987681156532
+      },
+      "holonomicAngle": 0,
+      "isReversal": true,
+      "velOverride": null,
+      "isLocked": false,
+      "isStopPoint": false,
+      "stopEvent": {
+        "names": [],
+        "executionBehavior": "parallel",
+        "waitBehavior": "none",
+        "waitTime": 0
+      }
+    },
+    {
+      "anchorPoint": {
+        "x": 3.73037972894776,
+        "y": 4.677102307129007
+      },
+      "prevControl": {
+        "x": 5.365650217748366,
+        "y": 4.665666849165367
+      },
+      "nextControl": {
+        "x": 2.0951092401471545,
+        "y": 4.688537765092647
       },
       "holonomicAngle": 180.0,
       "isReversal": false,
@@ -24,15 +76,15 @@
     },
     {
       "anchorPoint": {
-        "x": 7.035227080439896,
-        "y": 4.562747727492601
+        "x": 1.832093706983419,
+        "y": 4.3912158580379925
       },
       "prevControl": {
-        "x": 5.171247432366476,
-        "y": 4.55131226952896
+        "x": 2.8041076338928708,
+        "y": 4.4026513160016325
       },
       "nextControl": null,
-      "holonomicAngle": 0,
+      "holonomicAngle": 180.0,
       "isReversal": false,
       "velOverride": null,
       "isLocked": false,
