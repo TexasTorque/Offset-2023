@@ -109,7 +109,7 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
                     autoSpindexState = AutoState.FALSE_SWITCH;
             } else if (autoSpindexState == AutoState.FALSE_SWITCH) {
 
-                if (limitSwitch.get() && Timer.getFPGATimestamp() - firstClickTimer > 0.12) {
+                if (limitSwitch.get() && Timer.getFPGATimestamp() - firstClickTimer > 0.15) {
                     secondClickPose = turntable.getPosition();
                     autoSpindexState = AutoState.SECOND_CLICK;
                 } else if (Timer.getFPGATimestamp() - firstClickTimer > 0.3)
