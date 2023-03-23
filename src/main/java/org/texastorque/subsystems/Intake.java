@@ -42,6 +42,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
         INTAKE(new IndexerPose(6, 6, ROT_INTAKE), new IndexerPose(9, 12, ROT_INTAKE)),
         AUTOINTAKE(new IndexerPose(3, 3, ROT_INTAKE), new IndexerPose(3, 3, ROT_INTAKE)),
         OUTAKE(new IndexerPose(-4, -4, ROT_INTAKE), new IndexerPose(-8, -9, ROT_INTAKE)),
+        POOP(new IndexerPose(-12, -12, -9), new IndexerPose(-8, -9, ROT_UP)),
         PRIME(new IndexerPose(0, 0, ROT_PRIME)),
         PRIME_ROLL(new IndexerPose(6, 6, ROT_PRIME), new IndexerPose(9, 12, ROT_PRIME)),
         UP(new IndexerPose(0, 0, ROT_UP)),
@@ -144,7 +145,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
         if (desiredState == State.UP && arm.isPerformingHandoff())
             activeState = State.PRIME;
 
-        if (activeState == State.PRIME && lastState == State.INTAKE)
+        if (activeState == State.PRIME && (lastState == State.INTAKE || lastState == State.AUTOINTAKE))
             primeRollTimeout.set(1);
 
         if (primeRollTimeout.get())

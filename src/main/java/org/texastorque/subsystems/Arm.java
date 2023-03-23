@@ -54,16 +54,16 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     public static enum State {
         GRAB(
                 new ArmPose(5, Rotation2d.fromDegrees(254)),
-                new ArmPose(.238, Rotation2d.fromDegrees(251))),
+                new ArmPose(.238, Rotation2d.fromDegrees(247))),
         AUTOGRAB(
-                new ArmPose(5, Rotation2d.fromDegrees(268)),
+                new ArmPose(5, Rotation2d.fromDegrees(266)),
                 new ArmPose(0, Rotation2d.fromDegrees(180))),
         AUTOINDEX(
                 new ArmPose(5, Rotation2d.fromDegrees(250)),
                 new ArmPose(0, Rotation2d.fromDegrees(180))),
         INDEX(
-                new ArmPose(18, Rotation2d.fromDegrees(215)),
-                new ArmPose(20, Rotation2d.fromDegrees(230))),
+                new ArmPose(15, Rotation2d.fromDegrees(215)),
+                new ArmPose(16, Rotation2d.fromDegrees(236))),
         WAYPOINT(new ArmPose(0.45, Rotation2d.fromDegrees(90))),
         STOWED(new ArmPose(8, Rotation2d.fromDegrees(175))),
         GRABBED(STOWED),
@@ -100,7 +100,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     private static final double ROTARY_ENCODER_OFFSET = -Units.degreesToRadians(76 + 31),
             ELEVATOR_MAX_VOLTS_UP = 12,
-            ELEVATOR_MAX_VOLTS_DOWN = 9,
+            ELEVATOR_MAX_VOLTS_DOWN = 12,
+            ELEVATOR_MAX_VOLTS_HANDOFF = 9,
             ROTARY_MAX_VOLTS = 12,
             ELEVATOR_MIN = 0,
             ELEVATOR_MAX = 50; // 54 is the technical max
@@ -343,8 +344,9 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         elevatorVolts += elevatorPoseFeedForward.calculate(
                 calculateElevatorVelocity(elevatorSetpoint, realElevatorPose),
                 calculateElevatorAcceleration(elevatorSetpoint, realElevatorPose));
+
         elevatorVolts = TorqueMath.constrain(elevatorVolts,
-                isComingDown() ? ELEVATOR_MAX_VOLTS_UP : ELEVATOR_MAX_VOLTS_DOWN);
+                isPerformingHandoff() ? ELEVATOR_MAX_VOLTS_UP : ELEVATOR_MAX_VOLTS_HANDOFF);
         elevatorVolts = TorqueMath.linearConstraint(elevatorVolts, realElevatorPose, ELEVATOR_MIN, ELEVATOR_MAX);
         elevator.setVolts(elevatorVolts);
         Debug.log("elevatorCurrent", elevator.getCurrent());

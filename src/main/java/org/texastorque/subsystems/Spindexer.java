@@ -47,12 +47,12 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
     private boolean driverWantsAutoSpindex = false;
     private double secondClickPose = 0, pidVolts = 0, firstClickTimer, grabPoseTimer;
 
-    private final double TICKS_TO_ALIGN = 1;
+    private final double TICKS_TO_ALIGN = 1.2;
 
     private final TorqueNEO turntable = new TorqueNEO(Ports.SPINDEXER_MOTOR);
     private final DigitalInput limitSwitch = new DigitalInput(0);
     private AutoState autoSpindexState = AutoState.SEARCH;
-    private final PIDController turntablePID = new PIDController(3, 0, 0);
+    private final PIDController turntablePID = new PIDController(2.5, 0, 0);
     private boolean initAutoSpindex = false, initGrabPose = false;
 
     private Spindexer() {
@@ -86,6 +86,7 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
     public final void update(final TorqueMode mode) {
         SmartDashboard.putBoolean("spindexer::limitSwitch", limitSwitch.get());
         SmartDashboard.putString("spindexer::autoState", autoSpindexState.toString());
+        SmartDashboard.putNumber("pidDelta", Math.abs(turntable.getPosition()) - (Math.abs(secondClickPose) - TICKS_TO_ALIGN));
 
         if (driverWantsAutoSpindex) {
             if (!initAutoSpindex) {
@@ -115,7 +116,7 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
             } else if (autoSpindexState == AutoState.SECOND_CLICK) {
                 pidVolts = turntablePID.calculate(turntable.getPosition(), secondClickPose - TICKS_TO_ALIGN);
 
-                if (Math.abs(turntable.getPosition()) - (Math.abs(secondClickPose) - TICKS_TO_ALIGN) < 2) {
+                if (Math.abs(turntable.getPosition()) - (Math.abs(secondClickPose) - TICKS_TO_ALIGN) < 2.3) {
                     autoSpindexState = AutoState.STOP;
 
                     if (initGrabPose) {
