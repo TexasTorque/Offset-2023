@@ -86,7 +86,8 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
     public final void update(final TorqueMode mode) {
         SmartDashboard.putBoolean("spindexer::limitSwitch", limitSwitch.get());
         SmartDashboard.putString("spindexer::autoState", autoSpindexState.toString());
-        SmartDashboard.putNumber("pidDelta", Math.abs(turntable.getPosition()) - (Math.abs(secondClickPose) - TICKS_TO_ALIGN));
+        SmartDashboard.putNumber("pidDelta",
+                Math.abs(turntable.getPosition()) - (Math.abs(secondClickPose) - TICKS_TO_ALIGN));
 
         if (driverWantsAutoSpindex) {
             if (!initAutoSpindex) {
@@ -107,12 +108,13 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
                 if (!limitSwitch.get())
                     autoSpindexState = AutoState.FALSE_SWITCH;
             } else if (autoSpindexState == AutoState.FALSE_SWITCH) {
-                state = State.SLOW_CW;
-                if (limitSwitch.get() && Timer.getFPGATimestamp() - firstClickTimer > 0.1) {
+
+                if (limitSwitch.get() && Timer.getFPGATimestamp() - firstClickTimer > 0.15) {
                     secondClickPose = turntable.getPosition();
                     autoSpindexState = AutoState.SECOND_CLICK;
-                } else if (Timer.getFPGATimestamp() - firstClickTimer > 0.5)
+                } else if (Timer.getFPGATimestamp() - firstClickTimer > 0.3)
                     autoSpindexState = AutoState.SEARCH;
+
             } else if (autoSpindexState == AutoState.SECOND_CLICK) {
                 pidVolts = turntablePID.calculate(turntable.getPosition(), secondClickPose - TICKS_TO_ALIGN);
 
@@ -129,7 +131,7 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
             } else if (autoSpindexState == AutoState.STOP) {
                 if (Timer.getFPGATimestamp() - grabPoseTimer > 0.5) {
                     arm.setState(Arm.State.GRABBED);
-                 }
+                }
             }
         } else {
             initAutoSpindex = false;

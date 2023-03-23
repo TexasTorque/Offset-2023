@@ -203,5 +203,8 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
             drivebase.inputSpeeds = new TorqueSwerveSpeeds(xVelocity, yVelocity, 0);
             forks.setDirection(TorqueMath.scaledLinearDeadband(-driver.getRightYAxis(), DEADBAND));
         }
+
+        arm.setSetpointAdjustment(TorqueMath.scaledLinearDeadband(-operator.getRightYAxis(), DEADBAND));
+
     }
 }

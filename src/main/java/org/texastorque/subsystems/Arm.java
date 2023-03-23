@@ -53,7 +53,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     public static enum State {
         GRAB(
-                new ArmPose(5, Rotation2d.fromDegrees(254)),
+                new ArmPose(8, Rotation2d.fromDegrees(248)),
                 new ArmPose(.238, Rotation2d.fromDegrees(247))),
         AUTOGRAB(
                 new ArmPose(5, Rotation2d.fromDegrees(266)),
@@ -101,12 +101,15 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     private static final double ROTARY_ENCODER_OFFSET = -Units.degreesToRadians(76 + 31),
             ELEVATOR_MAX_VOLTS_UP = 12,
             ELEVATOR_MAX_VOLTS_DOWN = 12,
-            ELEVATOR_MAX_VOLTS_HANDOFF = 9,
+            ELEVATOR_MAX_VOLTS_HANDOFF = 11,
+            MAX_SETPOINT_ADJUSTMENT = .5,
             ROTARY_MAX_VOLTS = 12,
             ELEVATOR_MIN = 0,
             ELEVATOR_MAX = 50; // 54 is the technical max
 
     private static volatile Arm instance;
+
+    public static double handoffRotationAdjustment = 0;
 
     public static final synchronized Arm getInstance() {
         return instance == null ? instance = new Arm() : instance;
@@ -118,12 +121,13 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     private State desiredState = State.STOWED;
     @Log.ToString
     private State lastState = State.STOWED;
+
     @Log.ToString
     public double realElevatorPose = 0;
-
     @Log.ToString
     public Rotation2d realRotaryPose = Rotation2d.fromDegrees(0);
     private final TorqueNEO elevator = new TorqueNEO(Ports.ARM_ELEVATOR_MOTOR);
+
     @Config
     public final PIDController elevatorPoseController = new PIDController(1.13, 0, 0);
 
@@ -138,13 +142,12 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     public final ArmFeedforward rotaryFeedforward = new ArmFeedforward(0.18362, 0.22356, 4, 4.4775);
 
     private final TorqueCANCoder rotaryEncoder = new TorqueCANCoder(Ports.ARM_ROTARY_ENCODER);
-
     private final TorqueRequestableTimeout grabTimeout = new TorqueRequestableTimeout();
+
+    private final TorqueRequestableTimeout handOffTimeout = new TorqueRequestableTimeout();
 
     @Log.BooleanBox
     private boolean grabbing = false;
-
-    public double setpointAdjustment = 0;
 
     private final TorqueRequestableTimeout indexTimeout = new TorqueRequestableTimeout();
 
@@ -244,17 +247,22 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     public boolean isWantGrabbyClaw() {
-        return desiredState == State.GRAB;
+        return desiredState == State.GRAB && handOffTimeout.get();
     }
 
     @Override
     public final void update(final TorqueMode mode) {
+
         activeState = desiredState;
 
         updateFeedback();
 
         if (activeState == State.INDEX && lastState != State.INDEX) {
             indexTimeout.set(.25);
+        }
+
+        if (activeState == State.GRAB && lastState != State.GRAB) {
+            handOffTimeout.set(.25);
         }
 
         if (activeState == State.GRAB) {
@@ -296,9 +304,12 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     public void setSetpointAdjustment(final double setpointAdjustment) {
-        this.setpointAdjustment = setpointAdjustment;
-        if (Math.abs(this.setpointAdjustment) < .1)
-            this.setpointAdjustment = 0;
+        SmartDashboard.putNumber("setPointAdj", handoffRotationAdjustment);
+
+        handoffRotationAdjustment = setpointAdjustment * MAX_SETPOINT_ADJUSTMENT;
+
+        if (Math.abs(handoffRotationAdjustment) < .1)
+            handoffRotationAdjustment = 0;
     }
 
     @Log.BooleanBox
@@ -361,7 +372,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         double rotaryVolts = -rotaryFeedforward.calculate(armSetpoint, calculateRotaryVelocity(armSetpoint, rotaryPos),
                 calculateRotaryAcceleration(armSetpoint, rotaryPos));
         // final boolean stopArm = armSetpoint <= (Math.PI * 0.5) && armSwitch.get();
-        rotaryVolts += -rotaryPoseController.calculate(rotaryPos, armSetpoint);
+        rotaryVolts += -rotaryPoseController.calculate(rotaryPos, armSetpoint + (state == State.GRAB ? handoffRotationAdjustment : 0));
         rotaryVolts = TorqueMath.constrain(rotaryVolts, ROTARY_MAX_VOLTS);
         // rotary.setVolts(rotaryEncoder.isCANResponsive() && !isState(Arm.State.LOW) ?
         // rotaryVolts : 0);

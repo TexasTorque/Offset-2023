@@ -34,8 +34,8 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
     }
 
     public static enum State {
-        GRAB(3),
-        OPEN(2.8),
+        GRAB(2.9),
+        OPEN(2.9),
         CLOSE(4);
 
         public final double clawSetpoint;
