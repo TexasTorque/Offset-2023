@@ -142,7 +142,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     private final TorqueRequestableTimeout grabTimeout = new TorqueRequestableTimeout();
 
     @Log.BooleanBox
-    private boolean grabbing = false, wantsThrow = false, alreadyPulled = false;
+    private boolean grabbing = false;
 
     public double setpointAdjustment = 0;
 
@@ -247,10 +247,6 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         return desiredState == State.GRAB;
     }
 
-    public void setWantsThrow(boolean wantsThrow) {
-        this.wantsThrow = wantsThrow;
-    }
-
     @Override
     public final void update(final TorqueMode mode) {
         activeState = desiredState;
@@ -269,15 +265,6 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
             }
             grabbing = false;
         }
-
-        if (wantsThrow) {
-            if (!alreadyPulled) {
-                activeState = State.GRAB;
-                alreadyPulled = isAtState(State.GRAB);
-            } else
-                activeState = State.THROW;
-        } else
-            alreadyPulled = false;
 
         if (grabTimeout.get()) {
             activeState = State.GRAB;

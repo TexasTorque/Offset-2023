@@ -128,7 +128,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         armToMid.onTrue(() -> arm.setState(Arm.State.MID));
         armToTop.onTrue(() -> arm.setState(Arm.State.TOP));
 
-        arm.setWantsThrow(armThrow.get());
+        armThrow.onTrue(() -> arm.setState(Arm.State.THROW));
 
         armToBottom.onTrue(() -> {
             arm.setState(Arm.State.STOWED);
