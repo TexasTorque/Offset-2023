@@ -12,7 +12,9 @@ import org.texastorque.auto.routines.Score;
 import org.texastorque.subsystems.Arm;
 import org.texastorque.subsystems.Hand;
 import org.texastorque.subsystems.Hand.GamePiece;
+import org.texastorque.subsystems.Intake;
 import org.texastorque.torquelib.auto.TorqueSequence;
+import org.texastorque.torquelib.auto.commands.TorqueExecute;
 import org.texastorque.torquelib.auto.commands.TorqueSequenceRunner;
 import org.texastorque.torquelib.auto.commands.TorqueWaitUntil;
 
@@ -25,14 +27,19 @@ public final class TwoPieceMobility extends TorqueSequence implements Subsystems
 
         addBlock(hand.setGamePieceModeCommand(GamePiece.CUBE));
 
-        addBlock(new FollowEventPath("flat-side-get-first"));
+        addBlock(new FollowEventPath("flat-side-get-first-3"));
 
         addBlock(new TorqueWaitUntil(arm::isAtDesiredPose));
 
         addBlock(new TorqueSequenceRunner(new Score(Arm.State.TOP)));
 
-        // addBlock(new FollowEventPath("flat-side-get-ready"));
+        addBlock(new FollowEventPath("flat-side-get-ready"));
 
+        addBlock(new TorqueExecute(() -> {
+            intake.setState(Intake.State.UP);
+            arm.setState(Arm.State.STOWED);
+            hand.setState(Hand.State.CLOSE);
+        }));
 
         // addBlock(arm.setStateCommand(Arm.State.STOWED));
         // addBlock(new TorqueWaitForSeconds(2));
