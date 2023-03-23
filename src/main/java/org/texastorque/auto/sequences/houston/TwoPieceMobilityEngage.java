@@ -13,8 +13,12 @@ import org.texastorque.subsystems.Arm;
 import org.texastorque.subsystems.Drivebase;
 import org.texastorque.subsystems.Hand;
 import org.texastorque.subsystems.Hand.GamePiece;
+import org.texastorque.subsystems.Intake;
+import org.texastorque.subsystems.Spindexer;
 import org.texastorque.torquelib.auto.TorqueSequence;
+import org.texastorque.torquelib.auto.commands.TorqueExecute;
 import org.texastorque.torquelib.auto.commands.TorqueSequenceRunner;
+import org.texastorque.torquelib.auto.commands.TorqueWaitForSeconds;
 import org.texastorque.torquelib.auto.commands.TorqueWaitUntil;
 
 public final class TwoPieceMobilityEngage extends TorqueSequence implements Subsystems {
@@ -26,11 +30,23 @@ public final class TwoPieceMobilityEngage extends TorqueSequence implements Subs
 
         addBlock(hand.setGamePieceModeCommand(GamePiece.CUBE));
 
-        addBlock(new FollowEventPath("flat-side-get-first"));
+        addBlock(new FollowEventPath("flat-side-get-first-2"));
 
         addBlock(new TorqueWaitUntil(arm::isAtDesiredPose));
 
+        addBlock(new TorqueExecute(() -> {
+            spindexer.setState(Spindexer.State.FAST_CCW);
+            intake.setState(Intake.State.POOP);
+        }));
+
         addBlock(new TorqueSequenceRunner(new Score(Arm.State.TOP)));
+
+        addBlock(new TorqueWaitForSeconds(1));
+
+        addBlock(new TorqueExecute(() -> {
+            spindexer.setState(Spindexer.State.OFF);
+            intake.setState(Intake.State.UP);
+        }));
 
         addBlock(new FollowEventPath("flat-side-go-level"));
 
