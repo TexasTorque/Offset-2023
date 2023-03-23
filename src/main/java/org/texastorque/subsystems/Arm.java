@@ -27,6 +27,7 @@ import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
@@ -53,7 +54,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     public static enum State {
         GRAB(
-                new ArmPose(8, Rotation2d.fromDegrees(248)),
+                new ArmPose(7, Rotation2d.fromDegrees(246)),
                 new ArmPose(.238, Rotation2d.fromDegrees(247))),
         AUTOGRAB(
                 new ArmPose(5, Rotation2d.fromDegrees(266)),
@@ -102,7 +103,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
             ELEVATOR_MAX_VOLTS_UP = 12,
             ELEVATOR_MAX_VOLTS_DOWN = 12,
             ELEVATOR_MAX_VOLTS_HANDOFF = 11,
-            MAX_SETPOINT_ADJUSTMENT = .5,
+            MAX_SETPOINT_ADJUSTMENT = 1,
             ROTARY_MAX_VOLTS = 12,
             ELEVATOR_MIN = 0,
             ELEVATOR_MAX = 50; // 54 is the technical max
@@ -150,6 +151,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     private boolean grabbing = false;
 
     private final TorqueRequestableTimeout indexTimeout = new TorqueRequestableTimeout();
+
+    double time = 0;
 
     private Arm() {
         elevator.setCurrentLimit(30);
@@ -244,10 +247,11 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     public boolean isWantingOpenClaw() {
         return (desiredState == State.INDEX && !indexTimeout.get());
+
     }
 
     public boolean isWantGrabbyClaw() {
-        return desiredState == State.GRAB && handOffTimeout.get();
+        return desiredState == State.GRAB;
     }
 
     @Override
@@ -262,7 +266,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         }
 
         if (activeState == State.GRAB && lastState != State.GRAB) {
-            handOffTimeout.set(.25);
+            time = Timer.getFPGATimestamp();
         }
 
         if (activeState == State.GRAB) {
@@ -372,7 +376,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         double rotaryVolts = -rotaryFeedforward.calculate(armSetpoint, calculateRotaryVelocity(armSetpoint, rotaryPos),
                 calculateRotaryAcceleration(armSetpoint, rotaryPos));
         // final boolean stopArm = armSetpoint <= (Math.PI * 0.5) && armSwitch.get();
-        rotaryVolts += -rotaryPoseController.calculate(rotaryPos, armSetpoint + (state == State.GRAB ? handoffRotationAdjustment : 0));
+        rotaryVolts += -rotaryPoseController.calculate(rotaryPos,
+                armSetpoint + (state == State.GRAB ? handoffRotationAdjustment : 0));
         rotaryVolts = TorqueMath.constrain(rotaryVolts, ROTARY_MAX_VOLTS);
         // rotary.setVolts(rotaryEncoder.isCANResponsive() && !isState(Arm.State.LOW) ?
         // rotaryVolts : 0);
