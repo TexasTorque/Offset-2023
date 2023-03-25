@@ -31,8 +31,8 @@ public final class Ports {
     public static final int CLAW_SWITCH = 0;
     public static final int ARM_SWITCH = 1;
     // PWM
-    public static final int LIGHTS_SUPERSTRUCTURE = 1;
-    public static final int LIGHTS_UNDERGLOW = 1;
+    public static final int LIGHTS_SUPERSTRUCTURE = 2;
+    public static final int LIGHTS_UNDERGLOW = 2;
 
     /**
      * BRAVO:
@@ -51,8 +51,7 @@ public final class Ports {
     // public static final int ARM_ROTARY_ENCODER = 18;
     // public static final int CLAW_MOTOR = 55;
     // public static final int CLAW_ENCODER = 22;
-    // public static final int FORKS_MOTOR = 20;
-    // public static final int INTAKE_ROTARY_MOTOR_RIGHT = 32;
+    // public static final int FORKS_MOTOR = 20;    // public static final int INTAKE_ROTARY_MOTOR_RIGHT = 32;
     // public static final int INTAKE_ROTARY_MOTOR_LEFT = 31;
     // public static final int CLAW_SWITCH = 0;
     // public static final int ARM_SWITCH = 1;

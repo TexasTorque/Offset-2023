@@ -180,7 +180,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         config.maxAngularAcceleration = MAX_ANGULAR_ACCELERATION;
 
         fl = new TorqueSwerveModule2022("Front Left", Ports.FL_MOD, -1.510968022048473 + Math.PI, config);
-        fr = new TorqueSwerveModule2022("Front Right", Ports.FR_MOD, 0.875901259481907, config);
+        fr = new TorqueSwerveModule2022("Front Right", Ports.FR_MOD, 2.336254367726393, config); // maybe + PI // old = 0.875901259481907
         bl = new TorqueSwerveModule2022("Back Left", Ports.BL_MOD, 2.147568762302399 + Math.PI, config);
         br = new TorqueSwerveModule2022("Back Right", Ports.BR_MOD, -0.751661766563551, config);
 
@@ -271,7 +271,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
                 inputSpeeds = autoLevelController.calculate();
                 convertToFieldRelative();
 
-            } else if (mode.isTeleop()) {
+            } else if (mode.isTeleop() || state == State.ALIGN) {
                 inputSpeeds = inputSpeeds.times(speedSetting.speed);
             }
 

@@ -90,8 +90,8 @@ public final class PathAlignController extends AbstractController<Optional<Torqu
 
     public static double ALIGN_X_OFFSET_LOAD_ZONE = 1;
 
-    private final PIDController xController = TorquePID.create(.5).build();
-    private final PIDController yController = TorquePID.create(.5).build();
+    private final PIDController xController = TorquePID.create(.25).build();
+    private final PIDController yController = TorquePID.create(.25).build();
 
     private final PIDController thetaController = new PIDController(1 * Math.PI, 0, 0);
     private final PPHolonomicDriveController controller;

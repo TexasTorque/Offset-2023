@@ -34,8 +34,10 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
     }
 
     public static enum State {
-        GRAB(3),
-        OPEN(2.8),
+        // Smaller is bigger on the claw
+        OPEN(2.9),
+        SHELF(3),
+        HALF(3.2),
         CLOSE(4);
 
         public final double clawSetpoint;
@@ -146,12 +148,14 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
 
         if (arm.isReadyToThrow())
             activeState = State.OPEN;
-        if (arm.isWantingOpenClaw())
-            activeState = State.OPEN;
+        if (arm.isWantingIndexClaw()) {
+            activeState = isCubeMode() ? State.HALF : State.HALF;
+        }
+        if (arm.isState(Arm.State.SHELF) && activeState == State.OPEN) {
+            activeState = State.SHELF;
+        }
         if (arm.isWantGrabbyClaw())
             activeState = State.OPEN;
-        if (activeState == State.OPEN && arm.isState(Arm.State.SHELF))
-            activeState = State.GRAB;
 
         double clawVolts = clawPoseController.calculate(realClawPose, activeState.clawSetpoint);
         Debug.log("requestedVolts", clawVolts);

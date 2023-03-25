@@ -40,13 +40,13 @@ public final class AutoLevelController extends AbstractController<TorqueSwerveSp
         public double getAngle() { return angleSupplier.getAsDouble(); }
     }
 
-    private static final double TILT_THRESHOLD_DEG = 10, FLAT_THRESHOLD_DEG = 2;
+    private static final double TILT_THRESHOLD_DEG = 10, FLAT_THRESHOLD_DEG = 1;
 
     private BalanceDirection balanceDirection = BalanceDirection.POS_X;
 
     private final Supplier<Pose2d> poseSupplier;
 
-    private final PIDController controller = new PIDController(.01, 0, .000);
+    private final PIDController controller = new PIDController(.0047, 0, .000);
 
     private boolean hasTilted = false, isFlat = false;
 

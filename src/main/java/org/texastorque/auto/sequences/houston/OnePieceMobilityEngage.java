@@ -48,7 +48,7 @@ public final class OnePieceMobilityEngage extends TorqueSequence implements Subs
 
         addBlock(new TorqueExecute(() -> Debug.log("state", "doing path")));
 
-        addBlock(new FollowEventPath("off-station", 2, 2));
+        addBlock(new FollowEventPath("off-station", 3, 2));
 
         // addBlock(new DriveUntil(-.3, () -> TorqueNavXGyro.getInstance().getPitch() > -5));
 

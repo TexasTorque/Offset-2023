@@ -16,6 +16,7 @@ import org.texastorque.subsystems.Hand.GamePiece;
 import org.texastorque.torquelib.auto.TorqueSequence;
 import org.texastorque.torquelib.auto.commands.TorqueExecute;
 import org.texastorque.torquelib.auto.commands.TorqueSequenceRunner;
+import org.texastorque.torquelib.auto.commands.TorqueWaitForSeconds;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -30,7 +31,10 @@ public final class DumbMiddleSide1PieceEngage extends TorqueSequence implements 
 
         addBlock(new TorqueSequenceRunner(new Score(Arm.State.TOP)));
 
-        addBlock(new FollowEventPath("origin-engage", 2.5, 3.5));
+        addBlock(new FollowEventPath("origin-engage-out", 2.5, 3.5));
+        addBlock(new TorqueWaitForSeconds(2));
+        addBlock(new FollowEventPath("origin-engage-in", 2.5, 3.5));
+
 
         addBlock(drivebase.setStateCommand(Drivebase.State.BALANCE));
     }
