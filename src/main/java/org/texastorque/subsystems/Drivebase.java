@@ -69,6 +69,10 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         private SpeedSetting(final double speed) {
             this.speed = speed;
         }
+
+        public boolean isSlow() {
+            return this == SLOW;
+        }
     }
 
     private static volatile Drivebase instance;
@@ -100,11 +104,11 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
      */
     private static final Vector<N3> VISION_STDS = VecBuilder.fill(0.1, 0.1, Units.degreesToRadians(10));
 
-    // (forward from center, left from center, up from center)
-
     private static final Transform3d LEFT_CAMERA_TO_CENTER = new Transform3d(
             new Translation3d(Units.inchesToMeters(5.800), Units.inchesToMeters(-8.517), Units.inchesToMeters(43.3)),
             new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(0), Units.degreesToRadians(35.895 / 2)));
+
+    // (forward from center, left from center, up from center)
 
     private static final Transform3d RIGHT_CAMERA_TO_CENTER = new Transform3d(
             new Translation3d(Units.inchesToMeters(5.760), Units.inchesToMeters(-12.707), Units.inchesToMeters(43.3)),
@@ -118,6 +122,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         return instance == null ? instance = new Drivebase() : instance;
     }
 
+    @Log.ToString
     public SpeedSetting speedSetting = SpeedSetting.FAST;
 
     @Log.ToString
@@ -128,9 +133,9 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     private final Translation2d LOC_FL = new Translation2d(SIZE, -SIZE), LOC_FR = new Translation2d(SIZE, SIZE),
             LOC_BL = new Translation2d(-SIZE, -SIZE),
             LOC_BR = new Translation2d(-SIZE, SIZE);
+
     // This is the kinematics object that calculates the desired wheel speeds
     private final SwerveDriveKinematics kinematics;
-
     // PoseEstimator is a more advanced odometry system that uses a Kalman
     // filter to estimate the robot's position It also encorporates other
     // measures like April tag positions
@@ -140,8 +145,8 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     public final Field2d fieldMap = new Field2d();
 
     private final TorqueSwerveModule2022 fl, fr, bl, br;
-    private final TorqueNavXGyro gyro = TorqueNavXGyro.getInstance();
 
+    private final TorqueNavXGyro gyro = TorqueNavXGyro.getInstance();
     private double lastRotationRadians;
 
     private final PIDController teleopOmegaController = new PIDController(2 * Math.PI, 0, 0);
@@ -160,8 +165,8 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     private final AutoLevelController autoLevelController = new AutoLevelController(this::getPose);
 
     public final TorqueVision cameraLeft, cameraRight;
-    public boolean updateWithTags = true;
 
+    public boolean updateWithTags = true;
     /**
      * Constructor called on initialization.
      */
@@ -192,6 +197,10 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         swerveStates = new SwerveModuleState[4];
         for (int i = 0; i < swerveStates.length; i++)
             swerveStates[i] = new SwerveModuleState();
+    }
+
+    public SpeedSetting getSpeedSetting() {
+        return speedSetting;
     }
 
     public void setState(final State state) {
@@ -271,7 +280,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
                 inputSpeeds = autoLevelController.calculate();
                 convertToFieldRelative();
 
-            } else if (mode.isTeleop() || state == State.ALIGN) {
+            } else if (mode.isTeleop() && state != State.ALIGN) {
                 inputSpeeds = inputSpeeds.times(speedSetting.speed);
             }
 

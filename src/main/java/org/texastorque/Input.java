@@ -147,8 +147,12 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
         wantsIntake.onTrueOrFalse(() -> {
             if (!clawTimeout.get() && arm.isStowed()) {
-                handoffStates.set(1);
-                arm.setState(Arm.State.INDEX);
+                if (hand.isCubeMode()) {
+                    handoffStates.set(1);
+                    arm.setState(Arm.State.INDEX);
+                } else {
+                    arm.setState(Arm.State.CONESTOW);
+                }
             }
             intake.setState(Intake.State.INTAKE);
         }, () -> {
@@ -196,8 +200,8 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
     private void updateDrivebaseSpeeds() {
         SmartDashboard.putBoolean("slowMode", slowMode.get());
-       // drivebase.speedSetting = slowMode.get() ? SpeedSetting.SLOW : SpeedSetting.FAST;
-       drivebase.speedSetting = SpeedSetting.FAST;
+       drivebase.speedSetting = slowMode.get() ? SpeedSetting.SLOW : SpeedSetting.FAST;
+    //    drivebase.speedSetting = SpeedSetting.FAST;
 
         final double xVelocity = TorqueMath.scaledLinearDeadband(driver.getLeftYAxis(), DEADBAND)
                 * Drivebase.MAX_VELOCITY;

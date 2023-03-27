@@ -47,7 +47,7 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
     private boolean driverWantsAutoSpindex = false;
     private double secondClickPose = 0, pidVolts = 0, firstClickTimer, grabPoseTimer;
 
-    private final double TICKS_TO_ALIGN = 1.2;
+    private final double TICKS_TO_ALIGN = 1.3;
 
     private final TorqueNEO turntable = new TorqueNEO(Ports.SPINDEXER_MOTOR);
     private final DigitalInput limitSwitch = new DigitalInput(0);
@@ -108,7 +108,7 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
                     autoSpindexState = AutoState.FALSE_SWITCH;
             } else if (autoSpindexState == AutoState.FALSE_SWITCH) {
                 // state = State.SLOW_CW;
-                if (limitSwitch.get() && Timer.getFPGATimestamp() - firstClickTimer > 0.16) {
+                if (limitSwitch.get() && Timer.getFPGATimestamp() - firstClickTimer > 0.15) {
                     secondClickPose = turntable.getPosition();
                     autoSpindexState = AutoState.SECOND_CLICK;
                 } else if (Timer.getFPGATimestamp() - firstClickTimer > 0.3)
