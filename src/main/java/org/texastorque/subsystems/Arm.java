@@ -100,7 +100,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         }
     }
 
-     private static final double ROTARY_ENCODER_OFFSET = Units.degreesToRadians(-161),
+    private static final double ROTARY_ENCODER_OFFSET = Units.degreesToRadians(-67.5),
             ELEVATOR_MAX_VOLTS_UP = 12,
             ELEVATOR_MAX_VOLTS_DOWN = 12,
             ELEVATOR_MAX_VOLTS_HANDOFF = 12,
@@ -177,7 +177,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     public boolean isPerformingHandoff() {
-        return activeState == State.GRAB || activeState == State.INDEX || activeState == State.AUTOGRAB || activeState == State.CONESTOW;
+        return activeState == State.GRAB || activeState == State.INDEX || activeState == State.AUTOGRAB
+                || activeState == State.CONESTOW;
     }
 
     @Log.BooleanBox
@@ -355,7 +356,11 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     private void calculateRotary(final State state) {
-        double armSetpoint = state.get().rotaryPose.getRadians() + setpointAdjustment * Units.degreesToRadians(30); // was 10 in qual 16
+        double armSetpoint = state.get().rotaryPose.getRadians() + setpointAdjustment * Units.degreesToRadians(30); // was
+                                                                                                                    // 10
+                                                                                                                    // in
+                                                                                                                    // qual
+                                                                                                                    // 16
         double rotaryPos = realRotaryPose.getRadians();
         if (rotaryPos > Math.toRadians(315)) { // wrap around up to prevent overshoot causing a massive spin.
             rotaryPos = rotaryPos - 2 * Math.PI;

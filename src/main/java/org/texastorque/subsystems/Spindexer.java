@@ -86,7 +86,8 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
     public final void update(final TorqueMode mode) {
         SmartDashboard.putBoolean("spindexer::limitSwitch", limitSwitch.get());
         SmartDashboard.putString("spindexer::autoState", autoSpindexState.toString());
-        SmartDashboard.putNumber("pidDelta", Math.abs(turntable.getPosition()) - (Math.abs(secondClickPose) - TICKS_TO_ALIGN));
+        SmartDashboard.putNumber("pidDelta",
+                Math.abs(turntable.getPosition()) - (Math.abs(secondClickPose) - TICKS_TO_ALIGN));
 
         if (driverWantsAutoSpindex) {
             if (!initAutoSpindex) {
@@ -108,7 +109,9 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
                     autoSpindexState = AutoState.FALSE_SWITCH;
             } else if (autoSpindexState == AutoState.FALSE_SWITCH) {
                 // state = State.SLOW_CW;
-                if (limitSwitch.get() && Timer.getFPGATimestamp() - firstClickTimer > 0.15) {
+                if (limitSwitch.get())
+                    System.out.println("Debounce " + (Timer.getFPGATimestamp() - firstClickTimer));
+                if (limitSwitch.get() && Timer.getFPGATimestamp() - firstClickTimer > 0.1) {
                     secondClickPose = turntable.getPosition();
                     autoSpindexState = AutoState.SECOND_CLICK;
                 } else if (Timer.getFPGATimestamp() - firstClickTimer > 0.3)
@@ -129,7 +132,7 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
             } else if (autoSpindexState == AutoState.STOP) {
                 if (Timer.getFPGATimestamp() - grabPoseTimer > 0.5) {
                     arm.setState(Arm.State.GRABBED);
-                 }
+                }
             }
         } else {
             initAutoSpindex = false;
