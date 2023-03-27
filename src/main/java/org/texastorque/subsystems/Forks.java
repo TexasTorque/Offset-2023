@@ -12,6 +12,7 @@ import org.texastorque.Subsystems;
 import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.control.TorquePID;
+import org.texastorque.torquelib.control.TorqueRequestableTimeout;
 import org.texastorque.torquelib.motors.TorqueNEO;
 import org.texastorque.torquelib.motors.TorqueNEO.SmartMotionProfile;
 
@@ -34,6 +35,8 @@ public final class Forks extends TorqueSubsystem implements Subsystems {
     private final double encoderToOutputGearing = 302.4;
     private final double maxVelocity = Math.toRadians(100) * 60 * encoderToOutputGearing;
     private final double maxAcceleration = 48 * 60 * encoderToOutputGearing;
+
+    private TorqueRequestableTimeout timeout = new TorqueRequestableTimeout();
 
 
     private Forks() {
@@ -59,6 +62,10 @@ public final class Forks extends TorqueSubsystem implements Subsystems {
     
     @Override
     public final void update(final TorqueMode mode) {
+        if (direction != 0) {
+            timeout.set(6);
+        }
+
         rotary.setSmartVelocity(maxVelocity * direction);
         Debug.log("current", rotary.getCurrent());
        // Debug.log("direction", direction);
@@ -67,5 +74,9 @@ public final class Forks extends TorqueSubsystem implements Subsystems {
         Debug.log("volts", maxVelocity * direction);
 
         direction = 0;
+    }
+
+    public boolean isForksRunning() {
+        return timeout.get();
     }
 }

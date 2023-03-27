@@ -40,7 +40,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
 
     public static enum State {
         INTAKE(new IndexerPose(3, 3, ROT_INTAKE), new IndexerPose(9, 12, ROT_INTAKE)),
-        AUTOINTAKE(new IndexerPose(3, 3, ROT_INTAKE), new IndexerPose(3, 3, ROT_INTAKE)),
+        AUTOINTAKE(new IndexerPose(2, 2, ROT_INTAKE), new IndexerPose(3, 3, ROT_INTAKE)),
         OUTAKE(new IndexerPose(-4, -4, ROT_INTAKE), new IndexerPose(-8, -9, ROT_INTAKE)),
         POOP(new IndexerPose(-12, -12, -9), new IndexerPose(-8, -9, ROT_UP)),
         PRIME(new IndexerPose(0, 0, ROT_PRIME)),

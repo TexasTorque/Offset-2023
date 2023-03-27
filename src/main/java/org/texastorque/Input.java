@@ -25,6 +25,8 @@ import org.texastorque.torquelib.sensors.TorqueController;
 import org.texastorque.torquelib.swerve.TorqueSwerveSpeeds;
 import org.texastorque.torquelib.util.TorqueMath;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
 public final class Input extends TorqueInput<TorqueController> implements Subsystems {
     private static volatile Input instance;
 
@@ -39,7 +41,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
             gridOverrideCenter, resetGyroClick, resetPoseClick, toggleRotationLock, wantsIntake,
             gamePieceModeToggle, openClaw, armToBottom,
             armToShelf, armToMid, armToTop, armDoHandoff, armThrow,
-            wantsOuttake, xFactorToggle, autoSpindex, wantsTipCone;
+            wantsOuttake, xFactorToggle, autoSpindex, wantsTipCone, slowMode;
 
     private final TorqueRequestableTimeout driverTimeout = new TorqueRequestableTimeout();
 
@@ -57,9 +59,9 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         isZeroingWheels = new TorqueBoolSupplier(driver::isBButtonDown);
         xFactorToggle = new TorqueToggleSupplier(driver::isXButtonDown);
 
-        alignGridLeft = new TorqueBoolSupplier(driver::isLeftBumperDown);
+        alignGridLeft = new TorqueBoolSupplier(() -> false);
         alignGridCenter = new TorqueBoolSupplier(() -> false);
-        alignGridRight = new TorqueBoolSupplier(driver::isRightBumperDown);
+        alignGridRight = new TorqueBoolSupplier(() -> false);
 
         gridOverrideLeft = new TorqueBoolSupplier(operator::isDPADLeftDown);
         gridOverrideRight = new TorqueBoolSupplier(operator::isDPADRightDown);
@@ -67,7 +69,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
         resetGyroClick = new TorqueClickSupplier(driver::isRightCenterButtonPressed);
         resetPoseClick = new TorqueClickSupplier(driver::isLeftCenterButtonPressed);
-        toggleRotationLock = new TorqueToggleSupplier(driver::isAButtonDown, true);
+        toggleRotationLock = new TorqueToggleSupplier(() -> false);
 
         wantsIntake = new TorqueBoolSupplier(() -> operator.isRightTriggerDown() || driver.isRightTriggerDown());
 
@@ -85,6 +87,8 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         armToBottom = new TorqueClickSupplier(operator::isAButtonDown);
 
         autoSpindex = new TorqueBoolSupplier(operator::isDPADUpDown);
+
+        slowMode = new TorqueToggleSupplier(driver::isAButtonDown);
     }
 
     public void setDriverRumbleFor(final double duration) {
@@ -106,7 +110,8 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         resetGyroClick.onTrue(() -> drivebase.resetGyro());
         resetPoseClick.onTrue(() -> drivebase.resetPose(Drivebase.INITIAL_POS));
 
-        drivebase.isRotationLocked = toggleRotationLock.get();
+        // drivebase.isRotationLocked = toggleRotationLock.get();
+        drivebase.isRotationLocked = true;
 
         alignGridLeft.onTrue(() -> drivebase.setAlignState(AlignState.LEFT));
         alignGridCenter.onTrue(() -> drivebase.setAlignState(AlignState.CENTER));
@@ -142,8 +147,12 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
         wantsIntake.onTrueOrFalse(() -> {
             if (!clawTimeout.get() && arm.isStowed()) {
-                handoffStates.set(1);
-                arm.setState(Arm.State.INDEX);
+                if (hand.isCubeMode()) {
+                    handoffStates.set(1);
+                    arm.setState(Arm.State.INDEX);
+                } else {
+                    arm.setState(Arm.State.CONESTOW);
+                }
             }
             intake.setState(Intake.State.INTAKE);
         }, () -> {
@@ -157,12 +166,6 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
             intake.setState(Intake.State.UP_ROLL);
             spindexer.setState(Spindexer.State.FAST_CW);
         });
-
-        // forksUp.onTrue(() -> forks.setDirection(TorqueDirection.FORWARD));
-        // forksDown.onTrue(() -> forks.setDirection(TorqueDirection.REVERSE));
-
-        // forks.setDirection(TorqueMath.scaledLinearDeadband(-operator.getRightYAxis(),
-        // DEADBAND));
 
         updateSpindexer();
     }
@@ -188,7 +191,9 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
     }
 
     private void updateDrivebaseSpeeds() {
-        drivebase.speedSetting = SpeedSetting.FAST;
+        SmartDashboard.putBoolean("slowMode", slowMode.get());
+       drivebase.speedSetting = slowMode.get() ? SpeedSetting.SLOW : SpeedSetting.FAST;
+    //    drivebase.speedSetting = SpeedSetting.FAST;
 
         final double xVelocity = TorqueMath.scaledLinearDeadband(driver.getLeftYAxis(), DEADBAND)
                 * Drivebase.MAX_VELOCITY;
@@ -203,8 +208,5 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
             drivebase.inputSpeeds = new TorqueSwerveSpeeds(xVelocity, yVelocity, 0);
             forks.setDirection(TorqueMath.scaledLinearDeadband(-driver.getRightYAxis(), DEADBAND));
         }
-
-        arm.setSetpointAdjustment(TorqueMath.scaledLinearDeadband(-operator.getRightYAxis(), DEADBAND));
-
     }
 }

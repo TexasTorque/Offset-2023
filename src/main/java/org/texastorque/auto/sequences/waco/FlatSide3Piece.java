@@ -43,7 +43,7 @@ public final class FlatSide3Piece extends TorqueSequence implements Subsystems {
 
         addBlock(new TorqueSequenceRunner(new Score(Arm.State.MID)), new TorqueContinuous(() -> {
             if (TorqueUtil.time() - start > 14.75)
-                hand.setState(Hand.State.OPEN);
+                hand.setState(Hand.State.HALF);
         }));
     }
 }

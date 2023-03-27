@@ -53,9 +53,10 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     public static enum State {
+        // cube, cone
         GRAB(
-                new ArmPose(7, Rotation2d.fromDegrees(246)),
-                new ArmPose(.238, Rotation2d.fromDegrees(247))),
+                new ArmPose(8, Rotation2d.fromDegrees(260)),
+                new ArmPose(2, Rotation2d.fromDegrees(249))),
         AUTOGRAB(
                 new ArmPose(5, Rotation2d.fromDegrees(266)),
                 new ArmPose(0, Rotation2d.fromDegrees(180))),
@@ -64,10 +65,11 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
                 new ArmPose(0, Rotation2d.fromDegrees(180))),
         INDEX(
                 new ArmPose(15, Rotation2d.fromDegrees(215)),
-                new ArmPose(16, Rotation2d.fromDegrees(236))),
+                new ArmPose(16, Rotation2d.fromDegrees(240))),
         WAYPOINT(new ArmPose(0.45, Rotation2d.fromDegrees(90))),
         STOWED(new ArmPose(8, Rotation2d.fromDegrees(175))),
         GRABBED(STOWED),
+        CONESTOW(STOWED),
         SHELF(new ArmPose(0, Rotation2d.fromDegrees(220))),
         MID(
                 new ArmPose(0, Rotation2d.fromDegrees(0)),
@@ -99,22 +101,20 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         }
     }
 
-    private static final double ROTARY_ENCODER_OFFSET = -Units.degreesToRadians(76 + 31),
+     private static final double ROTARY_ENCODER_OFFSET = Units.degreesToRadians(-161),
             ELEVATOR_MAX_VOLTS_UP = 12,
             ELEVATOR_MAX_VOLTS_DOWN = 12,
-            ELEVATOR_MAX_VOLTS_HANDOFF = 11,
-            MAX_SETPOINT_ADJUSTMENT = 1,
-            ROTARY_MAX_VOLTS = 12,
-            ELEVATOR_MIN = 0,
-            ELEVATOR_MAX = 50; // 54 is the technical max
+            ELEVATOR_MAX_VOLTS_HANDOFF = 12,
+             ROTARY_MAX_VOLTS = 12,
+                ELEVATOR_MIN = 0,
+                ELEVATOR_MAX = 50;
 
     private static volatile Arm instance;
-
-    public static double handoffRotationAdjustment = 0;
 
     public static final synchronized Arm getInstance() {
         return instance == null ? instance = new Arm() : instance;
     }
+               
 
     @Log.ToString
     private State activeState = State.STOWED;
@@ -177,11 +177,11 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     public boolean isStowed() {
-        return activeState == State.STOWED || activeState == State.GRABBED;
+        return activeState == State.STOWED || activeState == State.GRABBED || activeState == State.CONESTOW;
     }
 
     public boolean isPerformingHandoff() {
-        return activeState == State.GRAB || activeState == State.INDEX || activeState == State.AUTOGRAB;
+        return activeState == State.GRAB || activeState == State.INDEX || activeState == State.AUTOGRAB || activeState == State.CONESTOW;
     }
 
     @Log.BooleanBox
@@ -245,7 +245,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         return activeState.get().atPose(realElevatorPose, realRotaryPose);
     }
 
-    public boolean isWantingOpenClaw() {
+    public boolean isWantingIndexClaw() {
         return (desiredState == State.INDEX && !indexTimeout.get());
 
     }
@@ -262,7 +262,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         updateFeedback();
 
         if (activeState == State.INDEX && lastState != State.INDEX) {
-            indexTimeout.set(.25);
+            indexTimeout.set(0);
         }
 
         if (activeState == State.GRAB && lastState != State.GRAB) {
@@ -305,15 +305,6 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     public boolean isReadyToThrow() {
         return desiredState == State.THROW && realRotaryPose.getDegrees() <= 145;
 
-    }
-
-    public void setSetpointAdjustment(final double setpointAdjustment) {
-        SmartDashboard.putNumber("setPointAdj", handoffRotationAdjustment);
-
-        handoffRotationAdjustment = setpointAdjustment * MAX_SETPOINT_ADJUSTMENT;
-
-        if (Math.abs(handoffRotationAdjustment) < .1)
-            handoffRotationAdjustment = 0;
     }
 
     @Log.BooleanBox
@@ -376,8 +367,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         double rotaryVolts = -rotaryFeedforward.calculate(armSetpoint, calculateRotaryVelocity(armSetpoint, rotaryPos),
                 calculateRotaryAcceleration(armSetpoint, rotaryPos));
         // final boolean stopArm = armSetpoint <= (Math.PI * 0.5) && armSwitch.get();
-        rotaryVolts += -rotaryPoseController.calculate(rotaryPos,
-                armSetpoint + (state == State.GRAB ? handoffRotationAdjustment : 0));
+        rotaryVolts += -rotaryPoseController.calculate(rotaryPos, armSetpoint);
         rotaryVolts = TorqueMath.constrain(rotaryVolts, ROTARY_MAX_VOLTS);
         // rotary.setVolts(rotaryEncoder.isCANResponsive() && !isState(Arm.State.LOW) ?
         // rotaryVolts : 0);

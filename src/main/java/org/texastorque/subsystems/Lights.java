@@ -88,6 +88,7 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
                         blinkGreen = new Blink(() -> Color.kGreen, 6),
                         solidPurple = new Solid(() -> Color.kPurple), solidYellow = new Solid(() -> Color.kYellow),
                         blinkPurple = new Blink(() -> Color.kPurple, 6), blinkYellow = new Blink(() -> Color.kYellow, 6),
+                        solidRed = new Solid(() -> Color.kRed),
                         rainbow = new Rainbow();
 
     private Lights() {
@@ -106,6 +107,14 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
         if (drivebase.isState(Drivebase.State.ALIGN)) {
             if (drivebase.isPathAlignDone()) return blinkGreen;
             return solidGreen;
+        }
+
+        if (drivebase.getSpeedSetting().isSlow() && mode.isTeleop()) {
+            return solidRed;
+        }
+
+        if (forks.isForksRunning()) {
+            return rainbow;
         }
 
         if (drivebase.isState(Drivebase.State.BALANCE)) {
