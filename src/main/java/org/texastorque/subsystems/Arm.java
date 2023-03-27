@@ -103,7 +103,6 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
      private static final double ROTARY_ENCODER_OFFSET = Units.degreesToRadians(-161),
             ELEVATOR_MAX_VOLTS_UP = 12,
-            ELEVATOR_MAX_VOLTS_DOWN = 12,
             ELEVATOR_MAX_VOLTS_HANDOFF = 12,
              ROTARY_MAX_VOLTS = 12,
                 ELEVATOR_MIN = 0,
@@ -114,6 +113,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     public static final synchronized Arm getInstance() {
         return instance == null ? instance = new Arm() : instance;
     }
+
+    private double setpointAdjustment = 0;
                
 
     @Log.ToString
@@ -254,6 +255,12 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         return desiredState == State.GRAB;
     }
 
+    public void setSetpointAdjustment(final double setpointAdjustment) {
+        this.setpointAdjustment = setpointAdjustment;
+        if (Math.abs(this.setpointAdjustment) < .1)
+            this.setpointAdjustment = 0;
+    }
+
     @Override
     public final void update(final TorqueMode mode) {
 
@@ -271,6 +278,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
         if (activeState == State.GRAB) {
             grabbing = true;
+            // Add cube adjustment from spindexer
         } else {
             if (grabbing && activeState == State.GRABBED) {
                 grabTimeout.set(.5);
@@ -359,7 +367,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     private void calculateRotary(final State state) {
-        double armSetpoint = state.get().rotaryPose.getRadians();
+        double armSetpoint = state.get().rotaryPose.getRadians() + setpointAdjustment * Units.degreesToRadians(30); // was 10 in qual 16
         double rotaryPos = realRotaryPose.getRadians();
         if (rotaryPos > Math.toRadians(315)) { // wrap around up to prevent overshoot causing a massive spin.
             rotaryPos = rotaryPos - 2 * Math.PI;

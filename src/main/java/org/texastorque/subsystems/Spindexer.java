@@ -27,7 +27,7 @@ import io.github.oblarg.oblog.annotations.Log;
 public final class Spindexer extends TorqueSubsystem implements Subsystems {
 
     public static enum State {
-        AUTO_SPINDEX(1477), SLOW_CW(-4), FAST_CW(-8), SLOW_CCW(4), FAST_CCW(8), OFF(0);
+        AUTO_SPINDEX(-8), SLOW_CW(-4), FAST_CW(-8), SLOW_CCW(4), FAST_CCW(8), OFF(0);
 
         public final double volts;
 
@@ -40,9 +40,7 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
 
         public AutoSpindex() {
             addBlock(new TorqueWaitForSeconds(0.25));
-
             addBlock(new TorqueRunSequenceWhile(new OrientSpindexer(), () -> spindexer.isConeAligned()));
-
             addBlock(new TorqueSequenceRunner(new Handoff()));
         }
 
@@ -53,6 +51,7 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
             addBlock(spindexer.setStateCommand(Spindexer.State.FAST_CW));
             addBlock(new TorqueWaitUntil(()-> spindexer.limitSwitch.get()));
             addBlock(spindexer.setStateCommand(Spindexer.State.OFF));
+            addBlock(new TorqueWaitForSeconds(0.25));
         }
     }
 
@@ -120,6 +119,7 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
         SmartDashboard.putNumber("spindexer::USLeft", usLeft.getRangeInches());
         SmartDashboard.putNumber("spindexer::USRight", usRight.getRangeInches());
         SmartDashboard.putBoolean("spindexer::isConeAligned", isConeAligned());
+        SmartDashboard.putString("spindexer::activeState", activeState.toString());
 
         activeState = desiredState;
 

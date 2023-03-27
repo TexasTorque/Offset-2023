@@ -167,6 +167,8 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
             spindexer.setActiveState(Spindexer.State.FAST_CW);
         });
 
+        arm.setSetpointAdjustment(operator.getRightYAxis());
+
         updateSpindexer();
     }
 
