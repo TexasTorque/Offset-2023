@@ -164,7 +164,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
         wantsTipCone.onTrue(() -> {
             intake.setState(Intake.State.UP_ROLL);
-            spindexer.setState(Spindexer.State.FAST_CW);
+            spindexer.setActiveState(Spindexer.State.FAST_CW);
         });
 
         updateSpindexer();
@@ -174,20 +174,20 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         final double fast = operator.getLeftYAxis();
         if (Math.abs(fast) > DEADBAND) {
             if (fast < 0)
-                spindexer.setState(Spindexer.State.FAST_CCW);
+                spindexer.setActiveState(Spindexer.State.FAST_CCW);
             else
-                spindexer.setState(Spindexer.State.FAST_CW);
+                spindexer.setActiveState(Spindexer.State.FAST_CW);
         }
 
         final double slow = operator.getLeftXAxis();
         if (Math.abs(slow) > DEADBAND) {
             if (slow < 0)
-                spindexer.setState(Spindexer.State.SLOW_CCW);
+                spindexer.setActiveState(Spindexer.State.SLOW_CCW);
             else
-                spindexer.setState(Spindexer.State.SLOW_CW);
+                spindexer.setActiveState(Spindexer.State.SLOW_CW);
         }
 
-        spindexer.setAutoSpindex(autoSpindex.get());
+        autoSpindex.onTrue(() -> spindexer.setActiveState(Spindexer.State.AUTO_SPINDEX));
     }
 
     private void updateDrivebaseSpeeds() {
