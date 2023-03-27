@@ -48,10 +48,12 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
             addBlock(new TorqueWaitForSeconds(0.25));
             addBlock(new TorqueExecute(() -> {
                 if (spindexer.isConeAligned()) {
-                    // Finish sequence
+                    // End the sequence?
                 }
             }));
             addBlock(spindexer.setStateCommand(Spindexer.State.FAST_CW));
+            addBlock(new TorqueWaitUntil(()-> spindexer.limitSwitch.get()));
+            addBlock(spindexer.setStateCommand(Spindexer.State.OFF));
             addBlock(new TorqueWaitUntil(() -> spindexer.isConeAligned()));
         }
     }
