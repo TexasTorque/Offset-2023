@@ -55,7 +55,7 @@ public final class OnePiecePickupEngage extends TorqueSequence implements Subsys
             hand.setState(Hand.State.CLOSE);
         }));
 
-        addBlock(new DriveUntil(2, () -> TorqueNavXGyro.getInstance().getPitch() > 5));
+        addBlock(new FollowEventPath("back-to-station", 3, 2));
 
         // addBlock(new DriveUntil(.3, () -> TorqueNavXGyro.getInstance().getPitch() < 5));
 
