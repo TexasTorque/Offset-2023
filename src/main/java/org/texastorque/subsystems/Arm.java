@@ -53,20 +53,22 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         GRAB(
                 new ArmPose(.15, Rotation2d.fromDegrees(245)),
                 new ArmPose(0, Rotation2d.fromDegrees(245))),
-
+        PREPARE_FOR_GRAB(
+            new ArmPose(.5, Rotation2d.fromDegrees(230)),
+            new ArmPose(.08, Rotation2d.fromDegrees(255))),
         INDEX(
                 new ArmPose(.5, Rotation2d.fromDegrees(230)),
-                new ArmPose(.45, Rotation2d.fromDegrees(220))),
+                new ArmPose(.8, Rotation2d.fromDegrees(255))),
         WAYPOINT(new ArmPose(0.45, Rotation2d.fromDegrees(250))),
         STOWED(new ArmPose(.2, Rotation2d.fromDegrees(175))),
         GRABBED(STOWED),
-        SHELF(new ArmPose(0, Rotation2d.fromDegrees(210))),
+        SHELF(new ArmPose(0.008, Rotation2d.fromDegrees(225))),
         MID(
                 new ArmPose(.1, Rotation2d.fromDegrees(0)),
-                new ArmPose(.2, Rotation2d.fromDegrees(5))),
+                new ArmPose(.2, Rotation2d.fromDegrees(23))),
         TOP(
                 new ArmPose(1.3, Rotation2d.fromDegrees(0)),
-                new ArmPose(1.1, Rotation2d.fromDegrees(5))),
+                new ArmPose(1.1, Rotation2d.fromDegrees(15))),
 
         LOW(new ArmPose(.55, Rotation2d.fromDegrees(0)));
 
@@ -276,7 +278,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     private void updateFeedback() {
-        realElevatorPose = elevator.getPosition();
+        realElevatorPose = -elevator.getPosition();
         final double rotaryRadians = TorqueMath.constrain0to2PI(-rotaryEncoder.getPosition() - ROTARY_ENCODER_OFFSET);
         realRotaryPose = Rotation2d.fromRadians(rotaryRadians);
         SmartDashboard.putNumber("rotaryCanCoder", realRotaryPose.getRadians());
@@ -292,7 +294,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         elevatorVolts = TorqueMath.constrain(elevatorVolts,
                 isComingDown ? ELEVATOR_MAX_VOLTS_UP : ELEVATOR_MAX_VOLTS_DOWN);
         elevatorVolts = TorqueMath.linearConstraint(elevatorVolts, realElevatorPose, ELEVATOR_MIN, ELEVATOR_MAX);
-        elevator.setVolts(elevatorVolts);
+        elevator.setVolts(-elevatorVolts);
 
         SmartDashboard.putNumber("arm::elevatorCurrent", elevator.getCurrent());
         SmartDashboard.putNumber("arm::elevatorRequestedVolts", elevatorVolts);
@@ -314,6 +316,10 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         double armSetpoint = activeState.get().rotaryPose.getRadians();
         double rotaryPos = realRotaryPose.getRadians();
 
+        
+        if(rotaryPos > Math.toRadians(315)) {
+            rotaryPos = rotaryPos - 2*Math.PI; 
+        }
         double rotaryVolts = -rotaryFeedforward.calculate(armSetpoint, calculateRotaryVelocity(armSetpoint, rotaryPos),
                 calculateRotaryAcceleration(armSetpoint, rotaryPos));
         // final boolean stopArm = armSetpoint <= (Math.PI * 0.5) && armSwitch.get();
@@ -322,9 +328,9 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         // rotary.setVolts(rotaryEncoder.isCANResponsive() && !isState(Arm.State.LOW) ?
         // rotaryVolts : 0);
 
-        if (rotaryPos > Math.toRadians(315)) { // wrap around up to prevent overshoot causing a massive spin.
-            rotaryVolts = -2;
-        }
+        // if (rotaryPos > Math.toRadians(315)) { // wrap around up to prevent overshoot causing a massive spin.
+        //     rotaryVolts = -2;
+        // }
         rotary.setVolts(rotaryVolts);
 
         SmartDashboard.putNumber("arm::rotaryVolts", rotaryVolts);

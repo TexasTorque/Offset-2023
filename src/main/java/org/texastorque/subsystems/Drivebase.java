@@ -172,10 +172,10 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         // br = new TorqueSwerveModule2022("Back Right", Ports.BR_MOD,
         // 5.186378560960293, config);
 
-        fl = new TorqueSwerveModule2022("Front Left", Ports.FL_MOD, -.53686679, config);
-        fr = new TorqueSwerveModule2022("Front Right", Ports.FR_MOD, 1.365240141749382 + Math.PI, config);
-        bl = new TorqueSwerveModule2022("Back Left", Ports.BL_MOD, 1.135143488645554, config);
-        br = new TorqueSwerveModule2022("Back Right", Ports.BR_MOD, 2.069323200489386 + Math.PI, config);
+        fl = new TorqueSwerveModule2022("Front Left", Ports.FL_MOD, 1.497162222862244, config);
+        fr = new TorqueSwerveModule2022("Front Right", Ports.FR_MOD, 0.740911222994328, config);
+        bl = new TorqueSwerveModule2022("Back Left", Ports.BL_MOD, -0.693370614443914, config);
+        br = new TorqueSwerveModule2022("Back Right", Ports.BR_MOD, 1.54164757579565, config);
 
         kinematics = new SwerveDriveKinematics(LOC_BL, LOC_BR, LOC_FL, LOC_FR);
 

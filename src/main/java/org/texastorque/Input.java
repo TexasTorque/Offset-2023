@@ -34,7 +34,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
     private final TorqueBoolSupplier slowModeToggle, resetGyroClick, resetPoseClick, toggleRotationLock, wantsIntake,
             gamePieceModeToggle, openClaw, armToBottom,
-            armToShelf, armToMid, armToTop, armDoHandoff, wantsOuttake,
+            armToShelf, armToMid, armToTop, armToLow, armDoHandoff, wantsOuttake,
             autoSpindex, primeRoll;
 
     private final TorqueRequestableTimeout driverTimeout = new TorqueRequestableTimeout();
@@ -58,7 +58,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
         wantsIntake = new TorqueBoolSupplier(operator::isRightTriggerDown);
         openClaw = new TorqueBoolSupplier(operator::isRightBumperDown);
-        gamePieceModeToggle = new TorqueToggleSupplier(operator::isLeftBumperDown);
+        gamePieceModeToggle = new TorqueToggleSupplier(driver::isYButtonDown);
 
         wantsOuttake = new TorqueBoolSupplier(operator::isLeftCenterButtonDown);
 
@@ -67,6 +67,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         armToMid = new TorqueClickSupplier(operator::isBButtonDown);
         armToTop = new TorqueClickSupplier(operator::isYButtonDown);
         armToBottom = new TorqueClickSupplier(operator::isAButtonDown);
+        armToLow = new TorqueClickSupplier(operator::isLeftBumperDown);
 
         primeRoll = new TorqueBoolSupplier(operator::isRightCenterButtonDown);
 
@@ -102,8 +103,9 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         armToShelf.onTrue(() -> arm.setState(Arm.State.SHELF));
         armToMid.onTrue(() -> arm.setState(Arm.State.MID));
         armToTop.onTrue(() -> arm.setState(Arm.State.TOP));
-
+        // armToLow.onTrue(()->arm.setState(Arm.State.LOW));
         armToBottom.onTrue(() -> {
+            
             arm.setState(Arm.State.STOWED);
             handoffStates.set(0);
         });
@@ -116,7 +118,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         wantsIntake.onTrueOrFalse(() -> {
             if (!clawTimeout.get() && arm.isStowed()) {
                 handoffStates.set(1);
-                arm.setState(Arm.State.INDEX);
+                arm.setState(Arm.State.SHELF);
             }
 
             intake.setState(Intake.State.INTAKE);

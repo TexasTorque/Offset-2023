@@ -18,6 +18,8 @@ public final class Handoff extends TorqueSequence implements Subsystems {
     public Handoff() {
         addBlock(arm.setStateCommand(Arm.State.INDEX));
         addBlock(new TorqueWaitForSeconds(.3));
+        addBlock(arm.setStateCommand(Arm.State.PREPARE_FOR_GRAB));
+        addBlock(new TorqueWaitForSeconds(.15));
         addBlock(arm.setStateCommand(Arm.State.GRAB));
         addBlock(spindexer.setStateCommand(Spindexer.State.SLOW_CW));
         addBlock(new TorqueWaitForSeconds(.7));
