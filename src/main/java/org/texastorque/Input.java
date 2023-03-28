@@ -194,8 +194,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
     private void updateDrivebaseSpeeds() {
         SmartDashboard.putBoolean("slowMode", slowMode.get());
-       drivebase.speedSetting = slowMode.get() ? SpeedSetting.SLOW : SpeedSetting.FAST;
-    //    drivebase.speedSetting = SpeedSetting.FAST;
+        drivebase.speedSetting = slowMode.get() ? SpeedSetting.SLOW : SpeedSetting.FAST;
 
         final double xVelocity = TorqueMath.scaledLinearDeadband(driver.getLeftYAxis(), DEADBAND)
                 * Drivebase.MAX_VELOCITY;
