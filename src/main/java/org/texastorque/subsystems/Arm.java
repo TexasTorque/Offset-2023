@@ -67,7 +67,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
                 new ArmPose(15, Rotation2d.fromDegrees(215)),
                 new ArmPose(16, Rotation2d.fromDegrees(240))),
         WAYPOINT(new ArmPose(0.45, Rotation2d.fromDegrees(90))),
-        STOWED(new ArmPose(8, Rotation2d.fromDegrees(175))),
+        STOWED(new ArmPose(8, Rotation2d.fromDegrees(230))),
         GRABBED(STOWED),
         CONESTOW(STOWED),
         SHELF(new ArmPose(0, Rotation2d.fromDegrees(220))),
@@ -101,7 +101,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         }
     }
 
-     private static final double ROTARY_ENCODER_OFFSET = Units.degreesToRadians(-161),
+     private static final double ROTARY_ENCODER_OFFSET = Units.degreesToRadians(-67.5),
             ELEVATOR_MAX_VOLTS_UP = 12,
             ELEVATOR_MAX_VOLTS_HANDOFF = 12,
              ROTARY_MAX_VOLTS = 12,
@@ -174,7 +174,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         cancoderConfig.initializationStrategy = SensorInitializationStrategy.BootToAbsolutePosition;
         rotaryEncoder.configAllSettings(cancoderConfig);
 
-        activeState = State.STOWED;
+        
     }
 
     public boolean isStowed() {
