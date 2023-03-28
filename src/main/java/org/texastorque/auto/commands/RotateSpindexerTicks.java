@@ -30,7 +30,6 @@ public final class RotateSpindexerTicks extends TorqueCommand implements Subsyst
 
     @Override
     protected final void continuous() {
-        spindexer.setAutoSpindexVolts(pidController.calculate(spindexer.getEncoderPosition(), endPos));
     }
 
     @Override

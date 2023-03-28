@@ -8,16 +8,17 @@ package org.texastorque.subsystems;
 
 import org.texastorque.Ports;
 import org.texastorque.Subsystems;
-import org.texastorque.auto.routines.spindexer.OrientSpindexer;
 import org.texastorque.torquelib.auto.TorqueCommand;
 import org.texastorque.torquelib.auto.TorqueSequence;
 import org.texastorque.torquelib.auto.commands.TorqueExecute;
 import org.texastorque.torquelib.auto.commands.TorqueRunSequenceWhile;
 import org.texastorque.torquelib.auto.commands.TorqueWaitForSeconds;
+import org.texastorque.torquelib.auto.commands.TorqueWaitUntil;
 import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.motors.TorqueNEO;
 
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Ultrasonic;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -26,7 +27,7 @@ import io.github.oblarg.oblog.annotations.Log;
 public final class Spindexer extends TorqueSubsystem implements Subsystems {
 
     public static enum State {
-        AUTO_SPINDEX(-8), SLOW_CW(-4), FAST_CW(-8), SLOW_CCW(4), FAST_CCW(8), OFF(0);
+        AUTO_SPINDEX(0), ALIGN(0), SLOW_CW(-4), FAST_CW(-8), SLOW_CCW(4), FAST_CCW(8), OFF(0);
 
         public final double volts;
 
@@ -36,6 +37,26 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
 
         private double getVolts() {
             return volts;
+        }
+    }
+
+    public static final class OrientSpindexer extends TorqueSequence implements Subsystems {
+        // If the limit switch is inside of the cone when the sequence starts, then it
+        // will be aligned after one click, so it waits for 1/4 of a second to allow the
+        // US to recalibrate. If the limit switch is outside of the cone, then it will
+        // be aligned after one click and an offset (Then wait for 1/4 of a second to
+        // allow the US to recalibrate)
+        public OrientSpindexer() {
+            // addBlock(new TorqueExecute(() ->
+            // spindexer.setAutoSpindexVolts(Spindexer.State.FAST_CW.getVolts())));
+            addBlock(new TorqueExecute(() -> spindexer.activeState = State.FAST_CW));
+            // addBlock(spindexer.setStateCommand(Spindexer.State.FAST_CW));
+            addBlock(new TorqueWaitUntil(() -> spindexer.limitSwitch.get()));
+            // // addBlock(new TorqueWaitForSeconds(0.25));
+            addBlock(new TorqueExecute(() -> spindexer.activeState = State.ALIGN));
+            addBlock(new TorqueWaitUntil(() -> spindexer.isEncoderAligned()));
+            addBlock(new TorqueExecute(() -> spindexer.activeState = State.OFF));
+            // addBlock(new TorqueWaitForSeconds(0.25));
         }
     }
 
@@ -49,35 +70,40 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
 
     }
 
-    // public static final class Handoff extends TorqueSequence implements
-    // Subsystems {
-    // public Handoff() {
-    // addBlock(Arm.getInstance().setStateCommand(Arm.State.GRAB));
-    // addBlock(new TorqueWaitForSeconds(0.5));
-    // addBlock(Arm.getInstance().setStateCommand(Arm.State.GRABBED));
-    // }
-    // }
+    public static final class Handoff extends TorqueSequence implements
+            Subsystems {
+        public Handoff() {
+            addBlock(Arm.getInstance().setStateCommand(Arm.State.GRAB));
+            addBlock(new TorqueWaitForSeconds(0.5));
+            addBlock(Arm.getInstance().setStateCommand(Arm.State.GRABBED));
+        }
+    }
 
     private static volatile Spindexer instance;
 
-    private static double autoVolts;
+    private final static double TICKS_TO_ALIGN = 4;
+
+    private static final double TOLERANCE = .1;
 
     public static final synchronized Spindexer getInstance() {
         return instance == null ? instance = new Spindexer() : instance;
     }
 
-    @Log.ToString
-    private State desiredState = State.OFF;
+    private double pidGoal = 0;
 
+    @Log.ToString
+    private State desiredState = State.OFF;;
     private State activeState = State.OFF;
-    private final TorqueNEO turntable = new TorqueNEO(Ports.SPINDEXER_MOTOR);;
+
+    private final TorqueNEO turntable = new TorqueNEO(Ports.SPINDEXER_MOTOR);
+
     private final DigitalInput limitSwitch;
 
     private final Ultrasonic usLeft, usRight;
 
-    private final double TICKS_TO_ALIGN = 4, TOLERANCE = .1;
+    private AutoSpindex autoSpindex;
 
-    private static final AutoSpindex autoSpindex = new AutoSpindex();
+    private final PIDController pidController = new PIDController(2.5, 0, 0);
 
     private Spindexer() {
         turntable.setCurrentLimit(35);
@@ -97,20 +123,16 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
         return turntable.getPosition();
     }
 
-    public final void setAutoSpindexVolts(final double volts) {
-        autoVolts = volts;
-    }
-
     public final boolean isConeAligned() {
         return usLeft.getRangeInches() < 3.3 && usRight.getRangeInches() < 3.3;
     }
 
-    public final void setActiveState(final State state) {
-        this.activeState = state;
+    public final void setState(final State state) {
+        this.desiredState = state;
     }
 
     public TorqueCommand setStateCommand(final State state) {
-        return new TorqueExecute(() -> setActiveState(state));
+        return new TorqueExecute(() -> setState(state));
     }
 
     @Override
@@ -127,20 +149,40 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
         SmartDashboard.putNumber("spindexer::USLeft", usLeft.getRangeInches());
         SmartDashboard.putNumber("spindexer::USRight", usRight.getRangeInches());
         SmartDashboard.putBoolean("spindexer::isConeAligned", isConeAligned());
+
+        if (autoSpindex == null)
+
+            autoSpindex = new AutoSpindex();
+
+        if (desiredState == State.AUTO_SPINDEX) {
+            autoSpindex.run();
+        } else {
+            activeState = desiredState;
+            autoSpindex.reset();
+        }
+
         SmartDashboard.putString("spindexer::activeState", activeState.toString());
 
-        activeState = desiredState;
+        if (activeState == State.ALIGN) {
+            if (pidGoal == -1) {
+                pidGoal = turntable.getPosition() + TICKS_TO_ALIGN;
+            }
 
-        if (desiredState == State.AUTO_SPINDEX)
-            autoSpindex.run();
-        else
-            autoSpindex.reset();
-
-        turntable.setVolts(activeState.volts);
+            turntable.setVolts(pidController.calculate(turntable.getPosition(), pidGoal));
+            if (isEncoderAligned())
+                turntable.setVolts(0);
+        } else {
+            pidGoal = -1;
+            turntable.setVolts(activeState.volts);
+        }
 
         desiredState = State.OFF;
 
         // usLeft.ping();
         // usRight.ping();
+    }
+
+    public boolean isEncoderAligned() {
+        return pidGoal != -1 && Math.abs(turntable.getPosition() - pidGoal) < TOLERANCE;
     }
 }

@@ -67,7 +67,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
                 new ArmPose(15, Rotation2d.fromDegrees(215)),
                 new ArmPose(16, Rotation2d.fromDegrees(240))),
         WAYPOINT(new ArmPose(0.45, Rotation2d.fromDegrees(90))),
-        STOWED(new ArmPose(8, Rotation2d.fromDegrees(230))),
+        STOWED(new ArmPose(8, Rotation2d.fromDegrees(175))),
         GRABBED(STOWED),
         CONESTOW(STOWED),
         SHELF(new ArmPose(0, Rotation2d.fromDegrees(220))),
