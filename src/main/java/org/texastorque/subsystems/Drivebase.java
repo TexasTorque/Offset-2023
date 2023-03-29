@@ -52,7 +52,8 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         ALIGN(FIELD_RELATIVE),
         ZERO(FIELD_RELATIVE),
         BALANCE(FIELD_RELATIVE),
-        XF(FIELD_RELATIVE);
+        XF(FIELD_RELATIVE),
+        STRAIGHT(FIELD_RELATIVE); // For fork climb
 
         public final State parent;
 
@@ -267,7 +268,10 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
             zeroModules();
         } else if (state == State.XF) {
             xFactor();
-        } else {
+        } else if (state == State.STRAIGHT) {
+            alignWheelsStraight();
+        } 
+        else {
             if (arm.isWantingHighCOG())
                 speedSetting = SpeedSetting.SLOW;
 
@@ -387,6 +391,13 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         fr.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(90 + 45)));
         bl.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(90 + 45)));
         br.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(45)));
+    }
+
+    private void alignWheelsStraight() {
+        fl.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(90)));
+        fr.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(90)));
+        bl.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(90)));
+        br.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(90)));
     }
 
     private void calculateTeleop() {
