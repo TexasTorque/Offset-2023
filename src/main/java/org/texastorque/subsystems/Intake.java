@@ -44,6 +44,8 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
         OUTAKE(new IndexerPose(-4, -4, ROT_INTAKE), new IndexerPose(-8, -9, ROT_INTAKE)),
         POOP(new IndexerPose(-12, -12, -9), new IndexerPose(-8, -9, ROT_UP)),
         PRIME(new IndexerPose(0, 0, ROT_PRIME)),
+        DOWN_OFF(new IndexerPose(0, 0, ROT_INTAKE)),
+        DOWN_SLOW(new IndexerPose(0, 3, ROT_INTAKE)),
         PRIME_ROLL(new IndexerPose(6, 6, ROT_PRIME), new IndexerPose(9, 12, ROT_PRIME)),
         UP(new IndexerPose(0, 0, ROT_UP)),
         UP_ROLL(new IndexerPose(-9, 0, ROT_UP));
@@ -65,7 +67,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
         }
     }
 
-    private static final double ROT_INTAKE = -12.85;
+    private static final double ROT_INTAKE = -13.06;
     private static final double ROT_PRIME = -7;
     private static final double ROT_UP = 0;
 
@@ -165,6 +167,8 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
         Debug.log("bottomRollersSpeed", bottomRollers.getVelocity());
         Debug.log("bottomRollerCurrent", bottomRollers.getCurrent());
 
+        // mode.onAuto(() -> activeState = State.UP);
+
         Debug.log("requestedRotaryPose", activeState.get().rotaryPose);
         double requestedRotaryVolts = TorqueMath.constrain(
                 rotaryPoseController.calculate(realRotaryPose, activeState.get().rotaryPose), ROTARY_MAX_VOLTS);
@@ -173,6 +177,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
         }
         Debug.log("requestedRotaryVolts", requestedRotaryVolts);
         Debug.log("rotaryCurrent", rotary.getCurrent());
+
         rotary.setVolts(requestedRotaryVolts);
 
         lastState = activeState;

@@ -16,33 +16,19 @@ import org.texastorque.subsystems.Intake;
 import org.texastorque.torquelib.auto.TorqueSequence;
 import org.texastorque.torquelib.auto.commands.TorqueExecute;
 import org.texastorque.torquelib.auto.commands.TorqueSequenceRunner;
-import org.texastorque.torquelib.auto.commands.TorqueWaitUntil;
 
 public final class TwoPieceMobility extends TorqueSequence implements Subsystems {
     public TwoPieceMobility() {
 
+        addBlock(new TorqueExecute(() -> drivebase.updateWithTags = false));
         addBlock(hand.setStateCommand(Hand.State.CLOSE), hand.setGamePieceModeCommand(GamePiece.CONE));
 
         addBlock(new TorqueSequenceRunner(new Score(Arm.State.TOP)));
 
         addBlock(hand.setGamePieceModeCommand(GamePiece.CUBE));
 
-        addBlock(new FollowEventPath("flat-side-get-first-3"));
+        addBlock(new FollowEventPath("flat-side-get-first-5"));
 
-        addBlock(new TorqueWaitUntil(arm::isAtDesiredPose));
-
-        addBlock(new TorqueSequenceRunner(new Score(Arm.State.TOP)));
-
-        addBlock(new FollowEventPath("flat-side-get-ready"));
-
-        addBlock(new TorqueExecute(() -> {
-            intake.setState(Intake.State.UP);
-            arm.setState(Arm.State.STOWED);
-            hand.setState(Hand.State.CLOSE);
-        }));
-
-        // addBlock(arm.setStateCommand(Arm.State.STOWED));
-        // addBlock(new TorqueWaitForSeconds(2));
-        // addBlock(new TorqueSequenceRunner(new Handoff()));
+        addBlock(intake.setStateCommand(Intake.State.UP));
     }
 }

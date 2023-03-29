@@ -1,4 +1,4 @@
-/* 
+/**
  * Copyright 2023 Texas Torque.
  *
  * This file is part of Torque-2023, which is not licensed for distribution.
@@ -12,38 +12,27 @@ import org.texastorque.auto.routines.Score;
 import org.texastorque.subsystems.Arm;
 import org.texastorque.subsystems.Hand;
 import org.texastorque.subsystems.Hand.GamePiece;
+import org.texastorque.subsystems.Intake;
 import org.texastorque.torquelib.auto.TorqueSequence;
-import org.texastorque.torquelib.auto.commands.TorqueContinuous;
 import org.texastorque.torquelib.auto.commands.TorqueExecute;
 import org.texastorque.torquelib.auto.commands.TorqueSequenceRunner;
-import org.texastorque.torquelib.auto.commands.TorqueWaitUntil;
-import org.texastorque.torquelib.util.TorqueUtil;
 
 public final class ThreePieceMobility extends TorqueSequence implements Subsystems {
-    private double start = 0;
-
     public ThreePieceMobility() {
-        addBlock(new TorqueExecute(() -> start = TorqueUtil.time()));
 
+        addBlock(new TorqueExecute(() -> drivebase.updateWithTags = false));
         addBlock(hand.setStateCommand(Hand.State.CLOSE), hand.setGamePieceModeCommand(GamePiece.CONE));
 
         addBlock(new TorqueSequenceRunner(new Score(Arm.State.TOP)));
 
         addBlock(hand.setGamePieceModeCommand(GamePiece.CUBE));
 
-        addBlock(new FollowEventPath("flat-side-get-first"));
+        addBlock(new FollowEventPath("flat-side-get-first-5"));
 
-        addBlock(new TorqueWaitUntil(arm::isAtDesiredPose));
+        addBlock(intake.setStateCommand(Intake.State.UP));
 
-        addBlock(new TorqueSequenceRunner(new Score(Arm.State.TOP)));
-
-        addBlock(new FollowEventPath("flat-side-get-second"));
-
-        addBlock(new TorqueWaitUntil(arm::isAtDesiredPose));
-
-        addBlock(new TorqueSequenceRunner(new Score(Arm.State.MID)), new TorqueContinuous(() -> {
-            if (TorqueUtil.time() - start > 14.75)
-                hand.setState(Hand.State.HALF);
-        }));
+        addBlock(new FollowEventPath("flat-side-get-second-3"));
+        
+        addBlock(intake.setStateCommand(Intake.State.UP));
     }
 }

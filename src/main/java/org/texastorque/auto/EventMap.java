@@ -30,6 +30,14 @@ public final class EventMap implements Subsystems {
             hand.setState(Hand.State.CLOSE);
         }));
 
+        map.put("intake-down-slow", new TorqueExecute(() -> {
+            intake.setState(Intake.State.DOWN_SLOW);
+        }));
+
+        map.put("intake-down-off", new TorqueExecute(() -> {
+            intake.setState(Intake.State.DOWN_OFF);
+        }));
+
         map.put("pickup", new TorqueSequenceRunner(new Handoff()));
 
         // Legacy
@@ -37,6 +45,8 @@ public final class EventMap implements Subsystems {
 
         map.put("arm-ready-top", new TorqueExecute(() -> arm.setState(Arm.State.TOP)));
         map.put("arm-ready-mid", new TorqueExecute(() -> arm.setState(Arm.State.MID)));
+        
+        map.put("dump-low", intake.setStateCommand(Intake.State.OUTAKE));
 
         return map;
     }
