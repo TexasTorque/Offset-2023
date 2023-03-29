@@ -27,7 +27,7 @@ import io.github.oblarg.oblog.annotations.Log;
 public final class Spindexer extends TorqueSubsystem implements Subsystems {
 
     public static enum State {
-        AUTO_SPINDEX(0), ALIGN(0), SLOW_CW(-4), FAST_CW(-8), SLOW_CCW(4), FAST_CCW(8), OFF(0);
+        AUTO_SPINDEX(0), ALIGN(0), SLOW_CW(-4), FAST_CW(-6), SLOW_CCW(4), FAST_CCW(8), OFF(0);
 
         public final double volts;
 
@@ -35,9 +35,6 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
             this.volts = volts;
         }
 
-        private double getVolts() {
-            return volts;
-        }
     }
 
     public static final class OrientSpindexer extends TorqueSequence implements Subsystems {
@@ -49,20 +46,14 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
         public OrientSpindexer() {
             // addBlock(new TorqueExecute(() ->
             // spindexer.setAutoSpindexVolts(Spindexer.State.FAST_CW.getVolts())));
-            addBlock(new TorqueExecute(() -> System.out.println("1")));
+
             addBlock(new TorqueExecute(() -> spindexer.activeState = State.FAST_CW));
             // addBlock(spindexer.setStateCommand(Spindexer.State.FAST_CW));
-            addBlock(new TorqueExecute(() -> System.out.println("2")));
-
             addBlock(new TorqueWaitUntil(() -> spindexer.limitSwitch.get()));
             // // addBlock(new TorqueWaitForSeconds(0.25));
-            addBlock(new TorqueExecute(() -> System.out.println("3")));
-
-            addBlock(new TorqueExecute(() -> spindexer.activeState = State.ALIGN));
-            addBlock(new TorqueExecute(() -> System.out.println("4")));
-
-            addBlock(new TorqueWaitUntil(() -> spindexer.isEncoderAligned()));
             addBlock(new TorqueExecute(() -> spindexer.activeState = State.OFF));
+            // addBlock(new TorqueWaitUntil(() -> spindexer.isEncoderAligned()));
+            // addBlock(new TorqueExecute(() -> spindexer.activeState = State.OFF));
             // addBlock(new TorqueWaitForSeconds(0.25));
         }
     }
@@ -158,14 +149,12 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
         SmartDashboard.putBoolean("spindexer::isConeAligned", isConeAligned());
 
         if (autoSpindex == null)
-
             autoSpindex = new AutoSpindex();
 
         if (desiredState == State.AUTO_SPINDEX) {
             autoSpindex.run();
         } else {
             activeState = desiredState;
-            // autoSpindex.reset();
             autoSpindex = new AutoSpindex();
         }
 
@@ -173,10 +162,11 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
 
         if (activeState == State.ALIGN) {
             if (pidGoal == -1) {
-                pidGoal = turntable.getPosition() + TICKS_TO_ALIGN;
+                pidGoal = turntable.getPosition() - TICKS_TO_ALIGN;
             }
 
             turntable.setVolts(pidController.calculate(turntable.getPosition(), pidGoal));
+
             if (isEncoderAligned())
                 turntable.setVolts(0);
         } else {

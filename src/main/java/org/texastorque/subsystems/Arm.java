@@ -101,12 +101,12 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         }
     }
 
-     private static final double ROTARY_ENCODER_OFFSET = Units.degreesToRadians(-67.5),
+    private static final double ROTARY_ENCODER_OFFSET = Units.degreesToRadians(-155),
             ELEVATOR_MAX_VOLTS_UP = 12,
             ELEVATOR_MAX_VOLTS_HANDOFF = 12,
-             ROTARY_MAX_VOLTS = 12,
-                ELEVATOR_MIN = 0,
-                ELEVATOR_MAX = 50;
+            ROTARY_MAX_VOLTS = 12,
+            ELEVATOR_MIN = 0,
+            ELEVATOR_MAX = 50;
 
     private static volatile Arm instance;
 
@@ -115,7 +115,6 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     private double setpointAdjustment = 0;
-               
 
     @Log.ToString
     private State activeState = State.STOWED;
@@ -174,7 +173,6 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         cancoderConfig.initializationStrategy = SensorInitializationStrategy.BootToAbsolutePosition;
         rotaryEncoder.configAllSettings(cancoderConfig);
 
-        
     }
 
     public boolean isStowed() {
@@ -182,7 +180,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     public boolean isPerformingHandoff() {
-        return activeState == State.GRAB || activeState == State.INDEX || activeState == State.AUTOGRAB || activeState == State.CONESTOW;
+        return activeState == State.GRAB || activeState == State.INDEX || activeState == State.AUTOGRAB
+                || activeState == State.CONESTOW;
     }
 
     @Log.BooleanBox
@@ -367,7 +366,11 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     private void calculateRotary(final State state) {
-        double armSetpoint = state.get().rotaryPose.getRadians() + setpointAdjustment * Units.degreesToRadians(30); // was 10 in qual 16
+        double armSetpoint = state.get().rotaryPose.getRadians() + setpointAdjustment * Units.degreesToRadians(30); // was
+                                                                                                                    // 10
+                                                                                                                    // in
+                                                                                                                    // qual
+                                                                                                                    // 16
         double rotaryPos = realRotaryPose.getRadians();
         if (rotaryPos > Math.toRadians(315)) { // wrap around up to prevent overshoot causing a massive spin.
             rotaryPos = rotaryPos - 2 * Math.PI;
@@ -379,7 +382,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         rotaryVolts = TorqueMath.constrain(rotaryVolts, ROTARY_MAX_VOLTS);
         // rotary.setVolts(rotaryEncoder.isCANResponsive() && !isState(Arm.State.LOW) ?
         // rotaryVolts : 0);
-        rotary.setVolts(rotaryVolts);
+        // rotary.setVolts(rotaryVolts);
         Debug.log("rotaryVolts", rotaryVolts);
         Debug.log("elevatorCurrent", rotary.getCurrent());
         SmartDashboard.putBoolean("rotaryCANResponsiveness", rotaryEncoder.isCANResponsive());

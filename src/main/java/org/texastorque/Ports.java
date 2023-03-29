@@ -28,11 +28,11 @@ public final class Ports {
     public static final int CLAW_ENCODER = 22;
     public static final int FORKS_MOTOR = 20;
     // DIO
-    public static final int SPINDEXER_LIMIT_SWITCH = 0;
-    public static final int SPINDEXER_US_LEFT_PING = 2;
+    public static final int SPINDEXER_LIMIT_SWITCH = 4;
+    public static final int SPINDEXER_US_LEFT_PING = 0;
     public static final int SPINDEXER_US_LEFT_ECHO = 1;
-    public static final int SPINDEXER_US_RIGHT_PING = 4;
-    public static final int SPINDEXER_US_RIGHT_ECHO = 3;
+    public static final int SPINDEXER_US_RIGHT_PING = 3;
+    public static final int SPINDEXER_US_RIGHT_ECHO = 2;
     // PWM
     public static final int LIGHTS_SUPERSTRUCTURE = 2;
     public static final int LIGHTS_UNDERGLOW = 2;
