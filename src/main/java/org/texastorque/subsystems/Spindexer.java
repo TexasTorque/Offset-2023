@@ -155,26 +155,30 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
             autoSpindex.run();
         } else {
             activeState = desiredState;
-            autoSpindex = new AutoSpindex();
+            // autoSpindex = new AutoSpindex();
+            autoSpindex.reset();
         }
 
         SmartDashboard.putString("spindexer::activeState", activeState.toString());
+
+        double volts = 0;
 
         if (activeState == State.ALIGN) {
             if (pidGoal == -1) {
                 pidGoal = turntable.getPosition() - TICKS_TO_ALIGN;
             }
 
-            turntable.setVolts(pidController.calculate(turntable.getPosition(), pidGoal));
+            volts = pidController.calculate(turntable.getPosition(), pidGoal);
 
             if (isEncoderAligned())
-                turntable.setVolts(0);
+                volts = 0;
         } else {
             pidGoal = -1;
-            turntable.setVolts(activeState.volts);
+            volts = activeState.volts;
         }
 
         desiredState = State.OFF;
+        turntable.setVolts(volts);
 
         // usLeft.ping();
         // usRight.ping();
