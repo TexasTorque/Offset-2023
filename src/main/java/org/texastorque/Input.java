@@ -44,7 +44,10 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
     private final TorqueRequestableTimeout clawTimeout = new TorqueRequestableTimeout();
 
     private final TorqueTraversableSelection<Arm.State> handoffStates = new TorqueTraversableSelection<Arm.State>(
-            Arm.State.STOWED, Arm.State.INDEX, Arm.State.GRAB, Arm.State.GRABBED);
+            Arm.State.STOWED, Arm.State.INDEX, Arm.State.GRAB, Arm.State.UNJAM, Arm.State.GRABBED);
+
+    private final TorqueTraversableSelection<Arm.State> shelfStates = new TorqueTraversableSelection<Arm.State>(
+                Arm.State.SHELF, Arm.State.SHELF_GRAB_CUBE);
 
     private Input() {
         driver = new TorqueController(0, .001);
@@ -58,11 +61,12 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
         wantsIntake = new TorqueBoolSupplier(operator::isRightTriggerDown);
         openClaw = new TorqueBoolSupplier(operator::isRightBumperDown);
-        gamePieceModeToggle = new TorqueToggleSupplier(driver::isYButtonDown);
+        gamePieceModeToggle = new TorqueToggleSupplier(operator::isLeftBumperDown);
 
         wantsOuttake = new TorqueBoolSupplier(operator::isLeftCenterButtonDown);
 
         armDoHandoff = new TorqueClickSupplier(operator::isLeftTriggerDown);
+
         armToShelf = new TorqueClickSupplier(operator::isXButtonDown);
         armToMid = new TorqueClickSupplier(operator::isBButtonDown);
         armToTop = new TorqueClickSupplier(operator::isYButtonDown);
@@ -105,12 +109,19 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         armToTop.onTrue(() -> arm.setState(Arm.State.TOP));
         // armToLow.onTrue(()->arm.setState(Arm.State.LOW));
         armToBottom.onTrue(() -> {
-            
+
             arm.setState(Arm.State.STOWED);
             handoffStates.set(0);
         });
 
         armDoHandoff.onTrue(() -> arm.setState(handoffStates.calculate(false, true)));
+
+        if (armToShelf.get()) {
+            if (hand.isConeMode())
+                arm.setState(Arm.State.SHELF);
+            else
+                arm.setState(shelfStates.calculate(false, true));
+        }
 
         if (handoffStates.isLast())
             handoffStates.set(0);
@@ -135,7 +146,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
     }
 
     private void updateSpindexer() {
-        final double fast = operator.getLeftYAxis();
+        final double fast = operator.getLeftXAxis();
         if (Math.abs(fast) > DEADBAND) {
             if (fast < 0)
                 spindexer.setState(Spindexer.State.FAST_CCW);
@@ -143,15 +154,16 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
                 spindexer.setState(Spindexer.State.FAST_CW);
         }
 
-        final double slow = operator.getLeftXAxis();
-        if (Math.abs(slow) > DEADBAND) {
-            if (slow < 0)
-                spindexer.setState(Spindexer.State.SLOW_CCW);
-            else
-                spindexer.setState(Spindexer.State.SLOW_CW);
-        }
+        // final double slow = operator.getLeftXAxis();
+        // if (Math.abs(slow) > DEADBAND) {
+        //     if (slow < 0)
+        //         spindexer.setState(Spindexer.State.SLOW_CCW);
+        //     else
+        //         spindexer.setState(Spindexer.State.SLOW_CW);
+        // }
 
-        spindexer.setAutoSpindex(autoSpindex.get());
+        autoSpindex.onTrue(() -> spindexer.setState(Spindexer.State.AUTO_SPINDEX));
+
     }
 
     private void updateDrivebaseSpeeds() {
