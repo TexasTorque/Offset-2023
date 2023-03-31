@@ -18,7 +18,6 @@ import org.texastorque.torquelib.control.TorqueBoolSupplier;
 import org.texastorque.torquelib.control.TorqueClickSupplier;
 import org.texastorque.torquelib.control.TorqueRequestableTimeout;
 import org.texastorque.torquelib.control.TorqueToggleSupplier;
-import org.texastorque.torquelib.control.TorqueTraversableSelection;
 import org.texastorque.torquelib.sensors.TorqueController;
 import org.texastorque.torquelib.swerve.TorqueSwerveSpeeds;
 import org.texastorque.torquelib.util.TorqueMath;
@@ -43,12 +42,6 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
     private final TorqueRequestableTimeout clawTimeout = new TorqueRequestableTimeout();
 
-    private final TorqueTraversableSelection<Arm.State> handoffStates = new TorqueTraversableSelection<Arm.State>(
-            Arm.State.STOWED, Arm.State.INDEX, Arm.State.GRAB, Arm.State.UNJAM, Arm.State.GRABBED);
-
-    private final TorqueTraversableSelection<Arm.State> shelfStates = new TorqueTraversableSelection<Arm.State>(
-                Arm.State.SHELF, Arm.State.SHELF_GRAB_CUBE);
-
     private Input() {
         driver = new TorqueController(0, .001);
         operator = new TorqueController(1);
@@ -61,15 +54,20 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
         wantsIntake = new TorqueBoolSupplier(operator::isRightTriggerDown);
         openClaw = new TorqueBoolSupplier(operator::isRightBumperDown);
-        gamePieceModeToggle = new TorqueToggleSupplier(operator::isLeftBumperDown);
+        gamePieceModeToggle = new TorqueToggleSupplier(() -> operator.isLeftBumperDown() || driver.isYButtonDown());
 
         wantsOuttake = new TorqueBoolSupplier(operator::isLeftCenterButtonDown);
 
-        armDoHandoff = new TorqueClickSupplier(operator::isLeftTriggerDown);
+        armDoHandoff = new TorqueBoolSupplier(operator::isLeftTriggerDown);
 
         armToShelf = new TorqueClickSupplier(operator::isXButtonDown);
         armToMid = new TorqueClickSupplier(operator::isBButtonDown);
         armToTop = new TorqueClickSupplier(operator::isYButtonDown);
+        // armToTop = new TorqueBoolSupplier(() -> operator::isYButtonDown ||
+        // driver::isYButtonDown);
+        // armToTop = new TorqueBoolSupplier(() -> operator.isYButtonDown() ||
+        // driver.isYButtonDown());
+
         armToBottom = new TorqueClickSupplier(operator::isAButtonDown);
         armToLow = new TorqueClickSupplier(operator::isLeftBumperDown);
 
@@ -108,33 +106,16 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         armToMid.onTrue(() -> arm.setState(Arm.State.MID));
         armToTop.onTrue(() -> arm.setState(Arm.State.TOP));
         // armToLow.onTrue(()->arm.setState(Arm.State.LOW));
-        armToBottom.onTrue(() -> {
+        armToBottom.onTrue(() -> arm.setState(Arm.State.STOWED));
 
-            arm.setState(Arm.State.STOWED);
-            handoffStates.set(0);
-        });
+        armDoHandoff.onTrue(() -> arm.setState(Arm.State.HANDOFF));
 
-        armDoHandoff.onTrue(() -> arm.setState(handoffStates.calculate(false, true)));
-
-        if (armToShelf.get()) {
-            if (hand.isConeMode())
-                arm.setState(Arm.State.SHELF);
-            else
-                arm.setState(shelfStates.calculate(false, true));
-        }
-
-        if (handoffStates.isLast())
-            handoffStates.set(0);
+        armToShelf.onTrue(() -> arm.setState(Arm.State.SHELF));
 
         wantsIntake.onTrueOrFalse(() -> {
-            if (!clawTimeout.get() && arm.isStowed()) {
-                handoffStates.set(1);
-                arm.setState(Arm.State.SHELF);
-            }
 
             intake.setState(Intake.State.INTAKE);
         }, () -> {
-            clawTimeout.set(.2);
             intake.setState(Intake.State.UP);
         });
 
@@ -156,10 +137,10 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
         // final double slow = operator.getLeftXAxis();
         // if (Math.abs(slow) > DEADBAND) {
-        //     if (slow < 0)
-        //         spindexer.setState(Spindexer.State.SLOW_CCW);
-        //     else
-        //         spindexer.setState(Spindexer.State.SLOW_CW);
+        // if (slow < 0)
+        // spindexer.setState(Spindexer.State.SLOW_CCW);
+        // else
+        // spindexer.setState(Spindexer.State.SLOW_CW);
         // }
 
         autoSpindex.onTrue(() -> spindexer.setState(Spindexer.State.AUTO_SPINDEX));

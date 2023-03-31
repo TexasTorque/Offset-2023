@@ -246,8 +246,8 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         if (state == State.ZERO) {
             zeroModules();
         } else {
-            if (arm.isWantingHighCOG())
-                speedSetting = SpeedSetting.SLOW;
+            // if (arm.isWantingHighCOG())
+            //     speedSetting = SpeedSetting.SLOW;
 
             if (state == State.ALIGN) {
                 final Optional<TorqueSwerveSpeeds> speedsWrapper = alignmentController.calculate();

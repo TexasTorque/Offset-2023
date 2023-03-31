@@ -39,7 +39,6 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
         OPEN(4.6),
         CLOSE(5.6);
 
-
         public final double clawSetpoint;
 
         private State(final double clawSetpoint) {
@@ -72,7 +71,6 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
     @Config
 
     public final PIDController clawPoseController = new PIDController(10, 0, 0);
-
 
     private final TorqueNEO claw = new TorqueNEO(Ports.CLAW_MOTOR);
 
@@ -146,8 +144,6 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
         activeState = desiredState;
         updateFeedback();
 
-        if (arm.isWantingOpenClaw())
-            activeState = State.OPEN;
         if (arm.isWantGrabbyClaw())
             activeState = State.GRAB;
         if (activeState == State.OPEN && arm.isWantingScoringPose()) {
