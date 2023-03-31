@@ -13,43 +13,27 @@ import org.texastorque.subsystems.Arm;
 import org.texastorque.subsystems.Drivebase;
 import org.texastorque.subsystems.Hand;
 import org.texastorque.subsystems.Hand.GamePiece;
+import org.texastorque.subsystems.Intake;
 import org.texastorque.torquelib.auto.TorqueSequence;
+import org.texastorque.torquelib.auto.commands.TorqueExecute;
 import org.texastorque.torquelib.auto.commands.TorqueSequenceRunner;
-import org.texastorque.torquelib.auto.commands.TorqueWaitUntil;
 
 public final class TwoPieceMobilityEngage extends TorqueSequence implements Subsystems {
     public TwoPieceMobilityEngage() {
 
+        addBlock(new TorqueExecute(() -> drivebase.updateWithTags = false));
         addBlock(hand.setStateCommand(Hand.State.CLOSE), hand.setGamePieceModeCommand(GamePiece.CONE));
 
         addBlock(new TorqueSequenceRunner(new Score(Arm.State.TOP)));
 
         addBlock(hand.setGamePieceModeCommand(GamePiece.CUBE));
 
-        addBlock(new FollowEventPath("flat-side-get-first-3"));
+        addBlock(new FollowEventPath("flat-side-get-first-5"));
 
-        addBlock(new TorqueWaitUntil(arm::isAtDesiredPose));
+        addBlock(intake.setStateCommand(Intake.State.UP));
 
-        // addBlock(new TorqueExecute(() -> {
-        //     spindexer.setState(Spindexer.State.FAST_CCW);
-        //     intake.setState(Intake.State.POOP);
-        // }));
-
-        addBlock(new TorqueSequenceRunner(new Score(Arm.State.TOP)));
-
-        // addBlock(new TorqueWaitForSeconds(1));
-
-        // addBlock(new TorqueExecute(() -> {
-        //     spindexer.setState(Spindexer.State.OFF);
-        //     intake.setState(Intake.State.UP);
-        // }));
-
-        addBlock(new FollowEventPath("flat-side-go-level"));
+        addBlock(new FollowEventPath("flat-side-go-level-2"));
 
         addBlock(drivebase.setStateCommand(Drivebase.State.BALANCE));
-
-        // addBlock(arm.setStateCommand(Arm.State.STOWED));
-        // addBlock(new TorqueWaitForSeconds(2));
-        // addBlock(new TorqueSequenceRunner(new Handoff()));
     }
 }

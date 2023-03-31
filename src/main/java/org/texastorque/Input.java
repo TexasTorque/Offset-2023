@@ -167,12 +167,6 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
             spindexer.setState(Spindexer.State.FAST_CW);
         });
 
-        // forksUp.onTrue(() -> forks.setDirection(TorqueDirection.FORWARD));
-        // forksDown.onTrue(() -> forks.setDirection(TorqueDirection.REVERSE));
-
-        // forks.setDirection(TorqueMath.scaledLinearDeadband(-operator.getRightYAxis(),
-        // DEADBAND));
-
         arm.setSetpointAdjustment(operator.getRightYAxis());
 
         updateSpindexer();
@@ -195,13 +189,12 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
                 spindexer.setState(Spindexer.State.SLOW_CW);
         }
 
-        spindexer.setAutoSpindex(autoSpindex.get());
+        autoSpindex.onTrue(() -> spindexer.setState(Spindexer.State.AUTO_SPINDEX));
     }
 
     private void updateDrivebaseSpeeds() {
         SmartDashboard.putBoolean("slowMode", slowMode.get());
-       drivebase.speedSetting = slowMode.get() ? SpeedSetting.SLOW : SpeedSetting.FAST;
-    //    drivebase.speedSetting = SpeedSetting.FAST;
+        drivebase.speedSetting = slowMode.get() ? SpeedSetting.SLOW : SpeedSetting.FAST;
 
         final double xVelocity = TorqueMath.scaledLinearDeadband(driver.getLeftYAxis(), DEADBAND)
                 * Drivebase.MAX_VELOCITY;

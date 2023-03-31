@@ -6,10 +6,11 @@
  */
 package org.texastorque.auto;
 
+import org.texastorque.auto.sequences.houston.OnePieceMobility;
+import org.texastorque.auto.sequences.houston.OnePieceMobilityEngage;
+import org.texastorque.auto.sequences.houston.ThreePieceMobility;
 import org.texastorque.auto.sequences.houston.TwoPieceMobility;
 import org.texastorque.auto.sequences.houston.TwoPieceMobilityEngage;
-import org.texastorque.auto.sequences.waco.DumbBothSide1PieceMobility;
-import org.texastorque.auto.sequences.waco.DumbMiddleSide1PieceEngage;
 import org.texastorque.torquelib.auto.TorqueAutoManager;
 
 public final class AutoManager extends TorqueAutoManager {
@@ -35,12 +36,13 @@ public final class AutoManager extends TorqueAutoManager {
         // addSequence(new DumbMiddleSide1PieceEngage());
         // addSequence(new DumbFlatSide1PieceEngage());
         // addSequence(new DumbBumpySide1PieceEngage());
-        addSequence(new DumbBothSide1PieceMobility());
-        addSequence(new DumbMiddleSide1PieceEngage());
+        addSequence(new OnePieceMobility());
+        addSequence(new OnePieceMobilityEngage());
 
         // addSequence(new OnePieceMobilityEngage());
         // addSequence(new OnePiecePickupEngage());
         addSequence(new TwoPieceMobility());
+        addSequence(new ThreePieceMobility());
         addSequence(new TwoPieceMobilityEngage());
         // addSequence(new ThreePieceMobility());
     }

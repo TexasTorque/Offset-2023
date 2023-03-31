@@ -146,16 +146,18 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
         activeState = desiredState;
         updateFeedback();
 
-        if (arm.isReadyToThrow())
-            activeState = State.OPEN;
-        if (arm.isWantingIndexClaw()) {
-            activeState = isCubeMode() ? State.HALF : State.HALF;
+        if (mode.isTeleop()) {
+            if (arm.isReadyToThrow())
+                activeState = State.OPEN;
+            if (arm.isWantingIndexClaw()) {
+                activeState = isCubeMode() ? State.HALF : State.HALF;
+            }
+            if (arm.isState(Arm.State.SHELF) && activeState == State.OPEN) {
+                activeState = State.SHELF;
+            }
+            if (arm.isWantGrabbyClaw())
+                activeState = State.OPEN;
         }
-        if (arm.isState(Arm.State.SHELF) && activeState == State.OPEN) {
-            activeState = State.SHELF;
-        }
-        if (arm.isWantGrabbyClaw())
-            activeState = State.OPEN;
 
         double clawVolts = clawPoseController.calculate(realClawPose, activeState.clawSetpoint);
         Debug.log("requestedVolts", clawVolts);
