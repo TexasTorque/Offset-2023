@@ -309,11 +309,11 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         if (handoff == null)
             handoff = new Handoff();
 
-        if (activeState == State.HANDOFF) {
-            handoff.run();
-        } else {
-            handoff.reset();
-        }
+        // if (activeState == State.HANDOFF) {
+        // handoff.run();
+        // } else {
+        // handoff.reset();
+        // }
 
         calculateElevator();
         calculateRotary();
