@@ -42,7 +42,7 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
 
             addBlock(new TorqueExecute(() -> spindexer.activeState = State.FAST_CCW));
 
-            addBlock(new TorqueWaitUntil(() -> !spindexer.limitSwitch.get()));
+            addBlock(new TorqueWaitUntil(() -> spindexer.limitSwitch.get()));
 
             // addBlock(new TorqueWaitForSeconds(1));
 
@@ -58,7 +58,7 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
     private static volatile Spindexer instance;
 
     // private final static double TICKS_TO_ALIGN = 8;
-    private final static double TICKS_TO_ALIGN = 13;
+    private final static double TICKS_TO_ALIGN = 17;
 
     private static final double TOLERANCE = .5;
 
@@ -86,8 +86,7 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
         turntable.setBreakMode(true);
         turntable.burnFlash();
 
-        limitSwitch = new DigitalInput(3);
-
+        limitSwitch = new DigitalInput(4);
     }
 
     public final double getEncoderPosition() {
@@ -112,7 +111,7 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
 
     @Override
     public final void update(final TorqueMode mode) {
-        SmartDashboard.putBoolean("spindexer::limitSwitch", !limitSwitch.get());
+        SmartDashboard.putBoolean("spindexer::limitSwitch", limitSwitch.get());
 
         if (autoSpindex == null)
             autoSpindex = new AutoSpindex();

@@ -40,7 +40,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
             gridOverrideCenter, resetGyroClick, resetPoseClick, toggleRotationLock, wantsIntake,
             gamePieceModeToggle, openClaw, armToBottom,
             armToShelf, armToMid, armToTop, armDoHandoff, armThrow,
-            wantsOuttake, xFactorToggle, autoSpindex, wantsTipCone, slowMode;
+            wantsOuttake, xFactorToggle, autoSpindex, wantsTipCone, slowMode, armLeavingHandoff;
 
     private final TorqueRequestableTimeout driverTimeout = new TorqueRequestableTimeout();
 
@@ -73,6 +73,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         wantsTipCone = new TorqueBoolSupplier(operator::isLeftStickClickDown);
 
         armDoHandoff = new TorqueBoolSupplier(operator::isLeftTriggerDown);
+        armLeavingHandoff = new TorqueClickSupplier(() -> !armDoHandoff.get());
         armToShelf = new TorqueClickSupplier(operator::isXButtonDown);
         armToMid = new TorqueClickSupplier(operator::isBButtonDown);
         armToTop = new TorqueClickSupplier(operator::isYButtonDown);
@@ -132,6 +133,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         armToBottom.onTrue(() -> arm.setState(Arm.State.STOWED));
 
         armDoHandoff.onTrue(() -> arm.setState(Arm.State.HANDOFF));
+        armLeavingHandoff.onTrue(() -> arm.setState(Arm.State.STOWED));
 
         wantsIntake.onTrueOrFalse(() -> {
             intake.setState(Intake.State.INTAKE);

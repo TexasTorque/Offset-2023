@@ -6,6 +6,7 @@
  */
 package org.texastorque.auto;
 
+import org.texastorque.auto.sequences.houston.MiddleOnePieceGrabOne;
 import org.texastorque.auto.sequences.houston.OnePieceMobility;
 import org.texastorque.auto.sequences.houston.OnePieceMobilityEngage;
 import org.texastorque.auto.sequences.houston.ThreePieceMobility;
@@ -44,6 +45,7 @@ public final class AutoManager extends TorqueAutoManager {
         addSequence(new TwoPieceMobility());
         addSequence(new ThreePieceMobility());
         addSequence(new TwoPieceMobilityEngage());
+        addSequence(new MiddleOnePieceGrabOne());
         // addSequence(new ThreePieceMobility());
     }
 }

@@ -48,8 +48,9 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         }
 
         public boolean atPose(final double elevatorReal, final Rotation2d rotaryReal) {
-            return Math.abs(elevatorReal - elevatorPose) < ELEVATOR_TOLERANCE
-                    && Math.abs(rotaryReal.minus(rotaryPose).getRadians()) < ROTARY_TOLERANCE;
+            // return Math.abs(elevatorReal - elevatorPose) < ELEVATOR_TOLERANCE
+            // && Math.abs(rotaryReal.minus(rotaryPose).getRadians()) < ROTARY_TOLERANCE;
+            return Math.abs(rotaryReal.minus(rotaryPose).getRadians()) < ROTARY_TOLERANCE;
         }
     }
 
@@ -58,8 +59,9 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
         // Normal states
         SCORING_HALF_WAY_POINT(new ArmPose(0.45, Rotation2d.fromDegrees(90))),
-        STOWED(new ArmPose(8, Rotation2d.fromDegrees(200))),
-        SHELF(new ArmPose(0, Rotation2d.fromDegrees(220))),
+        SHELF(new ArmPose(8, Rotation2d.fromDegrees(220)),
+                new ArmPose(0, Rotation2d.fromDegrees(220))),
+        STOWED(SHELF),
         MID(
                 new ArmPose(0, Rotation2d.fromDegrees(0)),
                 new ArmPose(5, Rotation2d.fromDegrees(20))),
@@ -82,10 +84,9 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
                 new ArmPose(2, Rotation2d.fromDegrees(249))),
         HANDOFF_GRAB(
                 new ArmPose(8, Rotation2d.fromDegrees(260)),
-                new ArmPose(2, Rotation2d.fromDegrees(249))),
+                new ArmPose(2, Rotation2d.fromDegrees(245))),
         HANDOFF_BACK(
-                new ArmPose(10, Rotation2d.fromDegrees(200))),
-        HANDOFF_STOWED(STOWED);
+                new ArmPose(16, Rotation2d.fromDegrees(230)));
 
         public final ArmPose cubePose;
         public final ArmPose conePose;
@@ -113,8 +114,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
             goTo(State.HANDOFF_ABOVE, .25);
             goTo(State.HANDOFF_DOWN, .25);
             goTo(State.HANDOFF_GRAB, .25);
-            goTo(State.HANDOFF_STOWED, .25);
-            goTo(State.STOWED, -1);
+            goTo(State.HANDOFF_BACK, .25);
         }
 
         private final void goTo(final State state, final double seconds) {
@@ -122,8 +122,10 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
                 arm.activeState = state;
                 return arm.isAtState(state);
             }));
+
             if (seconds == -1)
                 return;
+
             addBlock(new TorqueWaitForSeconds(seconds, () -> {
                 arm.activeState = state;
             }));
@@ -286,9 +288,10 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         updateFeedback();
 
         if (activeState == State.HANDOFF) {
-            handoff.run(); 
+            handoff.run();
         } else {
-            handoff.reset();
+            activeState = desiredState;
+            handoff = new Handoff();
         }
 
         if (desiredState == State.THROW) {
@@ -346,7 +349,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         elevatorVolts = TorqueMath.constrain(elevatorVolts,
                 isPerformingHandoff() ? ELEVATOR_MAX_VOLTS_UP : ELEVATOR_MAX_VOLTS_HANDOFF);
         elevatorVolts = TorqueMath.linearConstraint(elevatorVolts, realElevatorPose, ELEVATOR_MIN, ELEVATOR_MAX);
-        elevator.setVolts(elevatorVolts);
+        // elevator.setVolts(elevatorVolts);
         Debug.log("elevatorCurrent", elevator.getCurrent());
         Debug.log("elevatorRequestedVolts", elevatorVolts);
     }
@@ -364,7 +367,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     private void calculateRotary(final State state) {
-        double armSetpoint = state.get().rotaryPose.getRadians() ;//+ setpointAdjustment * Units.degreesToRadians(30);
+        double armSetpoint = state.get().rotaryPose.getRadians();// + setpointAdjustment * Units.degreesToRadians(30);
         double rotaryPos = realRotaryPose.getRadians();
         if (rotaryPos > Math.toRadians(315)) { // wrap around up to prevent overshoot causing a massive spin.
             rotaryPos = rotaryPos - 2 * Math.PI;
