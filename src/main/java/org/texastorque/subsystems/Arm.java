@@ -84,7 +84,6 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         LOW(new ArmPose(.6, Rotation2d.fromDegrees(0))),
         THROW(new ArmPose(50, Rotation2d.fromDegrees(0))),
 
-        // Handoff waypoints
         HANDOFF(new ArmPose(0, Rotation2d.fromDegrees(180))),
         HANDOFF_ABOVE(
                 new ArmPose(15, Rotation2d.fromDegrees(215)),
@@ -120,29 +119,24 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     public static class Handoff extends TorqueSequence implements Subsystems {
         public Handoff() {
-            goTo(State.HANDOFF_ABOVE);
-            wait(.25);
-            goTo(State.HANDOFF_DOWN);
-            wait(.25);
-            goTo(State.HANDOFF_GRAB);
-            wait(.25);
-            goTo(State.HANDOFF_STOWED);
-            wait(.25);
-            goTo(State.STOWED);
+            goTo(State.HANDOFF_ABOVE, .25);
+            goTo(State.HANDOFF_DOWN, .25);
+            goTo(State.HANDOFF_GRAB, .25);
+            goTo(State.HANDOFF_STOWED, .25);
+            goTo(State.STOWED, -1);
         }
 
-        private final void goTo(final State state) {
+        private final void goTo(final State state, final double seconds) {
             addBlock(new TorqueWaitUntil(() -> {
                 arm.activeState = state;
-
                 return arm.isAtState(state);
             }));
+            if (seconds == -1)
+                return;
+            addBlock(new TorqueWaitForSeconds(seconds, () -> {
+                arm.activeState = state;
+            }));
         }
-
-        private final void wait(final double seconds) {
-            addBlock(new TorqueWaitForSeconds(seconds));
-        }
-
     }
 
     private static final double ROTARY_ENCODER_OFFSET = -4.692437745630741,
