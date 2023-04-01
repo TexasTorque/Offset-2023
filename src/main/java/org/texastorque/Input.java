@@ -9,6 +9,7 @@ package org.texastorque;
 import org.texastorque.subsystems.Arm;
 import org.texastorque.subsystems.Drivebase;
 import org.texastorque.subsystems.Drivebase.SpeedSetting;
+import org.texastorque.subsystems.Forks;
 import org.texastorque.subsystems.Hand;
 import org.texastorque.subsystems.Hand.GamePiece;
 import org.texastorque.subsystems.Intake;
@@ -34,7 +35,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
     private final TorqueBoolSupplier slowModeToggle, resetGyroClick, resetPoseClick, toggleRotationLock, wantsIntake,
             gamePieceModeToggle, openClaw, armToBottom,
             armToShelf, armToMid, armToTop, armToLow, armDoHandoff, wantsOuttake,
-            autoSpindex, primeRoll;
+            autoSpindex, primeRoll, forksDownAuto, forksDown, forksUpAuto, forksUp;
 
     private final TorqueRequestableTimeout driverTimeout = new TorqueRequestableTimeout();
 
@@ -74,6 +75,11 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         primeRoll = new TorqueBoolSupplier(operator::isRightCenterButtonDown);
 
         autoSpindex = new TorqueBoolSupplier(operator::isDPADUpDown);
+
+        forksDownAuto = new TorqueBoolSupplier(driver::isDPADDownDown);
+        forksDown = new TorqueBoolSupplier(driver::isDPADLeftDown);
+        forksUpAuto = new TorqueBoolSupplier(driver::isDPADRightDown);
+        forksUp = new TorqueBoolSupplier(driver::isDPADUpDown);
     }
 
     public void setDriverRumbleFor(final double duration) {
@@ -160,8 +166,14 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
                     * Drivebase.MAX_ANGULAR_VELOCITY;
             drivebase.inputSpeeds = new TorqueSwerveSpeeds(xVelocity, yVelocity, rotationVelocity);
         } else {
+            final double joystick = -driver.getRightYAxis();
+            if (joystick > 0) {
+                forks.setState(Forks.State.UP);
+                forks.speed = TorqueMath.scaledLinearDeadband(-driver.getRightYAxis(), DEADBAND);
+            } else {
+                forks.setState(Forks.State.DOWN_AUTO);
+            }
             drivebase.inputSpeeds = new TorqueSwerveSpeeds(xVelocity, yVelocity, 0);
-            forks.setDirection(TorqueMath.scaledLinearDeadband(-driver.getRightYAxis(), DEADBAND));
         }
     }
 }

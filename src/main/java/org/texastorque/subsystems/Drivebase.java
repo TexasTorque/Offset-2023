@@ -45,6 +45,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         ROBOT_RELATIVE(null),
         ALIGN(FIELD_RELATIVE),
         ZERO(FIELD_RELATIVE),
+        STRAIGHT(FIELD_RELATIVE), // For fork climb
         BALANCE(FIELD_RELATIVE);
 
         public final State parent;
@@ -245,7 +246,10 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
         if (state == State.ZERO) {
             zeroModules();
-        } else {
+        } else if (state == State.STRAIGHT) {
+            alignWheelsStraight();
+        }
+        else {
             // if (arm.isWantingHighCOG())
             //     speedSetting = SpeedSetting.SLOW;
 
@@ -274,7 +278,6 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
             if (inputSpeeds.hasZeroVelocity()) {
                 preseveModulePositions();
             } else {
-
                 fl.setDesiredState(swerveStates[0]);
                 fr.setDesiredState(swerveStates[1]);
                 bl.setDesiredState(swerveStates[2]);
@@ -317,6 +320,14 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     @Log.Dial(name = "Gyro Radians")
     public double getGyroAngle() {
         return gyro.getHeadingCCW().getRadians();
+    }
+
+
+    private void alignWheelsStraight() {
+        fl.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(90)));
+        fr.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(90)));
+        bl.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(90)));
+        br.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(90)));
     }
 
     public TorqueCommand setStateCommand(final State state) {

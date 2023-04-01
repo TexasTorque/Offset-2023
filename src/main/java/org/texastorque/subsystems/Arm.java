@@ -76,11 +76,11 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         SHELF(new ArmPose(10, Rotation2d.fromDegrees(220)),
                 new ArmPose(0, Rotation2d.fromDegrees(220))),
         MID(
-                new ArmPose(0 + 5, Rotation2d.fromDegrees(0)),
-                new ArmPose(5 + 0, Rotation2d.fromDegrees(20))),
+                new ArmPose(0 + 5, Rotation2d.fromDegrees(10)),
+                new ArmPose(5 + 3, Rotation2d.fromDegrees(30))),
         TOP(
-                new ArmPose(30 + 5, Rotation2d.fromDegrees(0)),
-                new ArmPose(43 + 0, Rotation2d.fromDegrees(35))),
+                new ArmPose(30 + 5, Rotation2d.fromDegrees(10)),
+                new ArmPose(43 + 0, Rotation2d.fromDegrees(30))),
         LOW(new ArmPose(.6, Rotation2d.fromDegrees(0))),
         THROW(new ArmPose(50, Rotation2d.fromDegrees(0))),
 
@@ -303,11 +303,11 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         if (handoff == null)
             handoff = new Handoff();
 
-        // if (activeState == State.HANDOFF) {
-        // handoff.run();
-        // } else {
-        // handoff.reset();
-        // }
+        if (activeState == State.HANDOFF) {
+            handoff.run();
+        } else {
+            handoff.reset();
+        }
 
         calculateElevator();
         calculateRotary();
