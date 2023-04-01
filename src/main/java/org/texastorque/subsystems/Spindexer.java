@@ -11,9 +11,6 @@ import org.texastorque.Subsystems;
 import org.texastorque.torquelib.auto.TorqueCommand;
 import org.texastorque.torquelib.auto.TorqueSequence;
 import org.texastorque.torquelib.auto.commands.TorqueExecute;
-import org.texastorque.torquelib.auto.commands.TorqueSequenceRunner;
-import org.texastorque.torquelib.auto.commands.TorqueWaitForSeconds;
-import org.texastorque.torquelib.auto.commands.TorqueWaitUntil;
 import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.motors.TorqueNEO;
@@ -38,44 +35,12 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
 
     }
 
-    public static final class OrientSpindexer extends TorqueSequence implements Subsystems {
-        // If the limit switch is inside of the cone when the sequence starts, then it
-        // will be aligned after one click, so it waits for 1/4 of a second to allow the
-        // US to recalibrate. If the limit switch is outside of the cone, then it will
-        // be aligned after one click and an offset (Then wait for 1/4 of a second to
-        // allow the US to recalibrate)
-        public OrientSpindexer() {
-            // addBlock(new TorqueExecute(() ->
-            // spindexer.setAutoSpindexVolts(Spindexer.State.FAST_CW.getVolts())));
-
-            addBlock(new TorqueExecute(() -> spindexer.activeState = State.FAST_CW));
-            // addBlock(spindexer.setStateCommand(Spindexer.State.FAST_CW));
-            addBlock(new TorqueWaitUntil(() -> spindexer.limitSwitch.get()));
-            // // addBlock(new TorqueWaitForSeconds(0.25));
-            addBlock(new TorqueExecute(() -> spindexer.activeState = State.ALIGN));
-            addBlock(new TorqueWaitUntil(() -> spindexer.isEncoderAligned()));
-            // addBlock(new TorqueExecute(() -> spindexer.activeState = State.OFF));
-            addBlock(new TorqueWaitForSeconds(0.25));
-        }
-    }
-
     public static final class AutoSpindex extends TorqueSequence implements Subsystems {
 
         public AutoSpindex() {
-            addBlock(new TorqueWaitForSeconds(0.25));
-         //   addBlock(new TorqueRunSequenceWhile(new OrientSpindexer(), () -> !spindexer.isConeAligned()));
-            addBlock(new TorqueSequenceRunner(new OrientSpindexer()));
+           
         }
 
-    }
-
-    public static final class Handoff extends TorqueSequence implements
-            Subsystems {
-        public Handoff() {
-            addBlock(Arm.getInstance().setStateCommand(Arm.State.GRAB));
-            addBlock(new TorqueWaitForSeconds(0.5));
-            addBlock(Arm.getInstance().setStateCommand(Arm.State.GRABBED));
-        }
     }
 
     private static volatile Spindexer instance;

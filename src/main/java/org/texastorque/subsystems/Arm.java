@@ -10,10 +10,12 @@ import org.texastorque.Debug;
 import org.texastorque.Ports;
 import org.texastorque.Subsystems;
 import org.texastorque.torquelib.auto.TorqueCommand;
+import org.texastorque.torquelib.auto.TorqueSequence;
 import org.texastorque.torquelib.auto.commands.TorqueExecute;
+import org.texastorque.torquelib.auto.commands.TorqueWaitForSeconds;
+import org.texastorque.torquelib.auto.commands.TorqueWaitUntil;
 import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
-import org.texastorque.torquelib.control.TorqueRequestableTimeout;
 import org.texastorque.torquelib.motors.TorqueNEO;
 import org.texastorque.torquelib.sensors.TorqueCANCoder;
 import org.texastorque.torquelib.util.TorqueMath;
@@ -27,7 +29,6 @@ import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
@@ -53,23 +54,11 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     public static enum State {
-        // cube, cone
-        GRAB(
-                new ArmPose(8, Rotation2d.fromDegrees(260)),
-                new ArmPose(2, Rotation2d.fromDegrees(249))),
-        AUTOGRAB(
-                new ArmPose(5, Rotation2d.fromDegrees(266)),
-                new ArmPose(0, Rotation2d.fromDegrees(180))),
-        AUTOINDEX(
-                new ArmPose(5, Rotation2d.fromDegrees(250)),
-                new ArmPose(0, Rotation2d.fromDegrees(180))),
-        INDEX(
-                new ArmPose(15, Rotation2d.fromDegrees(215)),
-                new ArmPose(16, Rotation2d.fromDegrees(240))),
-        WAYPOINT(new ArmPose(0.45, Rotation2d.fromDegrees(90))),
-        STOWED(new ArmPose(8, Rotation2d.fromDegrees(175))),
-        GRABBED(STOWED),
-        CONESTOW(STOWED),
+        // The order is cube, cone
+
+        // Normal states
+        SCORING_HALF_WAY_POINT(new ArmPose(0.45, Rotation2d.fromDegrees(90))),
+        STOWED(new ArmPose(8, Rotation2d.fromDegrees(200))),
         SHELF(new ArmPose(0, Rotation2d.fromDegrees(220))),
         MID(
                 new ArmPose(0, Rotation2d.fromDegrees(0)),
@@ -77,8 +66,26 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         TOP(
                 new ArmPose(30, Rotation2d.fromDegrees(0)),
                 new ArmPose(43, Rotation2d.fromDegrees(10))),
+
+        // Not really used states
         LOW(new ArmPose(.6, Rotation2d.fromDegrees(0))),
-        THROW(new ArmPose(50, Rotation2d.fromDegrees(0)));
+        THROW(new ArmPose(50, Rotation2d.fromDegrees(0))),
+
+        // Handoff related states
+        HANDOFF(new ArmPose(0, Rotation2d.fromDegrees(180))),
+
+        HANDOFF_ABOVE(
+                new ArmPose(15, Rotation2d.fromDegrees(215)),
+                new ArmPose(16, Rotation2d.fromDegrees(240))),
+        HANDOFF_DOWN(
+                new ArmPose(8, Rotation2d.fromDegrees(260)),
+                new ArmPose(2, Rotation2d.fromDegrees(249))),
+        HANDOFF_GRAB(
+                new ArmPose(8, Rotation2d.fromDegrees(260)),
+                new ArmPose(2, Rotation2d.fromDegrees(249))),
+        HANDOFF_BACK(
+                new ArmPose(10, Rotation2d.fromDegrees(200))),
+        HANDOFF_STOWED(STOWED);
 
         public final ArmPose cubePose;
         public final ArmPose conePose;
@@ -101,6 +108,28 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         }
     }
 
+    public static class Handoff extends TorqueSequence implements Subsystems {
+        public Handoff() {
+            goTo(State.HANDOFF_ABOVE, .25);
+            goTo(State.HANDOFF_DOWN, .25);
+            goTo(State.HANDOFF_GRAB, .25);
+            goTo(State.HANDOFF_STOWED, .25);
+            goTo(State.STOWED, -1);
+        }
+
+        private final void goTo(final State state, final double seconds) {
+            addBlock(new TorqueWaitUntil(() -> {
+                arm.activeState = state;
+                return arm.isAtState(state);
+            }));
+            if (seconds == -1)
+                return;
+            addBlock(new TorqueWaitForSeconds(seconds, () -> {
+                arm.activeState = state;
+            }));
+        }
+    }
+
     private static final double ROTARY_ENCODER_OFFSET = Units.degreesToRadians(79 - 264),
             ELEVATOR_MAX_VOLTS_UP = 12,
             ELEVATOR_MAX_VOLTS_HANDOFF = 12,
@@ -115,18 +144,18 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     private double setpointAdjustment = 0;
-
     @Log.ToString
     private State activeState = State.STOWED;
     @Log.ToString
     private State desiredState = State.STOWED;
+
     @Log.ToString
     private State lastState = State.STOWED;
-
     @Log.ToString
     public double realElevatorPose = 0;
     @Log.ToString
     public Rotation2d realRotaryPose = Rotation2d.fromDegrees(0);
+
     private final TorqueNEO elevator = new TorqueNEO(Ports.ARM_ELEVATOR_MOTOR);
 
     @Config
@@ -143,16 +172,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     public final ArmFeedforward rotaryFeedforward = new ArmFeedforward(0.18362, 0.22356, 4, 4.4775);
 
     private final TorqueCANCoder rotaryEncoder = new TorqueCANCoder(Ports.ARM_ROTARY_ENCODER);
-    private final TorqueRequestableTimeout grabTimeout = new TorqueRequestableTimeout();
 
-    private final TorqueRequestableTimeout handOffTimeout = new TorqueRequestableTimeout();
-
-    @Log.BooleanBox
-    private boolean grabbing = false;
-
-    private final TorqueRequestableTimeout indexTimeout = new TorqueRequestableTimeout();
-
-    double time = 0;
+    private Handoff handoff;
 
     private Arm() {
         elevator.setCurrentLimit(30);
@@ -172,16 +193,14 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         cancoderConfig.sensorTimeBase = SensorTimeBase.PerSecond;
         cancoderConfig.initializationStrategy = SensorInitializationStrategy.BootToAbsolutePosition;
         rotaryEncoder.configAllSettings(cancoderConfig);
-
     }
 
     public boolean isStowed() {
-        return activeState == State.STOWED || activeState == State.GRABBED || activeState == State.CONESTOW;
+        return activeState == State.STOWED;
     }
 
     public boolean isPerformingHandoff() {
-        return activeState == State.GRAB || activeState == State.INDEX || activeState == State.AUTOGRAB
-                || activeState == State.CONESTOW;
+        return desiredState == State.HANDOFF;
     }
 
     @Log.BooleanBox
@@ -245,13 +264,12 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         return activeState.get().atPose(realElevatorPose, realRotaryPose);
     }
 
-    public boolean isWantingIndexClaw() {
-        return (desiredState == State.INDEX && !indexTimeout.get());
-
+    public boolean isWantingHalfOpen() {
+        return activeState == State.HANDOFF_ABOVE;
     }
 
-    public boolean isWantGrabbyClaw() {
-        return desiredState == State.GRAB;
+    public boolean isWantFullOpen() {
+        return activeState == State.HANDOFF_DOWN;
     }
 
     public void setSetpointAdjustment(final double setpointAdjustment) {
@@ -267,30 +285,11 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
         updateFeedback();
 
-        if (activeState == State.INDEX && lastState != State.INDEX) {
-            indexTimeout.set(0);
-        }
-
-        if (activeState == State.GRAB && lastState != State.GRAB) {
-            time = Timer.getFPGATimestamp();
-        }
-
-        if (activeState == State.GRAB) {
-            grabbing = true;
-            // Add cube adjustment from spindexer
+        if (activeState == State.HANDOFF) {
+            handoff.run(); 
         } else {
-            if (grabbing && activeState == State.GRABBED) {
-                grabTimeout.set(.5);
-            }
-            grabbing = false;
+            handoff.reset();
         }
-
-        if (grabTimeout.get()) {
-            activeState = State.GRAB;
-        }
-
-        if (mode.isAuto() && activeState == State.GRAB)
-            activeState = State.AUTOGRAB;
 
         if (desiredState == State.THROW) {
             calculateElevator(State.THROW);
@@ -298,7 +297,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
             lastState = State.TOP;
         } else if (isComingDown() && !isElevatorDownEnough()) {
             calculateElevator(activeState);
-            calculateRotary(State.WAYPOINT);
+            calculateRotary(State.SCORING_HALF_WAY_POINT);
         } else if (isGoingUp() && !isArmOutEnough()) {
             calculateElevator(State.STOWED);
             calculateRotary(activeState);

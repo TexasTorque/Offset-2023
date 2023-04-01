@@ -7,26 +7,21 @@
 package org.texastorque.auto.routines;
 
 import org.texastorque.Subsystems;
-import org.texastorque.subsystems.Arm;
-import org.texastorque.subsystems.Hand;
-import org.texastorque.subsystems.Intake;
-import org.texastorque.subsystems.Spindexer;
 import org.texastorque.torquelib.auto.TorqueSequence;
-import org.texastorque.torquelib.auto.commands.TorqueWaitForSeconds;
 
 public final class Handoff extends TorqueSequence implements Subsystems {
     public Handoff() {
-        addBlock(hand.setStateCommand(Hand.State.CLOSE));
-        addBlock(arm.setStateCommand(Arm.State.INDEX));
-        addBlock(hand.setStateCommand(Hand.State.OPEN));
-        addBlock(new TorqueWaitForSeconds(1));
-        addBlock(arm.setStateCommand(Arm.State.GRAB));
-        addBlock(new TorqueWaitForSeconds(.4));
-        addBlock(intake.setStateCommand(Intake.State.PRIME));
-        addBlock(hand.setStateCommand(Hand.State.CLOSE)); // will not return to default without being told to
-        addBlock(new TorqueWaitForSeconds(.25));
-        addBlock(intake.setStateCommand(Intake.State.UP));
-        addBlock(arm.setStateCommand(Arm.State.INDEX));
-        addBlock(spindexer.setStateCommand(Spindexer.State.OFF));
+        // addBlock(hand.setStateCommand(Hand.State.CLOSE));
+        // addBlock(arm.setStateCommand(Arm.State.INDEX));
+        // addBlock(hand.setStateCommand(Hand.State.OPEN));
+        // addBlock(new TorqueWaitForSeconds(1));
+        // addBlock(arm.setStateCommand(Arm.State.GRAB));
+        // addBlock(new TorqueWaitForSeconds(.4));
+        // addBlock(intake.setStateCommand(Intake.State.PRIME));
+        // addBlock(hand.setStateCommand(Hand.State.CLOSE)); // will not return to default without being told to
+        // addBlock(new TorqueWaitForSeconds(.25));
+        // addBlock(intake.setStateCommand(Intake.State.UP));
+        // addBlock(arm.setStateCommand(Arm.State.INDEX));
+        // addBlock(spindexer.setStateCommand(Spindexer.State.OFF));
     }
 }
