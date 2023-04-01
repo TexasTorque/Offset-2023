@@ -37,6 +37,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
         GRAB(4.6),
         BIG(4.6),
         OPEN(4.6),
+        HALF_OPEN(4.9),
         CLOSE(5.6);
 
         public final double clawSetpoint;
@@ -146,6 +147,10 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
 
         if (arm.isWantGrabbyClaw())
             activeState = State.GRAB;
+
+        if (activeState == State.OPEN && arm.isWantingShelf()) {
+            activeState = State.HALF_OPEN;
+        }
         if (activeState == State.OPEN && arm.isWantingScoringPose()) {
             activeState = State.BIG;
         }

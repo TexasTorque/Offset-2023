@@ -20,7 +20,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public final class Forks extends TorqueSubsystem implements Subsystems {
     public enum State {
-        UP(1), DOWN(-1), UP_AUTO(0), DOWN_AUTO(-10000), OFF(-1);
+        UP(1), DOWN(-1), UP_AUTO(0), DOWN_AUTO(-10100), OFF(-1);
 
         public final double rotaryPose;
 

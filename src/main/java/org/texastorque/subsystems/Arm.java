@@ -34,7 +34,7 @@ import io.github.oblarg.oblog.annotations.Log;
 
 public final class Arm extends TorqueSubsystem implements Subsystems {
     public static class ArmPose {
-        private static final double ELEVATOR_TOLERANCE = .4, ROTARY_TOLERANCE = Units.degreesToRadians(20);
+        private static final double ELEVATOR_TOLERANCE = .4, ROTARY_TOLERANCE = Units.degreesToRadians(2);
 
         public boolean autoReadyToScore = false;
 
@@ -53,8 +53,11 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
             SmartDashboard.putNumber("atPose::rot.real", rotaryReal.getDegrees());
             SmartDashboard.putNumber("atPose::rot.req", rotaryPose.getDegrees());
             SmartDashboard.putNumber("atPose::rot.delta", rotaryReal.minus(rotaryPose).getDegrees());
-            return Math.abs(elevatorReal - elevatorPose) < ELEVATOR_TOLERANCE
-                    && Math.abs(rotaryReal.minus(rotaryPose).getRadians()) < ROTARY_TOLERANCE;
+
+            return TorqueMath.toleranced(elevatorReal, elevatorPose, ELEVATOR_TOLERANCE)
+                    && TorqueMath.toleranced(rotaryReal.getRadians(), rotaryPose.getRadians(), ROTARY_TOLERANCE);
+            // return Math.abs(elevatorReal - elevatorPose) < ELEVATOR_TOLERANCE      
+            // && Math.abs(rotaryReal.minus(rotaryPose).getRadians()) < ROTARY_TOLERANCE;
         }
     }
 
@@ -76,8 +79,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         SHELF(new ArmPose(10, Rotation2d.fromDegrees(220)),
                 new ArmPose(0, Rotation2d.fromDegrees(220))),
         MID(
-                new ArmPose(0 + 5, Rotation2d.fromDegrees(10)),
-                new ArmPose(5 + 3, Rotation2d.fromDegrees(30))),
+                new ArmPose(5, Rotation2d.fromDegrees(10)),
+                new ArmPose(8, Rotation2d.fromDegrees(30))),
         TOP(
                 new ArmPose(30 + 5, Rotation2d.fromDegrees(10)),
                 new ArmPose(43 + 0, Rotation2d.fromDegrees(30))),
@@ -204,7 +207,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         rotary.setCurrentLimit(60);
         rotary.setVoltageCompensation(12.6);
         rotary.setBreakMode(true);
-        // rotary.setConversionFactors(1, 1);
+        rotary.setConversionFactors(1, 1);
         rotary.burnFlash();
 
         final CANCoderConfiguration cancoderConfig = new CANCoderConfiguration();

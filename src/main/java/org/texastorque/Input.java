@@ -168,6 +168,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         } else {
             final double joystick = -driver.getRightYAxis();
             if (joystick > 0) {
+                // drivebase.setState(Drivebase.State.STRAIGHT);
                 forks.setState(Forks.State.UP);
                 forks.speed = TorqueMath.scaledLinearDeadband(-driver.getRightYAxis(), DEADBAND);
             } else {
