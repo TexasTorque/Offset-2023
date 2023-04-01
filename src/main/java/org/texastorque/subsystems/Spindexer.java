@@ -11,6 +11,7 @@ import org.texastorque.Subsystems;
 import org.texastorque.torquelib.auto.TorqueCommand;
 import org.texastorque.torquelib.auto.TorqueSequence;
 import org.texastorque.torquelib.auto.commands.TorqueExecute;
+import org.texastorque.torquelib.auto.commands.TorqueWaitUntil;
 import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.motors.TorqueNEO;
@@ -18,14 +19,13 @@ import org.texastorque.torquelib.util.TorqueMath;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.Ultrasonic;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import io.github.oblarg.oblog.annotations.Log;
 
 public final class Spindexer extends TorqueSubsystem implements Subsystems {
 
     public static enum State {
-        AUTO_SPINDEX(0), ALIGN(0), SLOW_CW(-4), FAST_CW(-6), SLOW_CCW(4), FAST_CCW(8), OFF(0);
+        AUTO_SPINDEX(0), ALIGN(0), SLOW_CW(-4), FAST_CW(-4), SLOW_CCW(4), FAST_CCW(4), OFF(0);
 
         public final double volts;
 
@@ -38,22 +38,35 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
     public static final class AutoSpindex extends TorqueSequence implements Subsystems {
 
         public AutoSpindex() {
-           
+            // addBlock(new TorqueWaitForSeconds(.25));
+
+            addBlock(new TorqueExecute(() -> spindexer.activeState = State.FAST_CCW));
+
+            addBlock(new TorqueWaitUntil(() -> !spindexer.limitSwitch.get()));
+
+            // addBlock(new TorqueWaitForSeconds(1));
+
+            addBlock(new TorqueExecute(() -> spindexer.activeState = State.ALIGN));
+
+            addBlock(new TorqueWaitUntil(() -> spindexer.isEncoderAligned()));
+
+            addBlock(new TorqueExecute(() -> spindexer.activeState = State.OFF));
         }
 
     }
 
     private static volatile Spindexer instance;
 
-    private final static double TICKS_TO_ALIGN = 4;
+    // private final static double TICKS_TO_ALIGN = 8;
+    private final static double TICKS_TO_ALIGN = 13;
 
-    private static final double TOLERANCE = .1;
+    private static final double TOLERANCE = .5;
 
     public static final synchronized Spindexer getInstance() {
         return instance == null ? instance = new Spindexer() : instance;
     }
 
-    private double pidGoal = 0;
+    private double pidGoal = -1;
 
     @Log.ToString
     private State desiredState = State.OFF;;
@@ -63,11 +76,9 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
 
     private final DigitalInput limitSwitch;
 
-    private final Ultrasonic usLeft, usRight;
-
     private AutoSpindex autoSpindex;
 
-    private final PIDController pidController = new PIDController(2.5, 0, 0);
+    private final PIDController pidController = new PIDController(1, 0, 0);
 
     private Spindexer() {
         turntable.setCurrentLimit(35);
@@ -75,20 +86,12 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
         turntable.setBreakMode(true);
         turntable.burnFlash();
 
-        limitSwitch = new DigitalInput(Ports.SPINDEXER_LIMIT_SWITCH);
-
-        usLeft = new Ultrasonic(Ports.SPINDEXER_US_LEFT_PING, Ports.SPINDEXER_US_LEFT_ECHO);
-        usRight = new Ultrasonic(Ports.SPINDEXER_US_RIGHT_PING, Ports.SPINDEXER_US_RIGHT_ECHO);
-        Ultrasonic.setAutomaticMode(true);
+        limitSwitch = new DigitalInput(3);
 
     }
 
     public final double getEncoderPosition() {
         return turntable.getPosition();
-    }
-
-    public final boolean isConeAligned() {
-        return usLeft.getRangeInches() < 2.9 && usRight.getRangeInches() < 2.9;
     }
 
     public final void setState(final State state) {
@@ -109,10 +112,7 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
 
     @Override
     public final void update(final TorqueMode mode) {
-        SmartDashboard.putBoolean("spindexer::limitSwitch", limitSwitch.get());
-        SmartDashboard.putNumber("spindexer::USLeft", usLeft.getRangeInches());
-        SmartDashboard.putNumber("spindexer::USRight", usRight.getRangeInches());
-        SmartDashboard.putBoolean("spindexer::isConeAligned", isConeAligned());
+        SmartDashboard.putBoolean("spindexer::limitSwitch", !limitSwitch.get());
 
         if (autoSpindex == null)
             autoSpindex = new AutoSpindex();
@@ -134,7 +134,7 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
                 pidGoal = turntable.getPosition() - TICKS_TO_ALIGN;
             }
 
-            volts = pidController.calculate(turntable.getPosition(), pidGoal);
+            volts = TorqueMath.constrain(pidController.calculate(turntable.getPosition(), pidGoal), 4);
 
             if (isEncoderAligned())
                 volts = 0;
@@ -146,8 +146,6 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
         desiredState = State.OFF;
         turntable.setVolts(volts);
 
-        // usLeft.ping();
-        // usRight.ping();
     }
 
     public boolean isEncoderAligned() {
