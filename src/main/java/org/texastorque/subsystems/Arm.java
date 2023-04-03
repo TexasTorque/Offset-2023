@@ -59,7 +59,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
         // Normal states
         SCORING_HALF_WAY_POINT(new ArmPose(0.45, Rotation2d.fromDegrees(90))),
-        SHELF(new ArmPose(8, Rotation2d.fromDegrees(220)),
+        SHELF(new ArmPose(3, Rotation2d.fromDegrees(220)),
                 new ArmPose(0, Rotation2d.fromDegrees(220))),
         STOWED(SHELF),
         MID(
@@ -85,8 +85,10 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
                 new ArmPose(8, Rotation2d.fromDegrees(260)),
                 new ArmPose(2, Rotation2d.fromDegrees(249))),
         HANDOFF_GRAB(
-                new ArmPose(7, Rotation2d.fromDegrees(260)),
+                new ArmPose(9, Rotation2d.fromDegrees(260)),
                 new ArmPose(2, Rotation2d.fromDegrees(245))),
+        HANDOFF_GRAB_BACK(
+                new ArmPose(15, Rotation2d.fromDegrees(252))),
         HANDOFF_BACK(
                 new ArmPose(6, Rotation2d.fromDegrees(230)),
                 new ArmPose(16, Rotation2d.fromDegrees(230)));
@@ -114,9 +116,9 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     public static class ConeHandoff extends TorqueSequence implements Subsystems {
         public ConeHandoff() {
-            goTo(State.HANDOFF_ABOVE, .25);
-            goTo(State.HANDOFF_DOWN, .25);
-            goTo(State.HANDOFF_GRAB, .25);
+            goTo(State.HANDOFF_ABOVE, .5);
+            goTo(State.HANDOFF_DOWN, .5);
+            goTo(State.HANDOFF_GRAB, .5);
             goTo(State.HANDOFF_BACK, .25);
         }
 
@@ -138,7 +140,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     public static class CubeHandoff extends TorqueSequence implements Subsystems {
         public CubeHandoff() {
             goTo(State.HANDOFF_DOWN, .25);
-            goTo(State.HANDOFF_GRAB, .25);
+            goTo(State.HANDOFF_GRAB, .5);
+            goTo(State.HANDOFF_GRAB_BACK, .25);
         }
 
         private final void goTo(final State state, final double seconds) {
@@ -156,11 +159,11 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         }
     }
 
-    private static final double ROTARY_ENCODER_OFFSET = Units.degreesToRadians(-12),
+    private static final double ROTARY_ENCODER_OFFSET = Units.degreesToRadians(-65),
             ELEVATOR_MAX_VOLTS_UP = 12,
             ELEVATOR_MAX_VOLTS_HANDOFF = 12,
             ELEVATOR_MAX_VOLTS_DOWN = 6,
-            ROTARY_MAX_VOLTS = 10,
+            ROTARY_MAX_VOLTS = 6,
             ELEVATOR_MIN = 0,
             ELEVATOR_MAX = 50;
 
@@ -297,15 +300,18 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     }
 
-    public boolean isWantFullOpen() {
+    public boolean isWantingFullOpen() {
         return activeState == State.HANDOFF_DOWN;
-
     }
 
     public void setSetpointAdjustment(final double setpointAdjustment) {
         this.setpointAdjustment = setpointAdjustment;
         if (Math.abs(this.setpointAdjustment) < .1)
             this.setpointAdjustment = 0;
+    }
+
+    public boolean isDoingHandoff() {
+        return activeState == State.HANDOFF;
     }
 
     @Override

@@ -38,6 +38,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
         OPEN(2.9),
         SHELF(3.2),
         HALF(3.2),
+        CHUNGUS(2.8),
         CLOSE(4);
 
         public final double clawSetpoint;
@@ -153,10 +154,15 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
             if (arm.isWantingHalfOpen()) {
                 activeState = State.HALF;
             }
-            if (arm.isWantFullOpen()) {
+            if (arm.isWantingFullOpen()) {
                 activeState = State.OPEN;
+
+                if (isCubeMode())
+                    activeState = State.CHUNGUS;
             }
-            if (arm.isState(Arm.State.SHELF) && activeState == State.OPEN) {
+
+            if ((arm.isState(Arm.State.SHELF) || arm.isState(Arm.State.STOWED)) && activeState == State.OPEN
+                    && isConeMode()) {
                 activeState = State.SHELF;
             }
 
