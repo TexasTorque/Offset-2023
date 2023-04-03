@@ -22,10 +22,10 @@ import com.ctre.phoenix.sensors.CANCoderConfiguration;
 import com.ctre.phoenix.sensors.SensorInitializationStrategy;
 import com.ctre.phoenix.sensors.SensorTimeBase;
 
-import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -105,6 +105,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
             ELEVATOR_MAX_VOLTS_UP = 12,
             ELEVATOR_MAX_VOLTS_HANDOFF = 12,
             ROTARY_MAX_VOLTS = 12,
+            ROTARY_kG = 0.16726,
+            ROTARY_kS = 0.28195,
             ELEVATOR_MIN = 0,
             ELEVATOR_MAX = 50;
 
@@ -127,6 +129,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     public double realElevatorPose = 0;
     @Log.ToString
     public Rotation2d realRotaryPose = Rotation2d.fromDegrees(0);
+
     private final TorqueNEO elevator = new TorqueNEO(Ports.ARM_ELEVATOR_MOTOR);
 
     @Config
@@ -138,11 +141,15 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     private final TorqueNEO rotary = new TorqueNEO(Ports.ARM_ROTARY_MOTOR);
 
     @Config
-    public final PIDController rotaryPoseController = new PIDController(1.89, 0, 0);
+    public final PIDController rotaryPoseController = new PIDController(4, 0.01, 0);
 
-    public final ArmFeedforward rotaryFeedforward = new ArmFeedforward(0.18362, 0.22356, 4, 4.4775);
+    private final TrapezoidProfile.Constraints rotaryConstraints = new TrapezoidProfile.Constraints(8 * Math.PI,
+            2.5 * Math.PI);
+
+    private TrapezoidProfile.State rotaryPreviousProfiledReference = new TrapezoidProfile.State();
 
     private final TorqueCANCoder rotaryEncoder = new TorqueCANCoder(Ports.ARM_ROTARY_ENCODER);
+
     private final TorqueRequestableTimeout grabTimeout = new TorqueRequestableTimeout();
 
     private final TorqueRequestableTimeout handOffTimeout = new TorqueRequestableTimeout();
@@ -163,7 +170,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
         rotary.setCurrentLimit(60);
         rotary.setVoltageCompensation(12.6);
-        rotary.setBreakMode(true);
+        rotary.setBreakMode(false);
+        rotary.invertMotor(true);
         rotary.burnFlash();
 
         final CANCoderConfiguration cancoderConfig = new CANCoderConfiguration();
@@ -172,7 +180,6 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         cancoderConfig.sensorTimeBase = SensorTimeBase.PerSecond;
         cancoderConfig.initializationStrategy = SensorInitializationStrategy.BootToAbsolutePosition;
         rotaryEncoder.configAllSettings(cancoderConfig);
-
     }
 
     public boolean isStowed() {
@@ -332,10 +339,14 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         return realRotaryPose.getRadians() <= Math.PI * .75;
     }
 
+    private Rotation2d getRotaryCancoderPosition() {
+        return Rotation2d.fromRadians(TorqueMath.constrain0to2PI(-rotaryEncoder.getPosition() - ROTARY_ENCODER_OFFSET));
+    }
+
     private void updateFeedback() {
         realElevatorPose = elevator.getPosition();
-        final double rotaryRadians = TorqueMath.constrain0to2PI(-rotaryEncoder.getPosition() - ROTARY_ENCODER_OFFSET);
-        realRotaryPose = Rotation2d.fromRadians(rotaryRadians);
+        realRotaryPose = getRotaryCancoderPosition();
+        Debug.log("rotaryDegrees", realRotaryPose.getDegrees());
     }
 
     private void calculateElevator(final State state) {
@@ -365,33 +376,31 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     private void calculateRotary(final State state) {
-        double armSetpoint = state.get().rotaryPose.getRadians();// + setpointAdjustment * Units.degreesToRadians(30);
+        double armSetpoint = state.get().rotaryPose.getRadians();
         double rotaryPos = realRotaryPose.getRadians();
-        if (rotaryPos > Math.toRadians(315)) { // wrap around up to prevent overshoot causing a massive spin.
+
+        // wrap around up to prevent overshoot causing a massive spin.
+        if (rotaryPos > Math.toRadians(315)) { 
             rotaryPos = rotaryPos - 2 * Math.PI;
         }
-        double rotaryVolts = -rotaryFeedforward.calculate(armSetpoint, calculateRotaryVelocity(armSetpoint, rotaryPos),
-                calculateRotaryAcceleration(armSetpoint, rotaryPos));
-        // final boolean stopArm = armSetpoint <= (Math.PI * 0.5) && armSwitch.get();
-        rotaryVolts += -rotaryPoseController.calculate(rotaryPos, armSetpoint);
-        rotaryVolts = TorqueMath.constrain(rotaryVolts, ROTARY_MAX_VOLTS);
-        // rotary.setVolts(rotaryEncoder.isCANResponsive() && !isState(Arm.State.LOW) ?
-        // rotaryVolts : 0);
-        rotary.setVolts(rotaryVolts);
-        Debug.log("rotaryVolts", rotaryVolts);
-        Debug.log("elevatorCurrent", rotary.getCurrent());
+
+        // TMP
+        TrapezoidProfile profile = new TrapezoidProfile(rotaryConstraints, new TrapezoidProfile.State(armSetpoint, 0),
+                rotaryPreviousProfiledReference);
+        rotaryPreviousProfiledReference = profile.calculate(.02);
+
+        // Output
+        double outputVolts = rotaryPoseController.calculate(rotaryPos, rotaryPreviousProfiledReference.position);
+        double rotaryFF = Math.cos(rotaryPos) * ROTARY_kG + Math.signum(outputVolts) * ROTARY_kS;
+        outputVolts += rotaryFF;
+        outputVolts = TorqueMath.constrain(outputVolts, ROTARY_MAX_VOLTS);
+
+        rotary.setVolts(outputVolts);
+
+        Debug.log("rotary FF", rotaryFF);
+        Debug.log("rotary output volts", outputVolts);
+        Debug.log("rotary current", rotary.getCurrent());
         SmartDashboard.putBoolean("rotaryCANResponsiveness", rotaryEncoder.isCANResponsive());
     }
 
-    // omega with respect to delta theta (radians)
-    private double calculateRotaryVelocity(final double wanted, final double actual) {
-        return Math.signum(wanted - actual)
-                * (15 / (1 + Math.pow(Math.E, -.3 * (Math.abs(wanted - actual) - 12))) - .399);
-    }
-
-    // derivative of calculateRotaryVelocity
-    private double calculateRotaryAcceleration(final double wanted, final double actual) {
-        return Math.signum(wanted - actual) * (12 * Math.pow(Math.E, -1.5 * (Math.abs(wanted - actual - 12)))
-                / Math.pow(Math.pow(Math.E, -1.5 * (wanted - actual - 1.3)) + 1, 2));
-    }
 }
