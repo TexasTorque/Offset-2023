@@ -48,7 +48,9 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
         DOWN_SLOW(new IndexerPose(0, 3, ROT_INTAKE)),
         PRIME_ROLL(new IndexerPose(6, 6, ROT_PRIME), new IndexerPose(9, 12, ROT_PRIME)),
         UP(new IndexerPose(0, 0, ROT_UP)),
-        UP_ROLL(new IndexerPose(-9, 0, ROT_UP));
+        UP_ROLL(new IndexerPose(-9, 0, ROT_UP)),
+        SLOW_INTAKE(new IndexerPose(1, 1, ROT_INTAKE)),
+        SLOW_OUTAKE(new IndexerPose(-1, -1, ROT_INTAKE));
 
         public final IndexerPose cubePose;
         public final IndexerPose conePose;

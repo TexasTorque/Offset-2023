@@ -20,7 +20,6 @@ import org.texastorque.torquelib.control.TorqueBoolSupplier;
 import org.texastorque.torquelib.control.TorqueClickSupplier;
 import org.texastorque.torquelib.control.TorqueRequestableTimeout;
 import org.texastorque.torquelib.control.TorqueToggleSupplier;
-import org.texastorque.torquelib.control.TorqueTraversableSelection;
 import org.texastorque.torquelib.sensors.TorqueController;
 import org.texastorque.torquelib.swerve.TorqueSwerveSpeeds;
 import org.texastorque.torquelib.util.TorqueMath;
@@ -41,16 +40,11 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
             gridOverrideCenter, resetGyroClick, resetPoseClick, toggleRotationLock, wantsIntake,
             gamePieceModeToggle, openClaw, armToBottom,
             armToShelf, armToMid, armToTop, armDoHandoff, armThrow,
-            wantsOuttake, xFactorToggle, autoSpindex, wantsTipCone, slowMode;
+            wantsOuttake, xFactorToggle, autoSpindex, wantsTipCone, slowMode, armLeavingHandoff, wantsSlowIntake, wantsSlowOuttake;;
 
     private final TorqueRequestableTimeout driverTimeout = new TorqueRequestableTimeout();
 
     private final TorqueRequestableTimeout operatorTimeout = new TorqueRequestableTimeout();
-
-    private final TorqueRequestableTimeout clawTimeout = new TorqueRequestableTimeout();
-
-    private final TorqueTraversableSelection<Arm.State> handoffStates = new TorqueTraversableSelection<Arm.State>(
-            Arm.State.STOWED, Arm.State.INDEX, Arm.State.GRAB, Arm.State.GRABBED);
 
     private Input() {
         driver = new TorqueController(0, .001);
@@ -78,7 +72,11 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         wantsOuttake = new TorqueBoolSupplier(operator::isLeftCenterButtonDown);
         wantsTipCone = new TorqueBoolSupplier(operator::isLeftStickClickDown);
 
-        armDoHandoff = new TorqueClickSupplier(operator::isLeftTriggerDown);
+        wantsSlowIntake = new TorqueBoolSupplier(driver::isRightBumperDown);
+        wantsSlowOuttake = new TorqueBoolSupplier(driver::isLeftBumperDown);
+
+        armDoHandoff = new TorqueBoolSupplier(operator::isLeftTriggerDown);
+        armLeavingHandoff = new TorqueClickSupplier(() -> !armDoHandoff.get());
         armToShelf = new TorqueClickSupplier(operator::isXButtonDown);
         armToMid = new TorqueClickSupplier(operator::isBButtonDown);
         armToTop = new TorqueClickSupplier(operator::isYButtonDown);
@@ -135,28 +133,14 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
         armThrow.onTrue(() -> arm.setState(Arm.State.THROW));
 
-        armToBottom.onTrue(() -> {
-            arm.setState(Arm.State.STOWED);
-            handoffStates.set(0);
-        });
+        armToBottom.onTrue(() -> arm.setState(Arm.State.STOWED));
 
-        armDoHandoff.onTrue(() -> arm.setState(handoffStates.calculate(false, true)));
-
-        if (handoffStates.isLast())
-            handoffStates.set(0);
+        armDoHandoff.onTrue(() -> arm.setState(Arm.State.HANDOFF));
+        armLeavingHandoff.onTrue(() -> arm.setState(Arm.State.STOWED));
 
         wantsIntake.onTrueOrFalse(() -> {
-            if (!clawTimeout.get() && arm.isStowed()) {
-                if (hand.isCubeMode()) {
-                    handoffStates.set(1);
-                    arm.setState(Arm.State.INDEX);
-                } else {
-                    arm.setState(Arm.State.CONESTOW);
-                }
-            }
             intake.setState(Intake.State.INTAKE);
         }, () -> {
-            clawTimeout.set(.2);
             intake.setState(Intake.State.UP);
         });
 
@@ -166,6 +150,9 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
             intake.setState(Intake.State.UP_ROLL);
             spindexer.setState(Spindexer.State.FAST_CW);
         });
+
+        wantsSlowIntake.onTrue(() -> intake.setState(Intake.State.SLOW_INTAKE));
+        wantsSlowOuttake.onTrue(() -> intake.setState(Intake.State.SLOW_OUTAKE));
 
         arm.setSetpointAdjustment(operator.getRightYAxis());
 
