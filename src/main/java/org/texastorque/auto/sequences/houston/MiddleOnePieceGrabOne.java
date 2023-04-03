@@ -24,16 +24,18 @@ public final class MiddleOnePieceGrabOne extends TorqueSequence implements Subsy
     public MiddleOnePieceGrabOne() {
         addBlock(new TorqueExecute(() -> drivebase.updateWithTags = false));
 
+
         drivebase.resetPose(new Pose2d(0, 0, Rotation2d.fromRadians(Math.PI))); // not needed
 
         addBlock(hand.setStateCommand(Hand.State.CLOSE), hand.setGamePieceModeCommand(GamePiece.CONE));
 
-        addBlock(new TorqueSequenceRunner(new Score(Arm.State.TOP)));
+        // addBlock(new TorqueSequenceRunner(new Score(Arm.State.TOP)));
 
         addBlock(new FollowEventPath("origin-engage-out", 2.5, 3.5));
-        // addBlock(new TorqueWaitForSeconds(2));
-        // addBlock(new FollowEventPath("origin-engage-in", 2.5, 3.5));
-        addBlock(new FollowEventPath("middle-grab-one", 2.5, 3.5));
+
+        addBlock(new FollowEventPath("origin-pickup", 2.5, 3.5));
+
+        // addBlock(new FollowEventPath("origin-engage-in-reverse", 2.5, 3.5));
 
         addBlock(drivebase.setStateCommand(Drivebase.State.BALANCE));
     }

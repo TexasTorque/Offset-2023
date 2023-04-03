@@ -165,7 +165,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
         double clawVolts = clawPoseController.calculate(realClawPose, activeState.clawSetpoint);
         Debug.log("requestedVolts", clawVolts);
         clawVolts = TorqueMath.constrain(clawVolts, MAX_CLAW_VOLTS);
-        claw.setVolts(clawVolts);
+        // claw.setVolts(clawVolts);
 
         if (lastState != activeState) {
             if (activeState == State.OPEN)

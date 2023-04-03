@@ -40,7 +40,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
             gridOverrideCenter, resetGyroClick, resetPoseClick, toggleRotationLock, wantsIntake,
             gamePieceModeToggle, openClaw, armToBottom,
             armToShelf, armToMid, armToTop, armDoHandoff, armThrow,
-            wantsOuttake, xFactorToggle, autoSpindex, wantsTipCone, slowMode, armLeavingHandoff;
+            wantsOuttake, xFactorToggle, autoSpindex, wantsTipCone, slowMode, armLeavingHandoff, wantsSlowIntake, wantsSlowOuttake;;
 
     private final TorqueRequestableTimeout driverTimeout = new TorqueRequestableTimeout();
 
@@ -71,6 +71,9 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         gamePieceModeToggle = new TorqueToggleSupplier(() -> operator.isLeftBumperDown() || driver.isYButtonDown());
         wantsOuttake = new TorqueBoolSupplier(operator::isLeftCenterButtonDown);
         wantsTipCone = new TorqueBoolSupplier(operator::isLeftStickClickDown);
+
+        wantsSlowIntake = new TorqueBoolSupplier(driver::isRightBumperDown);
+        wantsSlowOuttake = new TorqueBoolSupplier(driver::isLeftBumperDown);
 
         armDoHandoff = new TorqueBoolSupplier(operator::isLeftTriggerDown);
         armLeavingHandoff = new TorqueClickSupplier(() -> !armDoHandoff.get());
@@ -147,6 +150,9 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
             intake.setState(Intake.State.UP_ROLL);
             spindexer.setState(Spindexer.State.FAST_CW);
         });
+
+        wantsSlowIntake.onTrue(() -> intake.setState(Intake.State.SLOW_INTAKE));
+        wantsSlowOuttake.onTrue(() -> intake.setState(Intake.State.SLOW_OUTAKE));
 
         arm.setSetpointAdjustment(operator.getRightYAxis());
 

@@ -58,7 +58,7 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
     private static volatile Spindexer instance;
 
     // private final static double TICKS_TO_ALIGN = 8;
-    private final static double TICKS_TO_ALIGN = 17;
+    private final static double TICKS_TO_ALIGN = 15;
 
     private static final double TOLERANCE = .5;
 

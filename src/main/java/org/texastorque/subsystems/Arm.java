@@ -73,6 +73,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         LOW(new ArmPose(.6, Rotation2d.fromDegrees(0))),
         THROW(new ArmPose(50, Rotation2d.fromDegrees(0))),
 
+        PRIME(new ArmPose(0, Rotation2d.fromDegrees(120))),
+
         // Handoff related states
         HANDOFF(new ArmPose(0, Rotation2d.fromDegrees(180))),
 
@@ -135,7 +137,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     private static final double ROTARY_ENCODER_OFFSET = Units.degreesToRadians(-6),
             ELEVATOR_MAX_VOLTS_UP = 12,
             ELEVATOR_MAX_VOLTS_HANDOFF = 12,
-            ROTARY_MAX_VOLTS = 12,
+            ELEVATOR_MAX_VOLTS_DOWN = 6,
+            ROTARY_MAX_VOLTS = 10,
             ELEVATOR_MIN = 0,
             ELEVATOR_MAX = 50;
 
@@ -346,10 +349,11 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         elevatorVolts += elevatorPoseFeedForward.calculate(
                 calculateElevatorVelocity(elevatorSetpoint, realElevatorPose),
                 calculateElevatorAcceleration(elevatorSetpoint, realElevatorPose));
+        final double maxVoltsNormal = elevatorVolts > 0 ? ELEVATOR_MAX_VOLTS_UP : ELEVATOR_MAX_VOLTS_DOWN;
         elevatorVolts = TorqueMath.constrain(elevatorVolts,
-                isPerformingHandoff() ? ELEVATOR_MAX_VOLTS_UP : ELEVATOR_MAX_VOLTS_HANDOFF);
+                isPerformingHandoff() ? ELEVATOR_MAX_VOLTS_HANDOFF : maxVoltsNormal);
         elevatorVolts = TorqueMath.linearConstraint(elevatorVolts, realElevatorPose, ELEVATOR_MIN, ELEVATOR_MAX);
-        // elevator.setVolts(elevatorVolts);
+        elevator.setVolts(elevatorVolts);
         Debug.log("elevatorCurrent", elevator.getCurrent());
         Debug.log("elevatorRequestedVolts", elevatorVolts);
     }
@@ -367,7 +371,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     private void calculateRotary(final State state) {
-        double armSetpoint = state.get().rotaryPose.getRadians();// + setpointAdjustment * Units.degreesToRadians(30);
+        double armSetpoint = state.get().rotaryPose.getRadians() + setpointAdjustment * Units.degreesToRadians(30);
         double rotaryPos = realRotaryPose.getRadians();
         if (rotaryPos > Math.toRadians(315)) { // wrap around up to prevent overshoot causing a massive spin.
             rotaryPos = rotaryPos - 2 * Math.PI;
@@ -379,7 +383,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         rotaryVolts = TorqueMath.constrain(rotaryVolts, ROTARY_MAX_VOLTS);
         // rotary.setVolts(rotaryEncoder.isCANResponsive() && !isState(Arm.State.LOW) ?
         // rotaryVolts : 0);
-        rotary.setVolts(rotaryVolts);
+        // rotary.setVolts(rotaryVolts);
         Debug.log("rotaryVolts", rotaryVolts);
         Debug.log("elevatorCurrent", rotary.getCurrent());
         SmartDashboard.putBoolean("rotaryCANResponsiveness", rotaryEncoder.isCANResponsive());
