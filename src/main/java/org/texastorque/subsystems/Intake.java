@@ -13,7 +13,6 @@ import org.texastorque.torquelib.auto.TorqueCommand;
 import org.texastorque.torquelib.auto.commands.TorqueExecute;
 import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
-import org.texastorque.torquelib.control.TorqueRequestableTimeout;
 import org.texastorque.torquelib.motors.TorqueNEO;
 import org.texastorque.torquelib.util.TorqueMath;
 
@@ -100,8 +99,6 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
     @Config
     public final PIDController rotaryPoseController = new PIDController(2.4, 0, 0);
 
-    private final TorqueRequestableTimeout primeRollTimeout = new TorqueRequestableTimeout();
-
     private Intake() {
         topRollers.setCurrentLimit(30);
         topRollers.setVoltageCompensation(12.6);
@@ -149,11 +146,12 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
         if (desiredState == State.UP && arm.isPerformingHandoff())
             activeState = State.PRIME;
 
-        // if (activeState == State.PRIME && (lastState == State.INTAKE || lastState == State.AUTOINTAKE))
-        //     primeRollTimeout.set(1);
+        // if (activeState == State.PRIME && (lastState == State.INTAKE || lastState ==
+        // State.AUTOINTAKE))
+        // primeRollTimeout.set(1);
 
         // if (primeRollTimeout.get())
-        //     activeState = State.PRIME_ROLL;
+        // activeState = State.PRIME_ROLL;
 
         Debug.log("rotaryPose", rotary.getPosition());
         Debug.log("topRollersPose", topRollers.getPosition());

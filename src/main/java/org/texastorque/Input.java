@@ -37,10 +37,11 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
     private final TorqueBoolSupplier isZeroingWheels, alignGridLeft, alignGridCenter, alignGridRight,
             gridOverrideLeft, gridOverrideRight,
-            gridOverrideCenter, resetGyroClick, resetPoseClick, toggleRotationLock, wantsIntake,
+            gridOverrideCenter, resetGyroClick, resetPoseClick, wantsIntake,
             gamePieceModeToggle, openClaw, armToBottom,
             armToShelf, armToMid, armToTop, armDoHandoff, armThrow,
-            wantsOuttake, xFactorToggle, autoSpindex, wantsTipCone, slowMode, armLeavingHandoff, wantsSlowIntake, wantsSlowOuttake;;
+            wantsOuttake, xFactorToggle, autoSpindex, wantsTipCone, slowMode, armLeavingHandoff, wantsSlowIntake,
+            wantsSlowOuttake;;
 
     private final TorqueRequestableTimeout driverTimeout = new TorqueRequestableTimeout();
 
@@ -63,7 +64,6 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
         resetGyroClick = new TorqueClickSupplier(driver::isRightCenterButtonPressed);
         resetPoseClick = new TorqueClickSupplier(driver::isLeftCenterButtonPressed);
-        toggleRotationLock = new TorqueToggleSupplier(() -> false);
 
         wantsIntake = new TorqueBoolSupplier(() -> operator.isRightTriggerDown() || driver.isRightTriggerDown());
 
@@ -108,7 +108,6 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         resetGyroClick.onTrue(() -> drivebase.resetGyro());
         resetPoseClick.onTrue(() -> drivebase.resetPose(Drivebase.INITIAL_POS));
 
-        // drivebase.isRotationLocked = toggleRotationLock.get();
         drivebase.isRotationLocked = true;
 
         alignGridLeft.onTrue(() -> drivebase.setAlignState(AlignState.LEFT));

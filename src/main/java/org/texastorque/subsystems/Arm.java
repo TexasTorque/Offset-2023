@@ -111,12 +111,35 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         }
     }
 
-    public static class Handoff extends TorqueSequence implements Subsystems {
-        public Handoff() {
+    public static class ConeHandoff extends TorqueSequence implements Subsystems {
+        public ConeHandoff() {
             goTo(State.HANDOFF_ABOVE, .25);
             goTo(State.HANDOFF_DOWN, .25);
             goTo(State.HANDOFF_GRAB, .25);
             goTo(State.HANDOFF_BACK, .25);
+        }
+
+        private final void goTo(final State state, final double seconds) {
+            addBlock(new TorqueWaitUntil(() -> {
+                arm.activeState = state;
+                return arm.isAtState(state);
+            }));
+
+            if (seconds == -1)
+                return;
+
+            addBlock(new TorqueWaitForSeconds(seconds, () -> {
+                arm.activeState = state;
+            }));
+        }
+    }
+
+    public static class CubeHandoff extends TorqueSequence implements Subsystems {
+        public CubeHandoff() {
+            goTo(State.HANDOFF_ABOVE, .25);
+            goTo(State.HANDOFF_DOWN, .25);
+            goTo(State.HANDOFF_BACK, .25);
+            goTo(State.HANDOFF_GRAB, .25);
         }
 
         private final void goTo(final State state, final double seconds) {
@@ -178,7 +201,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     private final TorqueCANCoder rotaryEncoder = new TorqueCANCoder(Ports.ARM_ROTARY_ENCODER);
 
-    private Handoff handoff;
+    private ConeHandoff coneHandoff;
+    private CubeHandoff cubeHandoff;
 
     private Arm() {
         elevator.setCurrentLimit(30);
@@ -291,10 +315,14 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         updateFeedback();
 
         if (activeState == State.HANDOFF) {
-            handoff.run();
+            if (hand.isConeMode())
+                coneHandoff.run();
+            else
+                cubeHandoff.run();
         } else {
             activeState = desiredState;
-            handoff = new Handoff();
+            coneHandoff = new ConeHandoff();
+            cubeHandoff = new CubeHandoff();
         }
 
         if (desiredState == State.THROW) {

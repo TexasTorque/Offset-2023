@@ -8,15 +8,11 @@ package org.texastorque.auto.sequences.houston;
 
 import org.texastorque.Subsystems;
 import org.texastorque.auto.commands.FollowEventPath;
-import org.texastorque.auto.routines.Score;
-import org.texastorque.subsystems.Arm;
 import org.texastorque.subsystems.Drivebase;
 import org.texastorque.subsystems.Hand;
 import org.texastorque.subsystems.Hand.GamePiece;
 import org.texastorque.torquelib.auto.TorqueSequence;
 import org.texastorque.torquelib.auto.commands.TorqueExecute;
-import org.texastorque.torquelib.auto.commands.TorqueSequenceRunner;
-
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 
