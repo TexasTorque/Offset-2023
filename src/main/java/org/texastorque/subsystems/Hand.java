@@ -151,7 +151,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
                 activeState = State.OPEN;
             }
             if (arm.isWantingHalfOpen()) {
-                activeState =  State.HALF;
+                activeState = State.HALF;
             }
             if (arm.isWantFullOpen()) {
                 activeState = State.OPEN;
@@ -159,13 +159,13 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
             if (arm.isState(Arm.State.SHELF) && activeState == State.OPEN) {
                 activeState = State.SHELF;
             }
-        
+
         }
 
         double clawVolts = clawPoseController.calculate(realClawPose, activeState.clawSetpoint);
         Debug.log("requestedVolts", clawVolts);
         clawVolts = TorqueMath.constrain(clawVolts, MAX_CLAW_VOLTS);
-        // claw.setVolts(clawVolts);
+        claw.setVolts(clawVolts);
 
         if (lastState != activeState) {
             if (activeState == State.OPEN)

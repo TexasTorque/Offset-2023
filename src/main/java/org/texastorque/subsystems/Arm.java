@@ -85,9 +85,10 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
                 new ArmPose(8, Rotation2d.fromDegrees(260)),
                 new ArmPose(2, Rotation2d.fromDegrees(249))),
         HANDOFF_GRAB(
-                new ArmPose(8, Rotation2d.fromDegrees(260)),
+                new ArmPose(7, Rotation2d.fromDegrees(260)),
                 new ArmPose(2, Rotation2d.fromDegrees(245))),
         HANDOFF_BACK(
+                new ArmPose(6, Rotation2d.fromDegrees(230)),
                 new ArmPose(16, Rotation2d.fromDegrees(230)));
 
         public final ArmPose cubePose;
@@ -136,9 +137,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     public static class CubeHandoff extends TorqueSequence implements Subsystems {
         public CubeHandoff() {
-            goTo(State.HANDOFF_ABOVE, .25);
             goTo(State.HANDOFF_DOWN, .25);
-            goTo(State.HANDOFF_BACK, .25);
             goTo(State.HANDOFF_GRAB, .25);
         }
 
@@ -157,7 +156,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         }
     }
 
-    private static final double ROTARY_ENCODER_OFFSET = Units.degreesToRadians(-6),
+    private static final double ROTARY_ENCODER_OFFSET = Units.degreesToRadians(-12),
             ELEVATOR_MAX_VOLTS_UP = 12,
             ELEVATOR_MAX_VOLTS_HANDOFF = 12,
             ELEVATOR_MAX_VOLTS_DOWN = 6,
@@ -295,10 +294,12 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     public boolean isWantingHalfOpen() {
         return activeState == State.HANDOFF_ABOVE;
+
     }
 
     public boolean isWantFullOpen() {
         return activeState == State.HANDOFF_DOWN;
+
     }
 
     public void setSetpointAdjustment(final double setpointAdjustment) {
@@ -344,7 +345,6 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     public boolean isReadyToThrow() {
         return desiredState == State.THROW && realRotaryPose.getDegrees() <= 145;
-
     }
 
     @Log.BooleanBox
@@ -411,7 +411,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         rotaryVolts = TorqueMath.constrain(rotaryVolts, ROTARY_MAX_VOLTS);
         // rotary.setVolts(rotaryEncoder.isCANResponsive() && !isState(Arm.State.LOW) ?
         // rotaryVolts : 0);
-        // rotary.setVolts(rotaryVolts);
+        rotary.setVolts(rotaryVolts);
         Debug.log("rotaryVolts", rotaryVolts);
         Debug.log("elevatorCurrent", rotary.getCurrent());
         SmartDashboard.putBoolean("rotaryCANResponsiveness", rotaryEncoder.isCANResponsive());
