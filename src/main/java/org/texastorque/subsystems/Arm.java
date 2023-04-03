@@ -83,12 +83,12 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
                 new ArmPose(16, Rotation2d.fromDegrees(240))),
         HANDOFF_DOWN(
                 new ArmPose(8, Rotation2d.fromDegrees(260)),
-                new ArmPose(2, Rotation2d.fromDegrees(249))),
+                new ArmPose(2, Rotation2d.fromDegrees(242))),
         HANDOFF_GRAB(
                 new ArmPose(9, Rotation2d.fromDegrees(260)),
-                new ArmPose(2, Rotation2d.fromDegrees(245))),
+                new ArmPose(2, Rotation2d.fromDegrees(235))),
         HANDOFF_GRAB_BACK(
-                new ArmPose(15, Rotation2d.fromDegrees(252))),
+                new ArmPose(15, Rotation2d.fromDegrees(232))),
         HANDOFF_BACK(
                 new ArmPose(6, Rotation2d.fromDegrees(230)),
                 new ArmPose(16, Rotation2d.fromDegrees(230)));
