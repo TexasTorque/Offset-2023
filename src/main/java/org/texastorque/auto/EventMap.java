@@ -5,12 +5,11 @@ import java.util.Map;
 
 import org.texastorque.Subsystems;
 import org.texastorque.subsystems.Arm;
-import org.texastorque.subsystems.Arm.CubeHandoff;
 import org.texastorque.subsystems.Hand;
 import org.texastorque.subsystems.Intake;
 import org.texastorque.torquelib.auto.TorqueCommand;
+import org.texastorque.torquelib.auto.commands.TorqueContinuous;
 import org.texastorque.torquelib.auto.commands.TorqueExecute;
-import org.texastorque.torquelib.auto.commands.TorqueSequenceRunner;
 
 public final class EventMap implements Subsystems {
 
@@ -21,7 +20,6 @@ public final class EventMap implements Subsystems {
             intake.setState(Intake.State.AUTOINTAKE);
             hand.setState(Hand.State.HALF);
         }));
-
 
         map.put("intake-up", new TorqueExecute(() -> {
             intake.setState(Intake.State.UP);
@@ -35,16 +33,16 @@ public final class EventMap implements Subsystems {
             intake.setState(Intake.State.DOWN_OFF);
         }));
 
-        map.put("handoff", new TorqueSequenceRunner(new CubeHandoff()));
-        map.put("pickup", new TorqueSequenceRunner(new CubeHandoff()));
-
+        map.put("handoff", new TorqueContinuous(() -> arm.setState(Arm.State.HANDOFF)));
+        map.put("prime-arm", new TorqueExecute(() -> arm.setState(Arm.State.PRIME)));
+        map.put("pickup", new TorqueContinuous(() -> arm.setState(Arm.State.HANDOFF)));
 
         // Legacy
         map.put("arm-ready", new TorqueExecute(() -> arm.setState(Arm.State.TOP)));
 
         map.put("arm-ready-top", new TorqueExecute(() -> arm.setState(Arm.State.TOP)));
         map.put("arm-ready-mid", new TorqueExecute(() -> arm.setState(Arm.State.MID)));
-        
+
         map.put("dump-low", intake.setStateCommand(Intake.State.OUTAKE));
 
         return map;

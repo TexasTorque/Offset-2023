@@ -49,7 +49,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
         public boolean atPose(final double elevatorReal, final Rotation2d rotaryReal) {
             return Math.abs(elevatorReal - elevatorPose) < ELEVATOR_TOLERANCE
-            && Math.abs(rotaryReal.minus(rotaryPose).getRadians()) < ROTARY_TOLERANCE;
+                    && Math.abs(rotaryReal.minus(rotaryPose).getRadians()) < ROTARY_TOLERANCE;
         }
     }
 
@@ -315,7 +315,6 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     @Override
     public final void update(final TorqueMode mode) {
-
         activeState = desiredState;
 
         updateFeedback();

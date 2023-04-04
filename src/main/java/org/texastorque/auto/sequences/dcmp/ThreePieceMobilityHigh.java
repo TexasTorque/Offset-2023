@@ -21,6 +21,7 @@ public final class ThreePieceMobilityHigh extends TorqueSequence implements Subs
     public ThreePieceMobilityHigh() {
 
         addBlock(new TorqueExecute(() -> drivebase.updateWithTags = false));
+        
         addBlock(hand.setStateCommand(Hand.State.CLOSE), hand.setGamePieceModeCommand(GamePiece.CONE));
 
         addBlock(new TorqueSequenceRunner(new Score(Arm.State.TOP)));
