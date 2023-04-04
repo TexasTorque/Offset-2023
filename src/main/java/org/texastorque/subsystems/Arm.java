@@ -406,6 +406,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     private void calculateRotary(final State state) {
         double armSetpoint = state.get().rotaryPose.getRadians() + setpointAdjustment * Units.degreesToRadians(30);
+
         double rotaryPos = realRotaryPose.getRadians();
         if (rotaryPos > Math.toRadians(315)) { // wrap around up to prevent overshoot causing a massive spin.
             rotaryPos = rotaryPos - 2 * Math.PI;
