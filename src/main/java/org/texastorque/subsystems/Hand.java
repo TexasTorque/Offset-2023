@@ -35,9 +35,10 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
 
     public static enum State {
         // Smaller is bigger on the claw
-        OPEN(2.9),
+        OPEN(3),
         SHELF(3.2),
         HALF(3.2),
+        CHUNGUS(3),
         CLOSE(4);
 
         public final double clawSetpoint;
@@ -151,21 +152,26 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
                 activeState = State.OPEN;
             }
             if (arm.isWantingHalfOpen()) {
-                activeState =  State.HALF;
+                activeState = State.HALF;
             }
-            if (arm.isWantFullOpen()) {
+            if (arm.isWantingFullOpen()) {
                 activeState = State.OPEN;
+
+                if (isCubeMode())
+                    activeState = State.CHUNGUS;
             }
-            if (arm.isState(Arm.State.SHELF) && activeState == State.OPEN) {
+
+            if ((arm.isState(Arm.State.SHELF) || arm.isState(Arm.State.STOWED)) && activeState == State.OPEN
+                    && isConeMode()) {
                 activeState = State.SHELF;
             }
-        
+
         }
 
         double clawVolts = clawPoseController.calculate(realClawPose, activeState.clawSetpoint);
         Debug.log("requestedVolts", clawVolts);
         clawVolts = TorqueMath.constrain(clawVolts, MAX_CLAW_VOLTS);
-        // claw.setVolts(clawVolts);
+        claw.setVolts(clawVolts);
 
         if (lastState != activeState) {
             if (activeState == State.OPEN)

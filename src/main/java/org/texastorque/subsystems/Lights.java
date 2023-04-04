@@ -24,11 +24,14 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
     public static class Solid extends LightAction {
         private final Supplier<Color> color;
 
-        public Solid(final Supplier<Color> color) { this.color = color; }
+        public Solid(final Supplier<Color> color) {
+            this.color = color;
+        }
 
         @Override
         public void run(AddressableLEDBuffer buff) {
-            for (int i = 0; i < buff.getLength(); i++) buff.setLED(i, color.get());
+            for (int i = 0; i < buff.getLength(); i++)
+                buff.setLED(i, color.get());
         }
     }
 
@@ -36,7 +39,9 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
         private final Supplier<Color> color1, color2;
         private final double hertz;
 
-        public Blink(final Supplier<Color> color1, final double hertz) { this(color1, () -> Color.kBlack, hertz); }
+        public Blink(final Supplier<Color> color1, final double hertz) {
+            this(color1, () -> Color.kBlack, hertz);
+        }
 
         public Blink(final Supplier<Color> color1, final Supplier<Color> color2, final double hertz) {
             this.color1 = color1;
@@ -48,9 +53,11 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
         public void run(AddressableLEDBuffer buff) {
             final double timestamp = TorqueUtil.time();
             final boolean on = (Math.floor(timestamp * hertz) % 2 == 1);
-            for (int i = 0; i < buff.getLength(); i++) buff.setLED(i, on ? color1.get() : color2.get());
+            for (int i = 0; i < buff.getLength(); i++)
+                buff.setLED(i, on ? color1.get() : color2.get());
         }
     }
+
     public static class Rainbow extends LightAction {
         private int rainbowFirstPixelHue = 0;
 
@@ -65,31 +72,41 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
         }
     }
 
-    private static abstract class LightAction { public abstract void run(AddressableLEDBuffer buff); }
+    private static abstract class LightAction {
+        public abstract void run(AddressableLEDBuffer buff);
+    }
 
     private static volatile Lights instance;
 
     private static final int LENGTH = 50;
 
-    public static final Color getAllianceColorLight() { return DriverStation.getAlliance() == Alliance.Blue ? Color.kLightBlue : Color.kPink; }
+    public static final Color getAllianceColorLight() {
+        return DriverStation.getAlliance() == Alliance.Blue ? Color.kLightBlue : Color.kPink;
+    }
 
-    public static final Color getAllianceColor() { return DriverStation.getAlliance() == Alliance.Blue ? Color.kBlue : Color.kRed; }
+    public static final Color getAllianceColor() {
+        return DriverStation.getAlliance() == Alliance.Blue ? Color.kBlue : Color.kRed;
+    }
 
-    public static final Color getAllianceColorFIRST() { return DriverStation.getAlliance() == Alliance.Blue ? Color.kFirstBlue : Color.kFirstRed; }
+    public static final Color getAllianceColorFIRST() {
+        return DriverStation.getAlliance() == Alliance.Blue ? Color.kFirstBlue : Color.kFirstRed;
+    }
 
-    public static final synchronized Lights getInstance() { return instance == null ? instance = new Lights() : instance; }
+    public static final synchronized Lights getInstance() {
+        return instance == null ? instance = new Lights() : instance;
+    }
 
     private final AddressableLED superstructureLEDs;
 
     private final AddressableLEDBuffer buff;
 
     private LightAction solidGreen = new Solid(() -> Color.kGreen), solidAlliance = new Solid(() -> getAllianceColor()),
-                        blinkLightAlliance = new Blink(() -> getAllianceColorLight(), 6),
-                        blinkGreen = new Blink(() -> Color.kGreen, 6),
-                        solidPurple = new Solid(() -> Color.kPurple), solidYellow = new Solid(() -> Color.kYellow),
-                        blinkPurple = new Blink(() -> Color.kPurple, 6), blinkYellow = new Blink(() -> Color.kYellow, 6),
-                        solidRed = new Solid(() -> Color.kRed),
-                        rainbow = new Rainbow();
+            blinkLightAlliance = new Blink(() -> getAllianceColorLight(), 6),
+            blinkGreen = new Blink(() -> Color.kGreen, 6),
+            solidPurple = new Solid(() -> Color.kPurple), solidYellow = new Solid(() -> Color.kYellow),
+            blinkPurple = new Blink(() -> Color.kPurple, 6), blinkYellow = new Blink(() -> Color.kYellow, 6),
+            solidRed = new Solid(() -> Color.kRed),
+            rainbow = new Rainbow(), blinkRed = new Blink(() -> Color.kRed, 6);
 
     private Lights() {
         superstructureLEDs = new AddressableLED(Ports.LIGHTS_SUPERSTRUCTURE);
@@ -105,12 +122,9 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
 
     public final LightAction getColor(final TorqueMode mode) {
         if (drivebase.isState(Drivebase.State.ALIGN)) {
-            if (drivebase.isPathAlignDone()) return blinkGreen;
+            if (drivebase.isPathAlignDone())
+                return blinkGreen;
             return solidGreen;
-        }
-
-        if (drivebase.getSpeedSetting().isSlow() && mode.isTeleop()) {
-            return solidRed;
         }
 
         if (forks.isForksRunning()) {
@@ -119,13 +133,15 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
 
         if (drivebase.isState(Drivebase.State.BALANCE)) {
             if (drivebase.isAutoLevelDone()) {
-                if (mode.isAuto()) return rainbow;
+                if (mode.isAuto())
+                    return rainbow;
                 return blinkLightAlliance;
             }
             return solidGreen;
         }
 
-        final boolean blinkColor = spindexer.isAutoSpindexing() || intake.isIntaking();
+        final boolean blinkColor = spindexer.isAutoSpindexing() || intake.isIntaking() || arm.isDoingHandoff()
+                || drivebase.getSpeedSetting().isSlow();
 
         if (hand.isCubeMode()) {
             return blinkColor ? blinkPurple : solidPurple;
