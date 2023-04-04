@@ -49,7 +49,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
         public boolean atPose(final double elevatorReal, final Rotation2d rotaryReal) {
             return Math.abs(elevatorReal - elevatorPose) < ELEVATOR_TOLERANCE
-            && Math.abs(rotaryReal.minus(rotaryPose).getRadians()) < ROTARY_TOLERANCE;
+                    && Math.abs(rotaryReal.minus(rotaryPose).getRadians()) < ROTARY_TOLERANCE;
         }
     }
 
@@ -139,7 +139,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     public static class CubeHandoff extends TorqueSequence implements Subsystems {
         public CubeHandoff() {
             goTo(State.HANDOFF_DOWN, .25);
-            goTo(State.HANDOFF_GRAB, .5);
+            goTo(State.HANDOFF_GRAB, .35);
             goTo(State.HANDOFF_GRAB_BACK, .25);
         }
 
@@ -156,6 +156,10 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
                 arm.activeState = state;
             }));
         }
+    }
+
+    public State getActiveState() {
+        return activeState;
     }
 
     private static final double ROTARY_ENCODER_OFFSET = Units.degreesToRadians(-65),
@@ -270,6 +274,10 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     public void setState(final State state) {
         this.desiredState = state;
+    }
+
+    public void setActiveState(final State state) {
+        this.activeState = state;
     }
 
     public State getState() {

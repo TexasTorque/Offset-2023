@@ -4,8 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.texastorque.Subsystems;
+import org.texastorque.auto.routines.Handoff;
 import org.texastorque.subsystems.Arm;
-import org.texastorque.subsystems.Arm.CubeHandoff;
 import org.texastorque.subsystems.Hand;
 import org.texastorque.subsystems.Intake;
 import org.texastorque.torquelib.auto.TorqueCommand;
@@ -35,8 +35,11 @@ public final class EventMap implements Subsystems {
             intake.setState(Intake.State.DOWN_OFF);
         }));
 
-        map.put("handoff", new TorqueSequenceRunner(new CubeHandoff()));
-        map.put("pickup", new TorqueSequenceRunner(new CubeHandoff()));
+        // map.put("handoff", new TorqueSequenceRunner(new CubeHandoff()));
+        // map.put("handoff", new TorqueContinuous(() -> arm.setStateCommand(Arm.State.HANDOFF)));
+        map.put("pickup", new TorqueSequenceRunner(new Handoff()));
+        map.put("handoff", new TorqueSequenceRunner(new Handoff()));
+
 
 
         // Legacy
