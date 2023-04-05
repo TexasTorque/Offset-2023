@@ -34,6 +34,6 @@ public final class AutoManager extends TorqueAutoManager {
         addSequence(new TwoPieceMobility());
         addSequence(new ThreePieceMobility());
         addSequence(new TwoPieceMobilityEngage());
-        addSequence(new ThreePieceMobilityHigh());
+        // addSequence(new ThreePieceMobilityHigh());
     }
 }

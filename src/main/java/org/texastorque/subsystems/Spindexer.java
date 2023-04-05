@@ -10,6 +10,7 @@ import org.texastorque.Ports;
 import org.texastorque.Subsystems;
 import org.texastorque.torquelib.auto.TorqueCommand;
 import org.texastorque.torquelib.auto.TorqueSequence;
+import org.texastorque.torquelib.auto.commands.TorqueContinuous;
 import org.texastorque.torquelib.auto.commands.TorqueExecute;
 import org.texastorque.torquelib.auto.commands.TorqueWaitUntil;
 import org.texastorque.torquelib.base.TorqueMode;
@@ -38,27 +39,25 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
     public static final class AutoSpindex extends TorqueSequence implements Subsystems {
 
         public AutoSpindex() {
-            // addBlock(new TorqueWaitForSeconds(.25));
 
             addBlock(new TorqueExecute(() -> spindexer.activeState = State.FAST_CCW));
 
             addBlock(new TorqueWaitUntil(() -> spindexer.limitSwitch.get()));
-
-            // addBlock(new TorqueWaitForSeconds(1));
 
             addBlock(new TorqueExecute(() -> spindexer.activeState = State.ALIGN));
 
             addBlock(new TorqueWaitUntil(() -> spindexer.isEncoderAligned()));
 
             addBlock(new TorqueExecute(() -> spindexer.activeState = State.OFF));
+
+            addBlock(new TorqueContinuous(() -> arm.setState(Arm.State.HANDOFF)));
         }
 
     }
 
     private static volatile Spindexer instance;
 
-    // private final static double TICKS_TO_ALIGN = 8;
-    private final static double TICKS_TO_ALIGN = 15;
+    private final static double TICKS_TO_ALIGN = 13;
 
     private static final double TOLERANCE = .5;
 
@@ -120,7 +119,6 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
             autoSpindex.run();
         } else {
             activeState = desiredState;
-            // autoSpindex = new AutoSpindex();
             autoSpindex.reset();
         }
 

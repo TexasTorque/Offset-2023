@@ -36,7 +36,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
     public static enum State {
         // Smaller is bigger on the claw
         OPEN(3),
-        SHELF(3.2),
+        SHELF(3.4),
         HALF(3.2),
         CHUNGUS(3),
         CLOSE(4);

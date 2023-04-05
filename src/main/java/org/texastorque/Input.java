@@ -17,9 +17,11 @@ import org.texastorque.subsystems.Intake;
 import org.texastorque.subsystems.Spindexer;
 import org.texastorque.torquelib.base.TorqueInput;
 import org.texastorque.torquelib.control.TorqueBoolSupplier;
+import org.texastorque.torquelib.control.TorqueClick;
 import org.texastorque.torquelib.control.TorqueClickSupplier;
 import org.texastorque.torquelib.control.TorqueRequestableTimeout;
 import org.texastorque.torquelib.control.TorqueToggleSupplier;
+import org.texastorque.torquelib.control.TorqueTraversableSelection;
 import org.texastorque.torquelib.sensors.TorqueController;
 import org.texastorque.torquelib.swerve.TorqueSwerveSpeeds;
 import org.texastorque.torquelib.util.TorqueMath;
@@ -31,6 +33,12 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
     private final static double DEADBAND = 0.125;
 
+    private final TorqueClick cubeHandoffClick = new TorqueClick();
+
+    private final TorqueTraversableSelection<Arm.State> cubeHandoffStates = new TorqueTraversableSelection<Arm.State>(
+        Arm.State.HANDOFF_DOWN, Arm.State.HANDOFF_GRAB
+    );
+
     public static final synchronized Input getInstance() {
         return instance == null ? instance = new Input() : instance;
     }
@@ -38,10 +46,10 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
     private final TorqueBoolSupplier isZeroingWheels, alignGridLeft, alignGridCenter, alignGridRight,
             gridOverrideLeft, gridOverrideRight,
             gridOverrideCenter, resetGyroClick, resetPoseClick, wantsIntake,
-            gamePieceModeToggle, openClaw, armToBottom,
+            gamePieceModeToggle, openClaw,
             armToShelf, armToMid, armToTop, armDoHandoff, armThrow,
             wantsOuttake, xFactorToggle, autoSpindex, wantsTipCone, slowMode, armLeavingHandoff, wantsSlowIntake,
-            wantsSlowOuttake;;
+            wantsSlowOuttake, armToPrime;
 
     private final TorqueRequestableTimeout driverTimeout = new TorqueRequestableTimeout();
 
@@ -69,7 +77,8 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
         openClaw = new TorqueBoolSupplier(operator::isRightBumperDown);
         gamePieceModeToggle = new TorqueToggleSupplier(() -> operator.isLeftBumperDown() || driver.isYButtonDown());
-        wantsOuttake = new TorqueBoolSupplier(operator::isLeftCenterButtonDown);
+        wantsOuttake = new TorqueBoolSupplier(() -> operator.isLeftCenterButtonDown() || driver.isLeftTriggerDown());
+        
         wantsTipCone = new TorqueBoolSupplier(operator::isLeftStickClickDown);
 
         wantsSlowIntake = new TorqueBoolSupplier(driver::isRightBumperDown);
@@ -82,11 +91,13 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         armToTop = new TorqueClickSupplier(operator::isYButtonDown);
 
         armThrow = new TorqueClickSupplier(operator::isRightCenterButtonDown);
-        armToBottom = new TorqueClickSupplier(operator::isAButtonDown);
+        // armToBottom = new TorqueClickSupplier(operator::isXButtonDown);
 
         autoSpindex = new TorqueBoolSupplier(operator::isDPADUpDown);
 
         slowMode = new TorqueToggleSupplier(driver::isAButtonDown);
+
+        armToPrime = new TorqueClickSupplier(operator::isAButtonDown);
     }
 
     public void setDriverRumbleFor(final double duration) {
@@ -132,9 +143,14 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
         armThrow.onTrue(() -> arm.setState(Arm.State.THROW));
 
-        armToBottom.onTrue(() -> arm.setState(Arm.State.STOWED));
+
 
         armDoHandoff.onTrue(() -> arm.setState(Arm.State.HANDOFF));
+
+        if (cubeHandoffClick.calculate(armDoHandoff.get() && hand.isCubeMode())) {
+            arm.setState(Arm.State.HANDOFF_DOWN);
+        }
+
         armLeavingHandoff.onTrue(() -> arm.setState(Arm.State.STOWED));
 
         wantsIntake.onTrueOrFalse(() -> {
@@ -154,6 +170,8 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         wantsSlowOuttake.onTrue(() -> intake.setState(Intake.State.SLOW_OUTAKE));
 
         arm.setSetpointAdjustment(operator.getRightYAxis());
+
+        armToPrime.onTrue(() -> arm.setState(Arm.State.PRIME));
 
         updateSpindexer();
     }

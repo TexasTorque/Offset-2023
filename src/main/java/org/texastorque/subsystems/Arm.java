@@ -75,7 +75,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         PRIME(new ArmPose(0, Rotation2d.fromDegrees(120))),
 
         // Handoff related states
-        HANDOFF(new ArmPose(0, Rotation2d.fromDegrees(180))),
+        HANDOFF(new ArmPose(20, Rotation2d.fromDegrees(220))),
 
         HANDOFF_ABOVE(
                 new ArmPose(15, Rotation2d.fromDegrees(215)),
@@ -87,7 +87,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
                 new ArmPose(9, Rotation2d.fromDegrees(260)),
                 new ArmPose(2, Rotation2d.fromDegrees(235))),
         HANDOFF_GRAB_BACK(
-                new ArmPose(15, Rotation2d.fromDegrees(232))),
+                new ArmPose(20, Rotation2d.fromDegrees(232))),
         HANDOFF_BACK(
                 new ArmPose(6, Rotation2d.fromDegrees(230)),
                 new ArmPose(16, Rotation2d.fromDegrees(230)));
@@ -115,10 +115,10 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     public static class ConeHandoff extends TorqueSequence implements Subsystems {
         public ConeHandoff() {
-            goTo(State.HANDOFF_ABOVE, .5);
-            goTo(State.HANDOFF_DOWN, .5);
-            goTo(State.HANDOFF_GRAB, .5);
-            goTo(State.HANDOFF_BACK, .25);
+            goTo(State.HANDOFF_ABOVE, .35);
+            goTo(State.HANDOFF_DOWN, .25);
+            goTo(State.HANDOFF_GRAB, .35);
+            // goTo(State.HANDOFF_BACK, .25);
         }
 
         private final void goTo(final State state, final double seconds) {
@@ -158,10 +158,6 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         }
     }
 
-    public State getActiveState() {
-        return activeState;
-    }
-
     private static final double ROTARY_ENCODER_OFFSET = Units.degreesToRadians(-65),
             ELEVATOR_MAX_VOLTS_UP = 12,
             ELEVATOR_MAX_VOLTS_HANDOFF = 12,
@@ -177,18 +173,18 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     private double setpointAdjustment = 0;
+
     @Log.ToString
     private State activeState = State.STOWED;
     @Log.ToString
     private State desiredState = State.STOWED;
-
     @Log.ToString
     private State lastState = State.STOWED;
+
     @Log.ToString
     public double realElevatorPose = 0;
     @Log.ToString
     public Rotation2d realRotaryPose = Rotation2d.fromDegrees(0);
-
     private final TorqueNEO elevator = new TorqueNEO(Ports.ARM_ELEVATOR_MOTOR);
 
     @Config
@@ -206,8 +202,11 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     private final TorqueCANCoder rotaryEncoder = new TorqueCANCoder(Ports.ARM_ROTARY_ENCODER);
 
-    private ConeHandoff coneHandoff;
-    private CubeHandoff cubeHandoff;
+    private ConeHandoff coneHandoff = new ConeHandoff();
+
+    private CubeHandoff cubeHandoff = new CubeHandoff();
+
+    private CubeHandoff autoCubeHandoff = new CubeHandoff();
 
     private Arm() {
         elevator.setCurrentLimit(30);
@@ -227,6 +226,10 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         cancoderConfig.sensorTimeBase = SensorTimeBase.PerSecond;
         cancoderConfig.initializationStrategy = SensorInitializationStrategy.BootToAbsolutePosition;
         rotaryEncoder.configAllSettings(cancoderConfig);
+    }
+
+    public State getActiveState() {
+        return activeState;
     }
 
     public boolean isStowed() {
@@ -331,13 +334,23 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         if (activeState == State.HANDOFF) {
             if (hand.isConeMode())
                 coneHandoff.run();
+            else if (mode.isAuto())
+                autoCubeHandoff.run();
             else
                 cubeHandoff.run();
+
         } else {
             activeState = desiredState;
-            coneHandoff = new ConeHandoff();
-            cubeHandoff = new CubeHandoff();
+            if (mode.isTeleop()) {
+                coneHandoff = new ConeHandoff();
+                cubeHandoff = new CubeHandoff();
+            } else {
+                autoCubeHandoff = new CubeHandoff();
+            }
+
         }
+
+        if (forks.isForksRunning()) activeState = State.SHELF;
 
         if (desiredState == State.THROW) {
             calculateElevator(State.THROW);
@@ -354,6 +367,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
             calculateRotary(activeState);
             lastState = activeState;
         }
+
     }
 
     public boolean isReadyToThrow() {

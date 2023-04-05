@@ -32,7 +32,7 @@ public final class ThreePieceMobility extends TorqueSequence implements Subsyste
         addBlock(intake.setStateCommand(Intake.State.UP));
 
         addBlock(new FollowEventPath("flat-side-get-second-3"));
-        
+
         addBlock(intake.setStateCommand(Intake.State.UP));
     }
 }
