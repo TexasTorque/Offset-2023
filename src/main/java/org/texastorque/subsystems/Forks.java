@@ -22,9 +22,10 @@ public final class Forks extends TorqueSubsystem implements Subsystems {
     private static volatile Forks instance;
 
     public static final double ROTARY_MAX_VOLTS = 8;
-    
 
-    public static final synchronized Forks getInstance() { return instance == null ? instance = new Forks() : instance; }
+    public static final synchronized Forks getInstance() {
+        return instance == null ? instance = new Forks() : instance;
+    }
 
     private final TorqueNEO rotary = new TorqueNEO(Ports.FORKS_MOTOR);
 
@@ -38,39 +39,37 @@ public final class Forks extends TorqueSubsystem implements Subsystems {
 
     private TorqueRequestableTimeout timeout = new TorqueRequestableTimeout();
 
-
     private Forks() {
         rotary.setCurrentLimit(60);
         rotary.setVoltageCompensation(12.6);
         rotary.setBreakMode(true);
-        SmartMotionProfile smp = new SmartMotionProfile(maxVelocity , 0, maxAcceleration, 1000);
+        SmartMotionProfile smp = new SmartMotionProfile(maxVelocity, 0, maxAcceleration, 1000);
         rotary.configureSmartMotion(smp);
         rotary.configurePID(TorquePID.create(.00002).build());
         rotary.burnFlash();
     }
 
     // public final void setDirection(final TorqueDirection direction) {
-    //     this.direction = direction;
+    // this.direction = direction;
     // }
     public final void setDirection(final double direction) {
         this.direction = direction;
     }
 
     @Override
-    public final void initialize(final TorqueMode mode) {}
+    public final void initialize(final TorqueMode mode) {
+    }
 
-    
     @Override
     public final void update(final TorqueMode mode) {
         if (direction != 0) {
             timeout.set(6);
+            
         }
 
         rotary.setSmartVelocity(maxVelocity * direction);
         Debug.log("current", rotary.getCurrent());
-       // Debug.log("direction", direction);
         Debug.log("velocity", rotary.getVelocity());
-
         Debug.log("volts", maxVelocity * direction);
 
         direction = 0;

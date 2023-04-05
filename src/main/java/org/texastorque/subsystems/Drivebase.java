@@ -62,7 +62,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     }
 
     public enum SpeedSetting {
-        FAST(1.0), SLOW(.5);
+        FAST(1.0), SLOW(.25);
 
         public final double speed;
 
@@ -149,7 +149,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     private final TorqueNavXGyro gyro = TorqueNavXGyro.getInstance();
     private double lastRotationRadians;
 
-    private final PIDController teleopOmegaController = new PIDController(2 * Math.PI, 0, 0);
+    private final PIDController teleopOmegaController = new PIDController(.5 * Math.PI, 0, 0);
 
     private SwerveModuleState[] swerveStates;
 
