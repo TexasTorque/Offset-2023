@@ -35,7 +35,6 @@ public final class OnePieceMobilityEngage extends TorqueSequence implements Subs
         addBlock(new TorqueWaitForSeconds(2));
         addBlock(new FollowEventPath("origin-engage-in", 2.5, 3.5));
 
-
         addBlock(drivebase.setStateCommand(Drivebase.State.BALANCE));
     }
 }

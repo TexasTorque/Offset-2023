@@ -35,7 +35,7 @@ public final class Forks extends TorqueSubsystem implements Subsystems {
 
     private final double encoderToOutputGearing = 302.4;
     private final double maxVelocity = Math.toRadians(100) * 60 * encoderToOutputGearing;
-    private final double maxAcceleration = 48 * 60 * encoderToOutputGearing;
+    private final double maxAcceleration = 18 * 60 * encoderToOutputGearing;
 
     private TorqueRequestableTimeout timeout = new TorqueRequestableTimeout();
 
@@ -72,7 +72,8 @@ public final class Forks extends TorqueSubsystem implements Subsystems {
         Debug.log("velocity", rotary.getVelocity());
         Debug.log("volts", maxVelocity * direction);
 
-        direction = 0;
+        if (mode.isTeleop())
+            direction = 0;
     }
 
     public boolean isForksRunning() {

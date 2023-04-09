@@ -6,6 +6,7 @@
  */
 package org.texastorque.subsystems;
 
+import org.texastorque.Debug;
 import org.texastorque.Ports;
 import org.texastorque.Subsystems;
 import org.texastorque.torquelib.auto.TorqueCommand;
@@ -111,6 +112,7 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
     @Override
     public final void update(final TorqueMode mode) {
         SmartDashboard.putBoolean("spindexer::limitSwitch", limitSwitch.get());
+        Debug.log("current", turntable.getCurrent());
 
         if (autoSpindex == null)
             autoSpindex = new AutoSpindex();
@@ -140,6 +142,7 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
             volts = activeState.volts;
         }
 
+        // if (mode.isTeleop())
         desiredState = State.OFF;
         turntable.setVolts(volts);
 

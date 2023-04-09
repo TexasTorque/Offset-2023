@@ -33,15 +33,15 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
     private final static double DEADBAND = 0.125;
 
+    public static final synchronized Input getInstance() {
+        return instance == null ? instance = new Input() : instance;
+    }
+
     private final TorqueClick cubeHandoffClick = new TorqueClick();
 
     private final TorqueTraversableSelection<Arm.State> cubeHandoffStates = new TorqueTraversableSelection<Arm.State>(
         Arm.State.HANDOFF_DOWN, Arm.State.HANDOFF_GRAB
     );
-
-    public static final synchronized Input getInstance() {
-        return instance == null ? instance = new Input() : instance;
-    }
 
     private final TorqueBoolSupplier isZeroingWheels, alignGridLeft, alignGridCenter, alignGridRight,
             gridOverrideLeft, gridOverrideRight,

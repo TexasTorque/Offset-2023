@@ -116,7 +116,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     public static class ConeHandoff extends TorqueSequence implements Subsystems {
         public ConeHandoff() {
             goTo(State.HANDOFF_ABOVE, .35);
-            goTo(State.HANDOFF_DOWN, .25);
+            goTo(State.HANDOFF_DOWN, .4);
             goTo(State.HANDOFF_GRAB, .35);
             // goTo(State.HANDOFF_BACK, .25);
         }
@@ -138,10 +138,11 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     public static class CubeHandoff extends TorqueSequence implements Subsystems {
         public CubeHandoff() {
+            goTo(State.STOWED, .2);
             goTo(State.HANDOFF_DOWN, .25);
             goTo(State.HANDOFF_GRAB, .35);
             goTo(State.HANDOFF_GRAB_BACK, .25);
-        }
+         }
 
         private final void goTo(final State state, final double seconds) {
             addBlock(new TorqueWaitUntil(() -> {
@@ -158,7 +159,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         }
     }
 
-    private static final double ROTARY_ENCODER_OFFSET = Units.degreesToRadians(-65),
+    private static final double ROTARY_ENCODER_OFFSET = Units.degreesToRadians(-100 + 88 + 6),
             ELEVATOR_MAX_VOLTS_UP = 12,
             ELEVATOR_MAX_VOLTS_HANDOFF = 12,
             ELEVATOR_MAX_VOLTS_DOWN = 6,
@@ -350,7 +351,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
         }
 
-        if (forks.isForksRunning()) activeState = State.SHELF;
+        // if (forks.isForksRunning()) activeState = State.SHELF; Couldn't 
 
         if (desiredState == State.THROW) {
             calculateElevator(State.THROW);
