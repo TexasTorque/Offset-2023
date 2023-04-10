@@ -79,6 +79,8 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
 
     private final TorqueRequestableTimeout retractArmTimeout = new TorqueRequestableTimeout();
 
+    public boolean systemsCheck = false;
+
     private Hand() {
         claw.setCurrentLimit(7);
         claw.setVoltageCompensation(12.6);
@@ -135,7 +137,8 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
 
     @Override
     public final void initialize(final TorqueMode mode) {
-        gamePieceMode = GamePiece.CONE;
+        if (!mode.isDisabled())
+            gamePieceMode = GamePiece.CONE;
     }
 
     public final boolean isClosedEnough() {
@@ -147,7 +150,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
         activeState = desiredState;
         updateFeedback();
 
-        if (mode.isTeleop()) {
+        if (mode.isTeleop() || systemsCheck) {
             if (arm.isReadyToThrow()) {
                 activeState = State.OPEN;
             }

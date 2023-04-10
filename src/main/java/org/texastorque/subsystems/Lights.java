@@ -100,7 +100,8 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
 
     private final AddressableLEDBuffer buff;
 
-    private LightAction solidGreen = new Solid(() -> Color.kGreen), solidAlliance = new Solid(() -> getAllianceColor()),
+    private LightAction 
+            solidGreen = new Solid(() -> Color.kGreen), solidAlliance = new Solid(() -> getAllianceColor()),
             blinkLightAlliance = new Blink(() -> getAllianceColorLight(), 6),
             blinkGreen = new Blink(() -> Color.kGreen, 6),
             solidPurple = new Solid(() -> Color.kPurple), solidYellow = new Solid(() -> Color.kYellow),
@@ -113,11 +114,22 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
         superstructureLEDs.setLength(LENGTH);
 
         buff = new AddressableLEDBuffer(LENGTH);
+
+        for (int i = 0; i < buff.getLength(); i++)
+            buff.setLED(i, Color.kGreen);
+
+        superstructureLEDs.setData(buff);
     }
 
     @Override
     public final void initialize(final TorqueMode mode) {
         superstructureLEDs.start();
+
+        mode.onDisabled(() -> {
+            for (int i = 0; i < buff.getLength(); i++)
+                buff.setLED(i, getAllianceColor());
+            superstructureLEDs.setData(buff);
+        });
     }
 
     public final LightAction getColor(final TorqueMode mode) {

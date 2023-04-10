@@ -8,8 +8,8 @@ package org.texastorque.auto;
 
 import org.texastorque.auto.sequences.dcmp.OnePieceMobility;
 import org.texastorque.auto.sequences.dcmp.OnePieceMobilityEngage;
+import org.texastorque.auto.sequences.dcmp.SystemsCheck;
 import org.texastorque.auto.sequences.dcmp.ThreePieceMobility;
-import org.texastorque.auto.sequences.dcmp.ThreePieceMobilityHigh;
 import org.texastorque.auto.sequences.dcmp.TwoPieceMobility;
 import org.texastorque.auto.sequences.dcmp.TwoPieceMobilityEngage;
 import org.texastorque.torquelib.auto.TorqueAutoManager;
@@ -35,5 +35,6 @@ public final class AutoManager extends TorqueAutoManager {
         addSequence(new ThreePieceMobility());
         addSequence(new TwoPieceMobilityEngage());
         // addSequence(new ThreePieceMobilityHigh());
+        addSequence(new SystemsCheck());
     }
 }
