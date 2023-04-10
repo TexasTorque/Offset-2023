@@ -59,7 +59,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         // Normal states
         SCORING_HALF_WAY_POINT(new ArmPose(0.45, Rotation2d.fromDegrees(90))),
         SHELF(new ArmPose(3, Rotation2d.fromDegrees(220)),
-                new ArmPose(0, Rotation2d.fromDegrees(220))),
+                new ArmPose(0, Rotation2d.fromDegrees(215))),
         STOWED(SHELF),
         MID(
                 new ArmPose(0, Rotation2d.fromDegrees(0)),
@@ -73,20 +73,23 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         THROW(new ArmPose(50, Rotation2d.fromDegrees(0))),
 
         PRIME(new ArmPose(0, Rotation2d.fromDegrees(120))),
+        PRIME_UP(new ArmPose(12, Rotation2d.fromDegrees(120))),
 
         // Handoff related states
-        HANDOFF(new ArmPose(20, Rotation2d.fromDegrees(220))),
+        HANDOFF(new ArmPose(12, Rotation2d.fromDegrees(120))),
 
         HANDOFF_ABOVE(
                 new ArmPose(15, Rotation2d.fromDegrees(215)),
-                new ArmPose(16, Rotation2d.fromDegrees(240))),
+                new ArmPose(15, Rotation2d.fromDegrees(245))),
+        HANDOFF_FORWARD(new ArmPose(2, Rotation2d.fromDegrees(247))),
         HANDOFF_DOWN(
                 new ArmPose(8, Rotation2d.fromDegrees(260)),
-                new ArmPose(2, Rotation2d.fromDegrees(242))),
+                new ArmPose(2, Rotation2d.fromDegrees(232))),
         HANDOFF_GRAB(
                 new ArmPose(9, Rotation2d.fromDegrees(260)),
-                new ArmPose(2, Rotation2d.fromDegrees(235))),
+                new ArmPose(2, Rotation2d.fromDegrees(228))),
         HANDOFF_GRAB_BACK(
+                new ArmPose(20, Rotation2d.fromDegrees(232)),
                 new ArmPose(20, Rotation2d.fromDegrees(232))),
         HANDOFF_BACK(
                 new ArmPose(6, Rotation2d.fromDegrees(230)),
@@ -115,10 +118,11 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     public static class ConeHandoff extends TorqueSequence implements Subsystems {
         public ConeHandoff() {
-            goTo(State.HANDOFF_ABOVE, .35);
-            goTo(State.HANDOFF_DOWN, .4);
-            goTo(State.HANDOFF_GRAB, .35);
-            // goTo(State.HANDOFF_BACK, .25);
+            goTo(State.HANDOFF_ABOVE, .3);
+            goTo(State.HANDOFF_FORWARD, .3);
+            goTo(State.HANDOFF_DOWN, .3);
+            goTo(State.HANDOFF_GRAB, .3);
+            goTo(State.PRIME_UP, .3);
         }
 
         private final void goTo(final State state, final double seconds) {
@@ -142,7 +146,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
             goTo(State.HANDOFF_DOWN, .25);
             goTo(State.HANDOFF_GRAB, .35);
             goTo(State.HANDOFF_GRAB_BACK, .25);
-         }
+        }
 
         private final void goTo(final State state, final double seconds) {
             addBlock(new TorqueWaitUntil(() -> {
@@ -311,8 +315,12 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     }
 
+    public boolean isWantingQuarterOpen() {
+        return activeState == State.HANDOFF_DOWN || activeState == State.HANDOFF_FORWARD;
+    }
+
     public boolean isWantingFullOpen() {
-        return activeState == State.HANDOFF_DOWN;
+        return false;
     }
 
     public void setSetpointAdjustment(final double setpointAdjustment) {
@@ -351,8 +359,6 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
         }
 
-        // if (forks.isForksRunning()) activeState = State.SHELF; Couldn't 
-
         if (desiredState == State.THROW) {
             calculateElevator(State.THROW);
             calculateRotary(State.THROW);
@@ -361,6 +367,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
             calculateElevator(activeState);
             calculateRotary(State.SCORING_HALF_WAY_POINT);
         } else if (isGoingUp() && !isArmOutEnough()) {
+            System.out.println("stowing");
             calculateElevator(State.STOWED);
             calculateRotary(activeState);
         } else {

@@ -49,7 +49,8 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
         UP(new IndexerPose(0, 0, ROT_UP)),
         UP_ROLL(new IndexerPose(-9, 0, ROT_UP)),
         SLOW_INTAKE(new IndexerPose(1.5, 1.5, ROT_INTAKE)),
-        SLOW_OUTAKE(new IndexerPose(-2, -2, ROT_INTAKE));
+        SLOW_OUTAKE(new IndexerPose(-2, -2, ROT_INTAKE)),
+        OUT(new IndexerPose(0, 0, ROT_INTAKE));
 
         public final IndexerPose cubePose;
         public final IndexerPose conePose;
@@ -144,14 +145,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
         realRotaryPose = rotary.getPosition();
 
         if (desiredState == State.UP && arm.isPerformingHandoff())
-            activeState = State.PRIME;
-
-        // if (activeState == State.PRIME && (lastState == State.INTAKE || lastState ==
-        // State.AUTOINTAKE))
-        // primeRollTimeout.set(1);
-
-        // if (primeRollTimeout.get())
-        // activeState = State.PRIME_ROLL;
+            activeState = State.OUT;
 
         Debug.log("rotaryPose", rotary.getPosition());
         Debug.log("topRollersPose", topRollers.getPosition());
@@ -166,8 +160,6 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
         bottomRollers.setVolts(bottomRollerVolts);
         Debug.log("bottomRollersSpeed", bottomRollers.getVelocity());
         Debug.log("bottomRollerCurrent", bottomRollers.getCurrent());
-
-        // mode.onAuto(() -> activeState = State.UP);
 
         Debug.log("requestedRotaryPose", activeState.get().rotaryPose);
         double requestedRotaryVolts = TorqueMath.constrain(

@@ -139,9 +139,9 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
             return solidGreen;
         }
 
-        if (forks.isForksRunning()) {
-            return rainbow;
-        }
+        // if (forks.isForksRunning()) {
+        //     return rainbow;
+        // }
 
         if (drivebase.isState(Drivebase.State.BALANCE)) {
             if (drivebase.isAutoLevelDone()) {

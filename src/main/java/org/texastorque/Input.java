@@ -40,8 +40,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
     private final TorqueClick cubeHandoffClick = new TorqueClick();
 
     private final TorqueTraversableSelection<Arm.State> cubeHandoffStates = new TorqueTraversableSelection<Arm.State>(
-        Arm.State.HANDOFF_DOWN, Arm.State.HANDOFF_GRAB
-    );
+            Arm.State.HANDOFF_DOWN, Arm.State.HANDOFF_GRAB);
 
     private final TorqueBoolSupplier isZeroingWheels, alignGridLeft, alignGridCenter, alignGridRight,
             gridOverrideLeft, gridOverrideRight,
@@ -78,7 +77,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         openClaw = new TorqueBoolSupplier(operator::isRightBumperDown);
         gamePieceModeToggle = new TorqueToggleSupplier(() -> operator.isLeftBumperDown() || driver.isYButtonDown());
         wantsOuttake = new TorqueBoolSupplier(() -> operator.isLeftCenterButtonDown() || driver.isLeftTriggerDown());
-        
+
         wantsTipCone = new TorqueBoolSupplier(operator::isLeftStickClickDown);
 
         wantsSlowIntake = new TorqueBoolSupplier(driver::isRightBumperDown);
@@ -143,15 +142,13 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
         armThrow.onTrue(() -> arm.setState(Arm.State.THROW));
 
-
-
         armDoHandoff.onTrue(() -> arm.setState(Arm.State.HANDOFF));
 
         if (cubeHandoffClick.calculate(armDoHandoff.get() && hand.isCubeMode())) {
             arm.setState(Arm.State.HANDOFF_DOWN);
         }
 
-        armLeavingHandoff.onTrue(() -> arm.setState(Arm.State.STOWED));
+        armLeavingHandoff.onTrue(() -> arm.setState(Arm.State.PRIME));
 
         wantsIntake.onTrueOrFalse(() -> {
             intake.setState(Intake.State.INTAKE);
