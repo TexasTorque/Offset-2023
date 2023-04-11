@@ -17,7 +17,6 @@ import org.texastorque.subsystems.Intake;
 import org.texastorque.subsystems.Spindexer;
 import org.texastorque.torquelib.base.TorqueInput;
 import org.texastorque.torquelib.control.TorqueBoolSupplier;
-import org.texastorque.torquelib.control.TorqueClick;
 import org.texastorque.torquelib.control.TorqueClickSupplier;
 import org.texastorque.torquelib.control.TorqueRequestableTimeout;
 import org.texastorque.torquelib.control.TorqueToggleSupplier;
@@ -36,15 +35,13 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         return instance == null ? instance = new Input() : instance;
     }
 
-    private final TorqueClick cubeHandoffClick = new TorqueClick();
-
     private final TorqueBoolSupplier isZeroingWheels, alignGridLeft, alignGridCenter, alignGridRight,
             gridOverrideLeft, gridOverrideRight,
             gridOverrideCenter, resetGyroClick, resetPoseClick, wantsIntake,
             gamePieceModeToggle, openClaw,
             armToShelf, armToMid, armToTop, armDoHandoff, armThrow,
             wantsOuttake, xFactorToggle, autoSpindex, wantsTipCone, slowMode, armLeavingHandoff, wantsSlowIntake,
-            wantsSlowOuttake, armToPrime;
+            wantsSlowOuttake, armToPrime, armLeavingShelf;
 
     private final TorqueRequestableTimeout driverTimeout = new TorqueRequestableTimeout();
 
@@ -81,19 +78,20 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
         armDoHandoff = new TorqueBoolSupplier(operator::isLeftTriggerDown);
         armLeavingHandoff = new TorqueClickSupplier(() -> !armDoHandoff.get());
-        armToShelf = new TorqueClickSupplier(operator::isXButtonDown);
+        armToShelf = new TorqueBoolSupplier(operator::isXButtonDown);
+        armLeavingShelf = new TorqueClickSupplier(() -> !armToShelf.get());
 
         armToMid = new TorqueClickSupplier(operator::isBButtonDown);
         armToTop = new TorqueClickSupplier(operator::isYButtonDown);
 
         armThrow = new TorqueClickSupplier(operator::isRightCenterButtonDown);
-        // armToBottom = new TorqueClickSupplier(operator::isXButtonDown);
 
         autoSpindex = new TorqueBoolSupplier(operator::isDPADUpDown);
 
         slowMode = new TorqueToggleSupplier(driver::isAButtonDown);
 
         armToPrime = new TorqueClickSupplier(operator::isAButtonDown);
+
     }
 
     public void setDriverRumbleFor(final double duration) {
@@ -140,12 +138,10 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         armThrow.onTrue(() -> arm.setState(Arm.State.THROW));
 
         armDoHandoff.onTrue(() -> arm.setState(Arm.State.HANDOFF));
-
-        if (cubeHandoffClick.calculate(armDoHandoff.get() && hand.isCubeMode())) {
-            arm.setState(Arm.State.HANDOFF_DOWN);
-        }
-
         armLeavingHandoff.onTrue(() -> arm.setState(Arm.State.PRIME));
+
+        armToShelf.onTrue(() -> arm.setState(Arm.State.SHELF));
+        armLeavingShelf.onTrue(() -> arm.setState(Arm.State.PRIME));
 
         wantsIntake.onTrueOrFalse(() -> {
             intake.setState(Intake.State.INTAKE);

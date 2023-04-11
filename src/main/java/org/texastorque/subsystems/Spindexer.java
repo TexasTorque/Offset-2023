@@ -11,7 +11,6 @@ import org.texastorque.Ports;
 import org.texastorque.Subsystems;
 import org.texastorque.torquelib.auto.TorqueCommand;
 import org.texastorque.torquelib.auto.TorqueSequence;
-import org.texastorque.torquelib.auto.commands.TorqueContinuous;
 import org.texastorque.torquelib.auto.commands.TorqueExecute;
 import org.texastorque.torquelib.auto.commands.TorqueWaitUntil;
 import org.texastorque.torquelib.base.TorqueMode;
@@ -47,33 +46,47 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
 
             addBlock(new TorqueExecute(() -> spindexer.activeState = State.ALIGN));
 
+            addBlock(new TorqueExecute(() -> spindexer.setAlignGoal(FIRST_OFFSET)));
+
+            addBlock(new TorqueWaitUntil(() -> spindexer.isEncoderAligned()));
+
+            addBlock(new TorqueExecute(() -> spindexer.activeState = State.FAST_CCW));
+
+            addBlock(new TorqueWaitUntil(() -> spindexer.limitSwitch.get()));
+
+            addBlock(new TorqueExecute(() -> spindexer.activeState = State.ALIGN));
+
+            addBlock(new TorqueExecute(() -> spindexer.setAlignGoal(SECOND_OFFSET)));
+
             addBlock(new TorqueWaitUntil(() -> spindexer.isEncoderAligned()));
 
             addBlock(new TorqueExecute(() -> spindexer.activeState = State.OFF));
 
-            addBlock(new TorqueContinuous(() -> arm.setState(Arm.State.HANDOFF)));
+            // addBlock(new TorqueContinuous(() -> arm.setState(Arm.State.HANDOFF)));
         }
 
     }
 
     private static volatile Spindexer instance;
 
-    private final static double TICKS_TO_ALIGN = 13;
+    private static double SECOND_OFFSET = 13, TOLERANCE = .5, FIRST_OFFSET = 30;
 
-    private static final double TOLERANCE = .5;
+    private double TICKS_TO_ALIGN; 
 
     public static final synchronized Spindexer getInstance() {
         return instance == null ? instance = new Spindexer() : instance;
     }
 
+    private double volts;
+
     private double pidGoal = -1;
 
     @Log.ToString
-    private State desiredState = State.OFF;;
+    private State desiredState = State.OFF;
+
     private State activeState = State.OFF;
 
-    private final TorqueNEO turntable = new TorqueNEO(Ports.SPINDEXER_MOTOR);
-
+    private final TorqueNEO turntable = new TorqueNEO(Ports.SPINDEXER_MOTOR);;
     private final DigitalInput limitSwitch;
 
     private AutoSpindex autoSpindex;
@@ -87,6 +100,10 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
         turntable.burnFlash();
 
         limitSwitch = new DigitalInput(4);
+    }
+
+    public void setAlignGoal(final double goal) {
+        TICKS_TO_ALIGN = goal;
     }
 
     public final double getEncoderPosition() {
@@ -126,7 +143,7 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
 
         SmartDashboard.putString("spindexer::activeState", activeState.toString());
 
-        double volts = 0;
+        volts = 0;
 
         if (activeState == State.ALIGN) {
             if (pidGoal == -1) {
@@ -142,7 +159,6 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
             volts = activeState.volts;
         }
 
-        // if (mode.isTeleop())
         desiredState = State.OFF;
         turntable.setVolts(volts);
 

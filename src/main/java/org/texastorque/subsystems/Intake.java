@@ -40,7 +40,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
     public static enum State {
         INTAKE(new IndexerPose(3, 3, ROT_INTAKE), new IndexerPose(4.5, 12, ROT_INTAKE)),
         AUTOINTAKE(new IndexerPose(2, 2, ROT_INTAKE), new IndexerPose(3, 3, ROT_INTAKE)),
-        OUTAKE(new IndexerPose(-5, -5, ROT_INTAKE), new IndexerPose(-8, -9, ROT_INTAKE)),
+        OUTAKE(new IndexerPose(-12, -12, ROT_INTAKE), new IndexerPose(-8, -9, ROT_INTAKE)),
         POOP(new IndexerPose(-12, -12, -9), new IndexerPose(-8, -9, ROT_UP)),
         PRIME(new IndexerPose(0, 0, ROT_PRIME)),
         DOWN_OFF(new IndexerPose(0, 0, ROT_INTAKE)),
@@ -50,7 +50,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
         UP_ROLL(new IndexerPose(-9, 0, ROT_UP)),
         SLOW_INTAKE(new IndexerPose(1.5, 1.5, ROT_INTAKE)),
         SLOW_OUTAKE(new IndexerPose(-2, -2, ROT_INTAKE)),
-        OUT(new IndexerPose(0, 0, ROT_INTAKE));
+        OUT(new IndexerPose(0, 0, ROT_ALMOST_DOWN));
 
         public final IndexerPose cubePose;
         public final IndexerPose conePose;
@@ -70,7 +70,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
     }
 
     private static final double ROT_INTAKE = -13.06;
-    private static final double ROT_PRIME = -7;
+    private static final double ROT_PRIME = -7, ROT_ALMOST_DOWN = -10;
     private static final double ROT_UP = 0;
 
     private static volatile Intake instance;

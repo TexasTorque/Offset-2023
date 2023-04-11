@@ -38,7 +38,7 @@ public final class EventMap implements Subsystems {
         }));
 
         // map.put("handoff", new TorqueSequenceRunner(new CubeHandoff()));
-        map.put("handoff", new TorqueContinuous(() -> arm.setStateCommand(Arm.State.HANDOFF)));
+        map.put("handoff", new TorqueContinuous(() -> arm.setState(Arm.State.HANDOFF)));
         // map.put("pickup", new TorqueSequenceRunner(new Handoff()));
         // map.put("handoff", new TorqueSequenceRunner(new Handoff()));
 
