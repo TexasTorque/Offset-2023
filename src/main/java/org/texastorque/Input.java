@@ -21,7 +21,6 @@ import org.texastorque.torquelib.control.TorqueClick;
 import org.texastorque.torquelib.control.TorqueClickSupplier;
 import org.texastorque.torquelib.control.TorqueRequestableTimeout;
 import org.texastorque.torquelib.control.TorqueToggleSupplier;
-import org.texastorque.torquelib.control.TorqueTraversableSelection;
 import org.texastorque.torquelib.sensors.TorqueController;
 import org.texastorque.torquelib.swerve.TorqueSwerveSpeeds;
 import org.texastorque.torquelib.util.TorqueMath;
@@ -38,9 +37,6 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
     }
 
     private final TorqueClick cubeHandoffClick = new TorqueClick();
-
-    private final TorqueTraversableSelection<Arm.State> cubeHandoffStates = new TorqueTraversableSelection<Arm.State>(
-            Arm.State.HANDOFF_DOWN, Arm.State.HANDOFF_GRAB);
 
     private final TorqueBoolSupplier isZeroingWheels, alignGridLeft, alignGridCenter, alignGridRight,
             gridOverrideLeft, gridOverrideRight,
@@ -86,6 +82,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         armDoHandoff = new TorqueBoolSupplier(operator::isLeftTriggerDown);
         armLeavingHandoff = new TorqueClickSupplier(() -> !armDoHandoff.get());
         armToShelf = new TorqueClickSupplier(operator::isXButtonDown);
+
         armToMid = new TorqueClickSupplier(operator::isBButtonDown);
         armToTop = new TorqueClickSupplier(operator::isYButtonDown);
 

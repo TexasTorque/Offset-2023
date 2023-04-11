@@ -58,8 +58,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
         // Normal states
         SCORING_HALF_WAY_POINT(new ArmPose(0.45, Rotation2d.fromDegrees(90))),
-        SHELF(new ArmPose(3, Rotation2d.fromDegrees(220)),
-                new ArmPose(0, Rotation2d.fromDegrees(215))),
+        SHELF(new ArmPose(2.5, Rotation2d.fromDegrees(205)),
+                new ArmPose(0, Rotation2d.fromDegrees(225))),
         STOWED(SHELF),
         MID(
                 new ArmPose(0, Rotation2d.fromDegrees(0)),
@@ -368,7 +368,6 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
             calculateElevator(activeState);
             calculateRotary(State.SCORING_HALF_WAY_POINT);
         } else if (isGoingUp() && !isArmOutEnough()) {
-            System.out.println("stowing");
             calculateElevator(State.STOWED);
             calculateRotary(activeState);
         } else {
