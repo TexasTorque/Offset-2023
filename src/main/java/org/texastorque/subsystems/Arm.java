@@ -73,7 +73,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         THROW(new ArmPose(50, Rotation2d.fromDegrees(0))),
 
         PRIME(new ArmPose(0, Rotation2d.fromDegrees(120))),
-        PRIME_UP(new ArmPose(12, Rotation2d.fromDegrees(120))),
+        PRIME_UP(new ArmPose(25, Rotation2d.fromDegrees(180))),
 
         // Handoff related states
         HANDOFF(new ArmPose(12, Rotation2d.fromDegrees(120))),
@@ -118,11 +118,11 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     public static class ConeHandoff extends TorqueSequence implements Subsystems {
         public ConeHandoff() {
-            goTo(State.HANDOFF_ABOVE, .3);
-            goTo(State.HANDOFF_FORWARD, .3);
-            goTo(State.HANDOFF_DOWN, .3);
-            goTo(State.HANDOFF_GRAB, .3);
-            goTo(State.PRIME_UP, .3);
+            goTo(State.HANDOFF_ABOVE, .1);
+            goTo(State.HANDOFF_FORWARD, .1);
+            goTo(State.HANDOFF_DOWN, .1);
+            goTo(State.HANDOFF_GRAB, .1);
+            goTo(State.PRIME_UP, .1);
         }
 
         private final void goTo(final State state, final double seconds) {
@@ -142,10 +142,11 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     public static class CubeHandoff extends TorqueSequence implements Subsystems {
         public CubeHandoff() {
-            goTo(State.STOWED, .2);
-            goTo(State.HANDOFF_DOWN, .25);
-            goTo(State.HANDOFF_GRAB, .35);
-            goTo(State.HANDOFF_GRAB_BACK, .25);
+            goTo(State.STOWED, .1);
+            goTo(State.HANDOFF_DOWN, .1);
+            goTo(State.HANDOFF_GRAB, .1);
+            goTo(State.HANDOFF_GRAB_BACK, .1);
+            goTo(State.PRIME_UP, .1);
         }
 
         private final void goTo(final State state, final double seconds) {
@@ -316,11 +317,11 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     public boolean isWantingQuarterOpen() {
-        return activeState == State.HANDOFF_DOWN || activeState == State.HANDOFF_FORWARD;
+        return activeState == State.HANDOFF_DOWN && hand.isConeMode() || activeState == State.HANDOFF_FORWARD;
     }
 
     public boolean isWantingFullOpen() {
-        return false;
+        return activeState == State.HANDOFF_DOWN && hand.isCubeMode();
     }
 
     public void setSetpointAdjustment(final double setpointAdjustment) {

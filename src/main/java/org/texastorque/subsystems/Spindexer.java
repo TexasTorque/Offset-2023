@@ -40,7 +40,6 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
     public static final class AutoSpindex extends TorqueSequence implements Subsystems {
 
         public AutoSpindex() {
-            addBlock(new TorqueWaitUntil(() -> spindexer.limitSwitch.get()));
 
             addBlock(new TorqueExecute(() -> spindexer.activeState = State.FAST_CCW));
 
