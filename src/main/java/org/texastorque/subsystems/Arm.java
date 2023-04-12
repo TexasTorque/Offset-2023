@@ -54,9 +54,6 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     public static enum State {
-        // The order is cube, cone
-
-        // Normal states
         SCORING_HALF_WAY_POINT(new ArmPose(0.45, Rotation2d.fromDegrees(90))),
         SHELF(new ArmPose(2.5, Rotation2d.fromDegrees(205)),
                 new ArmPose(0, Rotation2d.fromDegrees(225))),
@@ -139,10 +136,17 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         }
     }
 
-    public static class Shelf extends ArmSequence {
-        public Shelf() {
+    public static class GoToShelf extends ArmSequence {
+        public GoToShelf() {
             goTo(State.SHELF, -1);
             goTo(State.SHELF_OPEN, ArmSequence.NEVER_END);
+        }
+    }
+
+    public static class LeaveShelf extends ArmSequence {
+        public LeaveShelf() {
+            goTo(State.SHELF, .1);
+            goTo(State.PRIME, .1);
         }
     }
 
@@ -214,7 +218,10 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     private CubeHandoff autoCubeHandoff = new CubeHandoff();
 
-    private Shelf shelfSeq = new Shelf();
+    private GoToShelf goToShelfSeq = new GoToShelf();
+
+    private LeaveShelf leaveShelfSeq = new LeaveShelf();
+
 
     private Arm() {
         elevator.setCurrentLimit(30);
@@ -362,9 +369,15 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         }
 
         if (activeState == State.SHELF) {
-            shelfSeq.run();
+            goToShelfSeq.run();
         } else {
-            shelfSeq = new Shelf();
+            goToShelfSeq = new GoToShelf();
+        }
+
+        if (activeState == State.LEAVING_SHELF) {
+            leaveShelfSeq.run();
+        } else {
+            leaveShelfSeq = new LeaveShelf();
         }
 
         if (desiredState == State.THROW) {

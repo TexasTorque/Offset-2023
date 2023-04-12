@@ -140,8 +140,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         armDoHandoff.onTrue(() -> arm.setState(Arm.State.HANDOFF));
         armLeavingHandoff.onTrue(() -> arm.setState(Arm.State.PRIME));
 
-        armToShelf.onTrue(() -> arm.setState(Arm.State.SHELF));
-        armLeavingShelf.onTrue(() -> arm.setState(Arm.State.PRIME));
+        armLeavingShelf.onTrue(() -> arm.setState(Arm.State.LEAVING_SHELF));
 
         wantsIntake.onTrueOrFalse(() -> {
             intake.setState(Intake.State.INTAKE);

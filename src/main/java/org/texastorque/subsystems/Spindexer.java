@@ -11,13 +11,13 @@ import org.texastorque.Ports;
 import org.texastorque.Subsystems;
 import org.texastorque.torquelib.auto.TorqueCommand;
 import org.texastorque.torquelib.auto.TorqueSequence;
+import org.texastorque.torquelib.auto.commands.TorqueContinuous;
 import org.texastorque.torquelib.auto.commands.TorqueExecute;
 import org.texastorque.torquelib.auto.commands.TorqueWaitUntil;
 import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.motors.TorqueNEO;
 import org.texastorque.torquelib.util.TorqueMath;
-
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -26,7 +26,7 @@ import io.github.oblarg.oblog.annotations.Log;
 public final class Spindexer extends TorqueSubsystem implements Subsystems {
 
     public static enum State {
-        AUTO_SPINDEX(0), ALIGN(0), SLOW_CW(-4), FAST_CW(-4), SLOW_CCW(4), FAST_CCW(4), OFF(0);
+        AUTO_SPINDEX(0), ALIGN(0), SLOW_CW(-4), FAST_CW(-6), SLOW_CCW(4), FAST_CCW(6), OFF(0);
 
         public final double volts;
 
@@ -44,9 +44,9 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
 
             addBlock(new TorqueWaitUntil(() -> spindexer.limitSwitch.get()));
 
-            addBlock(new TorqueExecute(() -> spindexer.activeState = State.ALIGN));
-
             addBlock(new TorqueExecute(() -> spindexer.setAlignGoal(FIRST_OFFSET)));
+
+            addBlock(new TorqueExecute(() -> spindexer.activeState = State.ALIGN));
 
             addBlock(new TorqueWaitUntil(() -> spindexer.isEncoderAligned()));
 
@@ -54,28 +54,28 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
 
             addBlock(new TorqueWaitUntil(() -> spindexer.limitSwitch.get()));
 
-            addBlock(new TorqueExecute(() -> spindexer.activeState = State.ALIGN));
-
             addBlock(new TorqueExecute(() -> spindexer.setAlignGoal(SECOND_OFFSET)));
+
+            addBlock(new TorqueExecute(() -> spindexer.activeState = State.ALIGN));
 
             addBlock(new TorqueWaitUntil(() -> spindexer.isEncoderAligned()));
 
             addBlock(new TorqueExecute(() -> spindexer.activeState = State.OFF));
 
-            // addBlock(new TorqueContinuous(() -> arm.setState(Arm.State.HANDOFF)));
+            addBlock(new TorqueContinuous(() -> arm.setState(Arm.State.HANDOFF)));
         }
 
     }
 
     private static volatile Spindexer instance;
 
-    private static double SECOND_OFFSET = 13, TOLERANCE = .5, FIRST_OFFSET = 30;
-
-    private double TICKS_TO_ALIGN; 
+    private static double SECOND_OFFSET = 17, TOLERANCE = .5, FIRST_OFFSET = 30;
 
     public static final synchronized Spindexer getInstance() {
         return instance == null ? instance = new Spindexer() : instance;
     }
+
+    private double TICKS_TO_ALIGN;
 
     private double volts;
 
@@ -150,7 +150,7 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
                 pidGoal = turntable.getPosition() - TICKS_TO_ALIGN;
             }
 
-            volts = TorqueMath.constrain(pidController.calculate(turntable.getPosition(), pidGoal), 4);
+            volts = TorqueMath.constrain(pidController.calculate(turntable.getPosition(), pidGoal), 6);
 
             if (isEncoderAligned())
                 volts = 0;

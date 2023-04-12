@@ -70,7 +70,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
     }
 
     private static final double ROT_INTAKE = -13.06;
-    private static final double ROT_PRIME = -7, ROT_ALMOST_DOWN = -10;
+    private static final double ROT_PRIME = -7, ROT_ALMOST_DOWN = -8;
     private static final double ROT_UP = 0;
 
     private static volatile Intake instance;
