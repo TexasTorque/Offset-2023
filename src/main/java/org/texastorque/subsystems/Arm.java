@@ -59,8 +59,6 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
                 new ArmPose(0, Rotation2d.fromDegrees(225))),
         SHELF_OPEN(SHELF),
         STOWED(SHELF),
-        LEAVING_SHELF(
-                new ArmPose(10, Rotation2d.fromDegrees(225))),
         MID(
                 new ArmPose(0, Rotation2d.fromDegrees(0)),
                 new ArmPose(5, Rotation2d.fromDegrees(20))),
@@ -68,14 +66,9 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
                 new ArmPose(30, Rotation2d.fromDegrees(0)),
                 new ArmPose(43, Rotation2d.fromDegrees(10))),
 
-        // Not really used states
-        LOW(new ArmPose(.6, Rotation2d.fromDegrees(0))),
         THROW(new ArmPose(50, Rotation2d.fromDegrees(0))),
 
         PRIME(new ArmPose(15, Rotation2d.fromDegrees(220))),
-        PRIME_UP(new ArmPose(25, Rotation2d.fromDegrees(180))),
-
-        // Handoff related states
         HANDOFF(PRIME),
 
         HANDOFF_ABOVE(
@@ -94,7 +87,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
                 new ArmPose(20, Rotation2d.fromDegrees(232))),
         HANDOFF_BACK(
                 new ArmPose(6, Rotation2d.fromDegrees(230)),
-                new ArmPose(16, Rotation2d.fromDegrees(230)));
+                new ArmPose(16, Rotation2d.fromDegrees(230))),
+        LEAVING_SHELF(PRIME);
 
         public final ArmPose cubePose;
         public final ArmPose conePose;
@@ -221,7 +215,6 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     private GoToShelf goToShelfSeq = new GoToShelf();
 
     private LeaveShelf leaveShelfSeq = new LeaveShelf();
-
 
     private Arm() {
         elevator.setCurrentLimit(30);
