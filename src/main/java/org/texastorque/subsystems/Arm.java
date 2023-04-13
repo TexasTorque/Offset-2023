@@ -336,6 +336,10 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         return activeState == State.HANDOFF;
     }
 
+    public void resetHandoffSequence() {
+        coneHandoff = new ConeHandoff();
+    }
+
     @Override
     public final void update(final TorqueMode mode) {
 

@@ -62,6 +62,8 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
 
             addBlock(new TorqueExecute(() -> spindexer.activeState = State.OFF));
 
+            addBlock(new TorqueExecute(() -> arm.resetHandoffSequence()));
+
             addBlock(new TorqueContinuous(() -> arm.setState(Arm.State.HANDOFF)));
         }
 
