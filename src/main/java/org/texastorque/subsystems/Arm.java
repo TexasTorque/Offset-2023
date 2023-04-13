@@ -73,15 +73,15 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
         HANDOFF_ABOVE(
                 new ArmPose(15, Rotation2d.fromDegrees(215)),
-                new ArmPose(15, Rotation2d.fromDegrees(245))),
+                new ArmPose(15, Rotation2d.fromDegrees(250))),
         HANDOFF_FORWARD(
-                new ArmPose(2, Rotation2d.fromDegrees(247))),
+                new ArmPose(4, Rotation2d.fromDegrees(255))),
         HANDOFF_DOWN(
                 new ArmPose(8, Rotation2d.fromDegrees(260)),
                 new ArmPose(2, Rotation2d.fromDegrees(232))),
         HANDOFF_GRAB(
                 new ArmPose(9, Rotation2d.fromDegrees(260)),
-                new ArmPose(2, Rotation2d.fromDegrees(228))),
+                new ArmPose(2, Rotation2d.fromDegrees(223))),
         HANDOFF_GRAB_BACK(
                 new ArmPose(20, Rotation2d.fromDegrees(232)),
                 new ArmPose(20, Rotation2d.fromDegrees(232))),
@@ -113,10 +113,11 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     public static class ConeHandoff extends ArmSequence {
         public ConeHandoff() {
-            goTo(State.HANDOFF_ABOVE, .1);
-            goTo(State.HANDOFF_FORWARD, .1);
-            goTo(State.HANDOFF_DOWN, .1);
-            goTo(State.HANDOFF_GRAB, .1);
+            goTo(State.HANDOFF_ABOVE, .15);
+            goTo(State.HANDOFF_FORWARD, .2);
+            goTo(State.HANDOFF_DOWN, .2);
+            goTo(State.HANDOFF_GRAB, .15);
+            goTo(State.PRIME, -1);
 
         }
     }
@@ -340,6 +341,10 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         coneHandoff = new ConeHandoff();
     }
 
+    public boolean scoring() {
+        return desiredState == State.MID || desiredState == State.TOP;
+    }
+
     @Override
     public final void update(final TorqueMode mode) {
 
@@ -377,10 +382,9 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
             leaveShelfSeq = new LeaveShelf();
         }
 
-        if (desiredState == State.THROW) {
-            calculateElevator(State.THROW);
-            calculateRotary(State.THROW);
-            lastState = State.TOP;
+        if (scoring() && realRotaryPose.getDegrees() > 180) {
+            calculateElevator(State.PRIME);
+            calculateRotary(activeState);
         } else if (isComingDown() && !isElevatorDownEnough()) {
             calculateElevator(activeState);
             calculateRotary(State.SCORING_HALF_WAY_POINT);
