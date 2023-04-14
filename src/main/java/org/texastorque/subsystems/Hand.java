@@ -79,7 +79,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
 
     private final TorqueRequestableTimeout retractArmTimeout = new TorqueRequestableTimeout();
 
-    public boolean systemsCheck = false;
+    public boolean systemsCheck = false, autoScoring;
 
     private Hand() {
         claw.setCurrentLimit(7);
@@ -150,30 +150,30 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
         activeState = desiredState;
         updateFeedback();
 
-        if (mode.isTeleop() || systemsCheck) {
-            if (arm.isReadyToThrow()) {
-                activeState = State.OPEN;
-            }
-            if (arm.isWantingHalfOpen()) {
-                activeState = State.HALF;
-            }
-
-            if (arm.isWantingQuarterOpen()) {
-                activeState = State.SHELF;
-            }
-            if (arm.isWantingFullOpen()) {
-                activeState = State.OPEN;
-
-                if (isCubeMode())
-                    activeState = State.CHUNGUS;
-            }
-
-            if ((arm.isState(Arm.State.SHELF) || arm.isState(Arm.State.STOWED)) && activeState == State.OPEN
-                    && isConeMode()) {
-                activeState = State.SHELF;
-            }
-
+        // if (mode.isTeleop() || systemsCheck || autoScoring) {
+        if (arm.isReadyToThrow()) {
+            activeState = State.OPEN;
         }
+        if (arm.isWantingHalfOpen()) {
+            activeState = State.HALF;
+        }
+
+        if (arm.isWantingQuarterOpen()) {
+            activeState = State.SHELF;
+        }
+        if (arm.isWantingFullOpen()) {
+            activeState = State.OPEN;
+
+            if (isCubeMode())
+                activeState = State.CHUNGUS;
+        }
+
+        if ((arm.isState(Arm.State.SHELF) || arm.isState(Arm.State.STOWED)) && activeState == State.OPEN
+                && isConeMode()) {
+            activeState = State.SHELF;
+        }
+
+        // }
 
         double clawVolts = clawPoseController.calculate(realClawPose, activeState.clawSetpoint);
         Debug.log("requestedVolts", clawVolts);
@@ -193,7 +193,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
         if (drivebase.isPathAlignDone() && activeState == State.CLOSE)
             Input.getInstance().setOperatorRumbleFor(0.5);
 
-        if (mode.isTeleop())
+        if (mode.isTeleop() || !autoScoring)
             desiredState = State.CLOSE;
     }
 

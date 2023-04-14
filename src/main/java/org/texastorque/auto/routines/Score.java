@@ -10,18 +10,18 @@ import org.texastorque.Subsystems;
 import org.texastorque.subsystems.Arm;
 import org.texastorque.subsystems.Hand;
 import org.texastorque.torquelib.auto.TorqueSequence;
+import org.texastorque.torquelib.auto.commands.TorqueExecute;
 import org.texastorque.torquelib.auto.commands.TorqueWaitForSeconds;
 import org.texastorque.torquelib.auto.commands.TorqueWaitUntil;
 
 public final class Score extends TorqueSequence implements Subsystems {
     public Score(final Arm.State armState) {
         addBlock(hand.setStateCommand(Hand.State.CLOSE));
- 
         addBlock(arm.setStateCommand(armState));
         addBlock(new TorqueWaitUntil(() -> arm.isAtState(armState)));
-     
         addBlock(hand.setStateCommand(Hand.State.OPEN));
         addBlock(new TorqueWaitForSeconds(.4));
+        addBlock(new TorqueExecute(() -> hand.autoScoring = false));
         addBlock(arm.setStateCommand(Arm.State.STOWED), hand.setStateCommand(Hand.State.CLOSE));
 
     }
