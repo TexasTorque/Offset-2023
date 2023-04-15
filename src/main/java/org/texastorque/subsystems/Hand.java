@@ -157,6 +157,10 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
             if (arm.isWantingHalfOpen()) {
                 activeState = State.HALF;
             }
+
+            if (arm.isWantingQuarterOpen()) {
+                activeState = State.SHELF;
+            }
             if (arm.isWantingFullOpen()) {
                 activeState = State.OPEN;
 

@@ -18,7 +18,6 @@ import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.motors.TorqueNEO;
 import org.texastorque.torquelib.util.TorqueMath;
-
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -27,7 +26,7 @@ import io.github.oblarg.oblog.annotations.Log;
 public final class Spindexer extends TorqueSubsystem implements Subsystems {
 
     public static enum State {
-        AUTO_SPINDEX(0), ALIGN(0), SLOW_CW(-4), FAST_CW(-4), SLOW_CCW(4), FAST_CCW(4), OFF(0);
+        AUTO_SPINDEX(0), ALIGN(0), SLOW_CW(-4), FAST_CW(-6), SLOW_CCW(4), FAST_CCW(6), OFF(0);
 
         public final double volts;
 
@@ -45,11 +44,25 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
 
             addBlock(new TorqueWaitUntil(() -> spindexer.limitSwitch.get()));
 
+            addBlock(new TorqueExecute(() -> spindexer.setAlignGoal(FIRST_OFFSET)));
+
+            addBlock(new TorqueExecute(() -> spindexer.activeState = State.ALIGN));
+
+            addBlock(new TorqueWaitUntil(() -> spindexer.isEncoderAligned()));
+
+            addBlock(new TorqueExecute(() -> spindexer.activeState = State.FAST_CCW));
+
+            addBlock(new TorqueWaitUntil(() -> spindexer.limitSwitch.get()));
+
+            addBlock(new TorqueExecute(() -> spindexer.setAlignGoal(SECOND_OFFSET)));
+
             addBlock(new TorqueExecute(() -> spindexer.activeState = State.ALIGN));
 
             addBlock(new TorqueWaitUntil(() -> spindexer.isEncoderAligned()));
 
             addBlock(new TorqueExecute(() -> spindexer.activeState = State.OFF));
+
+            addBlock(new TorqueExecute(() -> arm.resetHandoffSequence()));
 
             addBlock(new TorqueContinuous(() -> arm.setState(Arm.State.HANDOFF)));
         }
@@ -58,22 +71,24 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
 
     private static volatile Spindexer instance;
 
-    private final static double TICKS_TO_ALIGN = 13;
-
-    private static final double TOLERANCE = .5;
+    private static double SECOND_OFFSET = 17, TOLERANCE = .5, FIRST_OFFSET = 30;
 
     public static final synchronized Spindexer getInstance() {
         return instance == null ? instance = new Spindexer() : instance;
     }
 
+    private double TICKS_TO_ALIGN;
+
+    private double volts;
+
     private double pidGoal = -1;
 
     @Log.ToString
-    private State desiredState = State.OFF;;
+    private State desiredState = State.OFF;
+
     private State activeState = State.OFF;
 
-    private final TorqueNEO turntable = new TorqueNEO(Ports.SPINDEXER_MOTOR);
-
+    private final TorqueNEO turntable = new TorqueNEO(Ports.SPINDEXER_MOTOR);;
     private final DigitalInput limitSwitch;
 
     private AutoSpindex autoSpindex;
@@ -87,6 +102,10 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
         turntable.burnFlash();
 
         limitSwitch = new DigitalInput(4);
+    }
+
+    public void setAlignGoal(final double goal) {
+        TICKS_TO_ALIGN = goal;
     }
 
     public final double getEncoderPosition() {
@@ -126,14 +145,14 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
 
         SmartDashboard.putString("spindexer::activeState", activeState.toString());
 
-        double volts = 0;
+        volts = 0;
 
         if (activeState == State.ALIGN) {
             if (pidGoal == -1) {
                 pidGoal = turntable.getPosition() - TICKS_TO_ALIGN;
             }
 
-            volts = TorqueMath.constrain(pidController.calculate(turntable.getPosition(), pidGoal), 4);
+            volts = TorqueMath.constrain(pidController.calculate(turntable.getPosition(), pidGoal), 6);
 
             if (isEncoderAligned())
                 volts = 0;
@@ -142,7 +161,6 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
             volts = activeState.volts;
         }
 
-        // if (mode.isTeleop())
         desiredState = State.OFF;
         turntable.setVolts(volts);
 

@@ -54,12 +54,10 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     public static enum State {
-        // The order is cube, cone
-
-        // Normal states
         SCORING_HALF_WAY_POINT(new ArmPose(0.45, Rotation2d.fromDegrees(90))),
-        SHELF(new ArmPose(3, Rotation2d.fromDegrees(220)),
-                new ArmPose(0, Rotation2d.fromDegrees(220))),
+        SHELF(new ArmPose(2.5, Rotation2d.fromDegrees(205)),
+                new ArmPose(0, Rotation2d.fromDegrees(225))),
+        SHELF_OPEN(SHELF),
         STOWED(SHELF),
         MID(
                 new ArmPose(0, Rotation2d.fromDegrees(0)),
@@ -68,29 +66,29 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
                 new ArmPose(30, Rotation2d.fromDegrees(0)),
                 new ArmPose(43, Rotation2d.fromDegrees(10))),
 
-        // Not really used states
-        LOW(new ArmPose(.6, Rotation2d.fromDegrees(0))),
         THROW(new ArmPose(50, Rotation2d.fromDegrees(0))),
 
-        PRIME(new ArmPose(0, Rotation2d.fromDegrees(120))),
-
-        // Handoff related states
-        HANDOFF(new ArmPose(20, Rotation2d.fromDegrees(220))),
+        PRIME(new ArmPose(15, Rotation2d.fromDegrees(220))),
+        HANDOFF(PRIME),
 
         HANDOFF_ABOVE(
                 new ArmPose(15, Rotation2d.fromDegrees(215)),
-                new ArmPose(16, Rotation2d.fromDegrees(240))),
+                new ArmPose(15, Rotation2d.fromDegrees(250))),
+        HANDOFF_FORWARD(
+                new ArmPose(4, Rotation2d.fromDegrees(255))),
         HANDOFF_DOWN(
                 new ArmPose(8, Rotation2d.fromDegrees(260)),
-                new ArmPose(2, Rotation2d.fromDegrees(242))),
+                new ArmPose(2, Rotation2d.fromDegrees(232))),
         HANDOFF_GRAB(
                 new ArmPose(9, Rotation2d.fromDegrees(260)),
-                new ArmPose(2, Rotation2d.fromDegrees(235))),
+                new ArmPose(2, Rotation2d.fromDegrees(223))),
         HANDOFF_GRAB_BACK(
+                new ArmPose(20, Rotation2d.fromDegrees(232)),
                 new ArmPose(20, Rotation2d.fromDegrees(232))),
         HANDOFF_BACK(
                 new ArmPose(6, Rotation2d.fromDegrees(230)),
-                new ArmPose(16, Rotation2d.fromDegrees(230)));
+                new ArmPose(16, Rotation2d.fromDegrees(230))),
+        LEAVING_SHELF(PRIME);
 
         public final ArmPose cubePose;
         public final ArmPose conePose;
@@ -113,38 +111,44 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         }
     }
 
-    public static class ConeHandoff extends TorqueSequence implements Subsystems {
+    public static class ConeHandoff extends ArmSequence {
         public ConeHandoff() {
-            goTo(State.HANDOFF_ABOVE, .35);
-            goTo(State.HANDOFF_DOWN, .4);
-            goTo(State.HANDOFF_GRAB, .35);
-            // goTo(State.HANDOFF_BACK, .25);
-        }
+            goTo(State.HANDOFF_ABOVE, .15);
+            goTo(State.HANDOFF_FORWARD, .2);
+            goTo(State.HANDOFF_DOWN, .2);
+            goTo(State.HANDOFF_GRAB, .15);
+            goTo(State.PRIME, -1);
 
-        private final void goTo(final State state, final double seconds) {
-            addBlock(new TorqueWaitUntil(() -> {
-                arm.activeState = state;
-                return arm.isAtState(state);
-            }));
-
-            if (seconds == -1)
-                return;
-
-            addBlock(new TorqueWaitForSeconds(seconds, () -> {
-                arm.activeState = state;
-            }));
         }
     }
 
-    public static class CubeHandoff extends TorqueSequence implements Subsystems {
+    public static class CubeHandoff extends ArmSequence {
         public CubeHandoff() {
-            goTo(State.STOWED, .2);
-            goTo(State.HANDOFF_DOWN, .25);
-            goTo(State.HANDOFF_GRAB, .35);
-            goTo(State.HANDOFF_GRAB_BACK, .25);
-         }
+            goTo(State.STOWED, .1);
+            goTo(State.HANDOFF_DOWN, .1);
+            goTo(State.HANDOFF_GRAB, .1);
+            goTo(State.HANDOFF_GRAB_BACK, .1);
+        }
+    }
 
-        private final void goTo(final State state, final double seconds) {
+    public static class GoToShelf extends ArmSequence {
+        public GoToShelf() {
+            goTo(State.SHELF, -1);
+            goTo(State.SHELF_OPEN, ArmSequence.NEVER_END);
+        }
+    }
+
+    public static class LeaveShelf extends ArmSequence {
+        public LeaveShelf() {
+            goTo(State.SHELF, .1);
+            goTo(State.PRIME, .1);
+        }
+    }
+
+    public static class ArmSequence extends TorqueSequence implements Subsystems {
+        public static final double NEVER_END = 1e6;
+
+        protected final void goTo(final State state, final double seconds) {
             addBlock(new TorqueWaitUntil(() -> {
                 arm.activeState = state;
                 return arm.isAtState(state);
@@ -208,6 +212,10 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     private CubeHandoff cubeHandoff = new CubeHandoff();
 
     private CubeHandoff autoCubeHandoff = new CubeHandoff();
+
+    private GoToShelf goToShelfSeq = new GoToShelf();
+
+    private LeaveShelf leaveShelfSeq = new LeaveShelf();
 
     private Arm() {
         elevator.setCurrentLimit(30);
@@ -311,8 +319,12 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     }
 
+    public boolean isWantingQuarterOpen() {
+        return activeState == State.HANDOFF_DOWN && hand.isConeMode() || activeState == State.HANDOFF_FORWARD;
+    }
+
     public boolean isWantingFullOpen() {
-        return activeState == State.HANDOFF_DOWN;
+        return activeState == State.HANDOFF_DOWN && hand.isCubeMode() || activeState == State.SHELF_OPEN;
     }
 
     public void setSetpointAdjustment(final double setpointAdjustment) {
@@ -323,6 +335,14 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     public boolean isDoingHandoff() {
         return activeState == State.HANDOFF;
+    }
+
+    public void resetHandoffSequence() {
+        coneHandoff = new ConeHandoff();
+    }
+
+    public boolean scoring() {
+        return desiredState == State.MID || desiredState == State.TOP;
     }
 
     @Override
@@ -348,15 +368,23 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
             } else {
                 autoCubeHandoff = new CubeHandoff();
             }
-
         }
 
-        // if (forks.isForksRunning()) activeState = State.SHELF; Couldn't 
+        if (activeState == State.SHELF) {
+            goToShelfSeq.run();
+        } else {
+            goToShelfSeq = new GoToShelf();
+        }
 
-        if (desiredState == State.THROW) {
-            calculateElevator(State.THROW);
-            calculateRotary(State.THROW);
-            lastState = State.TOP;
+        if (activeState == State.LEAVING_SHELF) {
+            leaveShelfSeq.run();
+        } else {
+            leaveShelfSeq = new LeaveShelf();
+        }
+
+        if (scoring() && realRotaryPose.getDegrees() > 180) {
+            calculateElevator(State.PRIME);
+            calculateRotary(activeState);
         } else if (isComingDown() && !isElevatorDownEnough()) {
             calculateElevator(activeState);
             calculateRotary(State.SCORING_HALF_WAY_POINT);

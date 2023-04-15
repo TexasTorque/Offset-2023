@@ -100,15 +100,13 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
 
     private final AddressableLEDBuffer buff;
 
-    private LightAction 
-            solidGreen = new Solid(() -> Color.kGreen), solidAlliance = new Solid(() -> getAllianceColor()),
+    private LightAction solidGreen = new Solid(() -> Color.kGreen), solidAlliance = new Solid(() -> getAllianceColor()),
             blinkLightAlliance = new Blink(() -> getAllianceColorLight(), 6),
             blinkGreen = new Blink(() -> Color.kGreen, 6),
             solidPurple = new Solid(() -> Color.kPurple), solidYellow = new Solid(() -> Color.kYellow),
             blinkPurple = new Blink(() -> Color.kPurple, 6), blinkYellow = new Blink(() -> Color.kYellow, 6),
-            solidRed = new Solid(() -> Color.kRed),
-            rainbow = new Rainbow(), blinkRed = new Blink(() -> Color.kRed, 6);
-
+            rainbow = new Rainbow();
+            
     private Lights() {
         superstructureLEDs = new AddressableLED(Ports.LIGHTS_SUPERSTRUCTURE);
         superstructureLEDs.setLength(LENGTH);
@@ -137,10 +135,6 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
             if (drivebase.isPathAlignDone())
                 return blinkGreen;
             return solidGreen;
-        }
-
-        if (forks.isForksRunning()) {
-            return rainbow;
         }
 
         if (drivebase.isState(Drivebase.State.BALANCE)) {
