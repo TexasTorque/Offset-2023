@@ -163,7 +163,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         }
     }
 
-    private static final double ROTARY_ENCODER_OFFSET = Units.degreesToRadians(-100 + 88 + 6),
+    private static final double ROTARY_ENCODER_OFFSET = Units.degreesToRadians(123.84),
             ELEVATOR_MAX_VOLTS_UP = 12,
             ELEVATOR_MAX_VOLTS_HANDOFF = 12,
             ELEVATOR_MAX_VOLTS_DOWN = 6,
@@ -201,9 +201,9 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     private final TorqueNEO rotary = new TorqueNEO(Ports.ARM_ROTARY_MOTOR);
 
     @Config
-    public final PIDController rotaryPoseController = new PIDController(1.89, 0, 0);
+    public final PIDController rotaryPoseController = new PIDController(0.1, 0, 0);
 
-    public final ArmFeedforward rotaryFeedforward = new ArmFeedforward(0.18362, 0.22356, 4, 4.4775);
+    public final ArmFeedforward rotaryFeedforward = new ArmFeedforward(0.38396,0.065509, 0.92645, 0.086198);
 
     private final TorqueCANCoder rotaryEncoder = new TorqueCANCoder(Ports.ARM_ROTARY_ENCODER);
 
@@ -226,7 +226,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
         rotary.setCurrentLimit(60);
         rotary.setVoltageCompensation(12.6);
-        rotary.setBreakMode(true);
+        rotary.setBreakMode(false);
         rotary.burnFlash();
 
         final CANCoderConfiguration cancoderConfig = new CANCoderConfiguration();
@@ -437,7 +437,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         elevatorVolts = TorqueMath.constrain(elevatorVolts,
                 isPerformingHandoff() ? ELEVATOR_MAX_VOLTS_HANDOFF : maxVoltsNormal);
         elevatorVolts = TorqueMath.linearConstraint(elevatorVolts, realElevatorPose, ELEVATOR_MIN, ELEVATOR_MAX);
-        elevator.setVolts(elevatorVolts);
+        // elevator.setVolts(elevatorVolts);
         Debug.log("elevatorCurrent", elevator.getCurrent());
         Debug.log("elevatorRequestedVolts", elevatorVolts);
     }
@@ -461,8 +461,11 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         if (rotaryPos > Math.toRadians(315)) { // wrap around up to prevent overshoot causing a massive spin.
             rotaryPos = rotaryPos - 2 * Math.PI;
         }
-        double rotaryVolts = -rotaryFeedforward.calculate(armSetpoint, calculateRotaryVelocity(armSetpoint, rotaryPos),
-                calculateRotaryAcceleration(armSetpoint, rotaryPos));
+
+        double requestedRotaryVelocity = calculateRotaryVelocity(armSetpoint, rotaryPos);
+        double requestedRotaryAcceleration = 0;
+        double rotaryVolts = -rotaryFeedforward.calculate(armSetpoint, requestedRotaryVelocity,
+                requestedRotaryAcceleration);
         // final boolean stopArm = armSetpoint <= (Math.PI * 0.5) && armSwitch.get();
         rotaryVolts += -rotaryPoseController.calculate(rotaryPos, armSetpoint);
         rotaryVolts = TorqueMath.constrain(rotaryVolts, ROTARY_MAX_VOLTS);
@@ -471,18 +474,17 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         rotary.setVolts(rotaryVolts);
         Debug.log("rotaryVolts", rotaryVolts);
         Debug.log("elevatorCurrent", rotary.getCurrent());
+        Debug.log("rotaryRequested", armSetpoint);
+        Debug.log("reqRotaryVelocity", requestedRotaryVelocity);
+        Debug.log("reqRotaryAccel", requestedRotaryAcceleration);
+
         SmartDashboard.putBoolean("rotaryCANResponsiveness", rotaryEncoder.isCANResponsive());
     }
 
     // omega with respect to delta theta (radians)
     private double calculateRotaryVelocity(final double wanted, final double actual) {
+        Debug.log("rotaryDiff", wanted-actual);
         return Math.signum(wanted - actual)
-                * (15 / (1 + Math.pow(Math.E, -.3 * (Math.abs(wanted - actual) - 12))) - .399);
-    }
-
-    // derivative of calculateRotaryVelocity
-    private double calculateRotaryAcceleration(final double wanted, final double actual) {
-        return Math.signum(wanted - actual) * (12 * Math.pow(Math.E, -1.5 * (Math.abs(wanted - actual - 12)))
-                / Math.pow(Math.pow(Math.E, -1.5 * (wanted - actual - 1.3)) + 1, 2));
+                * (20 / (1 + Math.pow(Math.E, -1 * Math.abs(wanted - actual))) - 10);
     }
 }
