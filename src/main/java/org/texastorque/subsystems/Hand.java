@@ -79,7 +79,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
 
     private final TorqueRequestableTimeout retractArmTimeout = new TorqueRequestableTimeout();
 
-    public boolean systemsCheck = false;
+    public boolean systemsCheck = false, keepOpenInAuto = false;
 
     private Hand() {
         claw.setCurrentLimit(7);
@@ -150,7 +150,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
         activeState = desiredState;
         updateFeedback();
 
-        if (mode.isTeleop() || systemsCheck) {
+        // if (mode.isTeleop() || systemsCheck) {
             if (arm.isReadyToThrow()) {
                 activeState = State.OPEN;
             }
@@ -173,7 +173,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
                 activeState = State.SHELF;
             }
 
-        }
+        // }
 
         double clawVolts = clawPoseController.calculate(realClawPose, activeState.clawSetpoint);
         Debug.log("requestedVolts", clawVolts);
@@ -193,7 +193,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
         if (drivebase.isPathAlignDone() && activeState == State.CLOSE)
             Input.getInstance().setOperatorRumbleFor(0.5);
 
-        if (mode.isTeleop())
+        if (mode.isTeleop() || !keepOpenInAuto)
             desiredState = State.CLOSE;
     }
 

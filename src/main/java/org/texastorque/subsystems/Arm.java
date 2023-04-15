@@ -64,7 +64,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
                 new ArmPose(5, Rotation2d.fromDegrees(20))),
         TOP(
                 new ArmPose(30, Rotation2d.fromDegrees(0)),
-                new ArmPose(43, Rotation2d.fromDegrees(10))),
+                new ArmPose(43, Rotation2d.fromDegrees(12))),
 
         THROW(new ArmPose(50, Rotation2d.fromDegrees(0))),
 
@@ -203,7 +203,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     @Config
     public final PIDController rotaryPoseController = new PIDController(0.08, 0, 0.02);
 
-    public final ArmFeedforward rotaryFeedforward = new ArmFeedforward(0.38396,0.065509, 0.92645, 0.086198);
+    public final ArmFeedforward rotaryFeedforward = new ArmFeedforward(0.38396,0.065509, 0.82645, 0.086198);
 
     private final TorqueCANCoder rotaryEncoder = new TorqueCANCoder(Ports.ARM_ROTARY_ENCODER);
 
@@ -226,7 +226,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
         rotary.setCurrentLimit(60);
         rotary.setVoltageCompensation(12.6);
-        rotary.setBreakMode(false);
+        rotary.setBreakMode(true);
         rotary.burnFlash();
 
         final CANCoderConfiguration cancoderConfig = new CANCoderConfiguration();
@@ -382,20 +382,23 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
             leaveShelfSeq = new LeaveShelf();
         }
 
-        if (scoring() && realRotaryPose.getDegrees() > 180) {
-            calculateElevator(State.PRIME);
-            calculateRotary(activeState);
-        } else if (isComingDown() && !isElevatorDownEnough()) {
-            calculateElevator(activeState);
-            calculateRotary(State.SCORING_HALF_WAY_POINT);
-        } else if (isGoingUp() && !isArmOutEnough()) {
-            calculateElevator(State.STOWED);
-            calculateRotary(activeState);
-        } else {
+        // if (scoring() && realRotaryPose.getDegrees() > 180) {
+        //     calculateElevator(State.PRIME);
+        //     calculateRotary(activeState);
+        // } 
+        //  if (isComingDown() && !isElevatorDownEnough()) {
+        //     calculateElevator(activeState);
+        //     calculateRotary(State.SCORING_HALF_WAY_POINT);
+        // } 
+        // else if (isGoingUp() && !isArmOutEnough()) {
+        //     calculateElevator(State.STOWED);
+        //     calculateRotary(activeState);
+        // }
+        //  else {
             calculateElevator(activeState);
             calculateRotary(activeState);
             lastState = activeState;
-        }
+        // }
 
     }
 

@@ -149,7 +149,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     private final TorqueNavXGyro gyro = TorqueNavXGyro.getInstance();
     private double lastRotationRadians;
 
-    private final PIDController teleopOmegaController = new PIDController(.5 * Math.PI, 0, 0);
+    private final PIDController teleopOmegaController = new PIDController(.25 * Math.PI, 0, 0);
 
     private SwerveModuleState[] swerveStates;
 
@@ -268,9 +268,6 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         } else if (state == State.XF) {
             xFactor();
         } else {
-            if (arm.isWantingHighCOG())
-                speedSetting = SpeedSetting.SLOW;
-
             if (state == State.ALIGN) {
                 final Optional<TorqueSwerveSpeeds> speedsWrapper = alignmentController.calculate();
                 if (speedsWrapper.isPresent())
