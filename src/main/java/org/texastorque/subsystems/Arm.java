@@ -163,7 +163,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         }
     }
 
-    private static final double ROTARY_ENCODER_OFFSET = Units.degreesToRadians(123.84),
+    private static final double ROTARY_ENCODER_OFFSET = Units.degreesToRadians(50),
             ELEVATOR_MAX_VOLTS_UP = 12,
             ELEVATOR_MAX_VOLTS_HANDOFF = 12,
             ELEVATOR_MAX_VOLTS_DOWN = 6,
@@ -201,7 +201,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     private final TorqueNEO rotary = new TorqueNEO(Ports.ARM_ROTARY_MOTOR);
 
     @Config
-    public final PIDController rotaryPoseController = new PIDController(0.1, 0, 0);
+    public final PIDController rotaryPoseController = new PIDController(0.08, 0, 0.02);
 
     public final ArmFeedforward rotaryFeedforward = new ArmFeedforward(0.38396,0.065509, 0.92645, 0.086198);
 
@@ -437,7 +437,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         elevatorVolts = TorqueMath.constrain(elevatorVolts,
                 isPerformingHandoff() ? ELEVATOR_MAX_VOLTS_HANDOFF : maxVoltsNormal);
         elevatorVolts = TorqueMath.linearConstraint(elevatorVolts, realElevatorPose, ELEVATOR_MIN, ELEVATOR_MAX);
-        // elevator.setVolts(elevatorVolts);
+        elevator.setVolts(elevatorVolts);
         Debug.log("elevatorCurrent", elevator.getCurrent());
         Debug.log("elevatorRequestedVolts", elevatorVolts);
     }
@@ -467,7 +467,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         double rotaryVolts = -rotaryFeedforward.calculate(armSetpoint, requestedRotaryVelocity,
                 requestedRotaryAcceleration);
         // final boolean stopArm = armSetpoint <= (Math.PI * 0.5) && armSwitch.get();
-        rotaryVolts += -rotaryPoseController.calculate(rotaryPos, armSetpoint);
+        // rotaryVolts += -rotaryPoseController.calculate(rotaryPos, armSetpoint);
         rotaryVolts = TorqueMath.constrain(rotaryVolts, ROTARY_MAX_VOLTS);
         // rotary.setVolts(rotaryEncoder.isCANResponsive() && !isState(Arm.State.LOW) ?
         // rotaryVolts : 0);
