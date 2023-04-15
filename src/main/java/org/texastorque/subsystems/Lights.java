@@ -78,7 +78,7 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
 
     private static volatile Lights instance;
 
-    private static final int LENGTH = 50;
+    private static final int LENGTH = 100;
 
     public static final Color getAllianceColorLight() {
         return DriverStation.getAlliance() == Alliance.Blue ? Color.kLightBlue : Color.kPink;

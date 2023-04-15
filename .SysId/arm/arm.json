@@ -2,7 +2,7 @@
   "canivore names": [
     "rio"
   ],
-  "counts per rotation": 4096.0,
+  "counts per rotation": 1.0,
   "encoder canivore name": "rio",
   "encoder type": "CANCoder",
   "encoding": false,
