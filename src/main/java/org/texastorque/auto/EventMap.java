@@ -50,6 +50,8 @@ public final class EventMap implements Subsystems {
 
         map.put("dump-low", intake.setStateCommand(Intake.State.OUTAKE));
 
+        map.put("push-cube", new TorqueExecute(() -> arm.setState(Arm.State.PUSH_CUBE)));
+
         return map;
     }
 }

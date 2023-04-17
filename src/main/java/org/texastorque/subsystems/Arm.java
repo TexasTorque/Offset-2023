@@ -19,11 +19,9 @@ import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.motors.TorqueNEO;
 import org.texastorque.torquelib.sensors.TorqueCANCoder;
 import org.texastorque.torquelib.util.TorqueMath;
-
 import com.ctre.phoenix.sensors.CANCoderConfiguration;
 import com.ctre.phoenix.sensors.SensorInitializationStrategy;
 import com.ctre.phoenix.sensors.SensorTimeBase;
-
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
@@ -88,7 +86,10 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         HANDOFF_BACK(
                 new ArmPose(6, Rotation2d.fromDegrees(230)),
                 new ArmPose(16, Rotation2d.fromDegrees(230))),
-        LEAVING_SHELF(PRIME);
+        LEAVING_SHELF(PRIME),
+         PUSH_CUBE(
+        new ArmPose(5, Rotation2d.fromDegrees(260)
+    ));;
 
         public final ArmPose cubePose;
         public final ArmPose conePose;
