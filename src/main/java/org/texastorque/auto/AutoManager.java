@@ -33,7 +33,6 @@ public final class AutoManager extends TorqueAutoManager {
 
     @Override
     public final void init() {
-
         addSequence(new OnePieceMobility());
         addSequence(new OnePieceMobilityEngage());
         addSequence(new TwoPieceMobility());

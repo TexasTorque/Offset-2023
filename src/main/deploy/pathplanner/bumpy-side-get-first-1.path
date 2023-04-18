@@ -2,13 +2,13 @@
   "waypoints": [
     {
       "anchorPoint": {
-        "x": 1.8,
-        "y": 1.05
+        "x": 1.7731691678661134,
+        "y": 0.54
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.3714855829422015,
-        "y": 1.0916798372336776
+        "x": 3.3711526542825867,
+        "y": 0.54
       },
       "holonomicAngle": 180.0,
       "isReversal": false,
@@ -24,18 +24,18 @@
     },
     {
       "anchorPoint": {
-        "x": 7.709919100294691,
-        "y": 0.6861274778184357
+        "x": 5.622758092738408,
+        "y": 0.88
       },
       "prevControl": {
-        "x": 4.012361971139583,
-        "y": 0.40897944214425686
+        "x": 4.9847615610814495,
+        "y": 0.8799999999999999
       },
       "nextControl": {
-        "x": 8.483087793927847,
-        "y": 0.7440798439889522
+        "x": 6.509798062367982,
+        "y": 0.8799999999999999
       },
-      "holonomicAngle": 180.0,
+      "holonomicAngle": -1.0,
       "isReversal": false,
       "velOverride": null,
       "isLocked": false,
@@ -49,18 +49,18 @@
     },
     {
       "anchorPoint": {
-        "x": 7.68936234469138,
-        "y": 2.157650629566284
+        "x": 7.29824261360363,
+        "y": 0.88
       },
       "prevControl": {
-        "x": 7.601146274925907,
-        "y": 1.304895288500047
+        "x": 6.76944658680498,
+        "y": 0.8799999999999999
       },
       "nextControl": {
-        "x": 7.601146274925907,
-        "y": 1.304895288500047
+        "x": 6.76944658680498,
+        "y": 0.8799999999999999
       },
-      "holonomicAngle": 90.0,
+      "holonomicAngle": 0,
       "isReversal": true,
       "velOverride": null,
       "isLocked": false,
@@ -74,62 +74,37 @@
     },
     {
       "anchorPoint": {
-        "x": 5.091199226620992,
-        "y": 0.8690948052366854
+        "x": 4.255923812194847,
+        "y": 0.58
       },
       "prevControl": {
-        "x": 5.594359377021179,
-        "y": 0.8690948052366854
+        "x": 4.878542557375062,
+        "y": 0.5911939553716904
       },
       "nextControl": {
-        "x": 4.588039076220805,
-        "y": 0.8690948052366854
+        "x": 2.7992647447303565,
+        "y": 0.5538109770719382
       },
-      "holonomicAngle": 180.0,
+      "holonomicAngle": -179.0,
       "isReversal": false,
       "velOverride": null,
       "isLocked": false,
-      "isStopPoint": false,
+      "isStopPoint": true,
       "stopEvent": {
         "names": [],
-        "executionBehavior": "parallel",
-        "waitBehavior": "none",
-        "waitTime": 0
+        "executionBehavior": "sequential",
+        "waitBehavior": "before",
+        "waitTime": 1.0
       }
     },
     {
       "anchorPoint": {
-        "x": 3.1859351770839677,
-        "y": 0.8641130388705389
+        "x": 1.9237059203285072,
+        "y": 1.103510939660768
       },
       "prevControl": {
-        "x": 3.6204825797023106,
-        "y": 0.841242122943259
-      },
-      "nextControl": {
-        "x": 2.8700832033988264,
-        "y": 0.8807368269592294
-      },
-      "holonomicAngle": 180.0,
-      "isReversal": false,
-      "velOverride": null,
-      "isLocked": false,
-      "isStopPoint": false,
-      "stopEvent": {
-        "names": [],
-        "executionBehavior": "parallel",
-        "waitBehavior": "none",
-        "waitTime": 0
-      }
-    },
-    {
-      "anchorPoint": {
-        "x": 1.808429430192194,
-        "y": 1.0822950357011814
-      },
-      "prevControl": {
-        "x": 1.7483932758830807,
-        "y": 1.073718442228451
+        "x": 2.550461433797901,
+        "y": 1.0642984651960128
       },
       "nextControl": null,
       "holonomicAngle": 180.0,
@@ -145,8 +120,24 @@
       }
     }
   ],
-  "maxVelocity": 3.5,
-  "maxAcceleration": 3.5,
-  "isReversed": null,
-  "markers": []
+  "markers": [
+    {
+      "position": 0.6986949573863636,
+      "names": [
+        "intake-down"
+      ]
+    },
+    {
+      "position": 2.6,
+      "names": [
+        "handoff"
+      ]
+    },
+    {
+      "position": 2.3,
+      "names": [
+        "intake-up"
+      ]
+    }
+  ]
 }

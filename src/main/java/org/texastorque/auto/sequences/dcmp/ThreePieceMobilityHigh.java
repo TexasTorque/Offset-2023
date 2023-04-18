@@ -26,6 +26,7 @@ public final class ThreePieceMobilityHigh extends TorqueSequence implements Subs
 
         addBlock(hand.setGamePieceModeCommand(GamePiece.CUBE));
 
+
         addBlock(new FollowEventPath("flat-side-get-first-3"));
 
         addBlock(new TorqueSequenceRunner(new Score(Arm.State.TOP)));

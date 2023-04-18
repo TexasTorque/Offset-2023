@@ -10,8 +10,8 @@ import org.texastorque.subsystems.Intake;
 import org.texastorque.torquelib.auto.TorqueSequence;
 import org.texastorque.torquelib.auto.commands.TorqueSequenceRunner;
 
-public class BumpySideThreePieceMobilityHigh extends TorqueSequence implements Subsystems {
-    public BumpySideThreePieceMobilityHigh() {
+public class BumpySideTwoPieceMobilityHigh extends TorqueSequence implements Subsystems {
+    public BumpySideTwoPieceMobilityHigh() {
 
         addBlock(hand.setStateCommand(Hand.State.CLOSE), hand.setGamePieceModeCommand(GamePiece.CONE));
 
@@ -19,15 +19,13 @@ public class BumpySideThreePieceMobilityHigh extends TorqueSequence implements S
 
         addBlock(hand.setGamePieceModeCommand(GamePiece.CUBE));
 
-        addBlock(new FollowEventPath("bumpy-side-get-first-3"));
+        addBlock(new FollowEventPath("bumpy-side-get-first"));
 
         addBlock(new TorqueSequenceRunner(new Score(Arm.State.TOP)));
 
         addBlock(intake.setStateCommand(Intake.State.UP));
 
         addBlock(new FollowEventPath("bumpy-side-get-second"));
-
-
 
         addBlock(intake.setStateCommand(Intake.State.UP));
     }
