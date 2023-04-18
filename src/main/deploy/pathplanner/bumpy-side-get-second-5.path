@@ -2,13 +2,13 @@
   "waypoints": [
     {
       "anchorPoint": {
-        "x": 1.94806086487173,
-        "y": 0.5280963808455394
+        "x": 1.8,
+        "y": 0.54
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.546044351288205,
-        "y": 0.5280963808455394
+        "x": 3.3979834864164733,
+        "y": 0.54
       },
       "holonomicAngle": 180.0,
       "isReversal": false,
@@ -24,18 +24,18 @@
     },
     {
       "anchorPoint": {
-        "x": 5.622758092738408,
-        "y": 0.68
+        "x": 7.417833481500297,
+        "y": 0.5695577745322155
       },
       "prevControl": {
-        "x": 4.9847615610814495,
-        "y": 0.6800000000000002
+        "x": 7.1767444601054935,
+        "y": 0.28393812835516274
       },
       "nextControl": {
-        "x": 6.509798062367982,
-        "y": 0.6800000000000002
+        "x": 8.184492342943019,
+        "y": 1.4778232421048172
       },
-      "holonomicAngle": 1.0,
+      "holonomicAngle": 90.0,
       "isReversal": false,
       "velOverride": null,
       "isLocked": false,
@@ -49,19 +49,19 @@
     },
     {
       "anchorPoint": {
-        "x": 7.29824261360363,
-        "y": 0.62
+        "x": 7.4049601536703085,
+        "y": 1.801512052676883
       },
       "prevControl": {
-        "x": 6.76944658680498,
-        "y": 0.6200000000000001
+        "x": 7.716935395676348,
+        "y": 1.8198942370106954
       },
       "nextControl": {
-        "x": 6.76944658680498,
-        "y": 0.6200000000000001
+        "x": 7.207496877407199,
+        "y": 1.7898771347260647
       },
-      "holonomicAngle": 0,
-      "isReversal": true,
+      "holonomicAngle": 90.0,
+      "isReversal": false,
       "velOverride": null,
       "isLocked": false,
       "isStopPoint": false,
@@ -74,37 +74,37 @@
     },
     {
       "anchorPoint": {
-        "x": 4.255923812194847,
+        "x": 5.4252510900855135,
+        "y": 0.8879696804532491
+      },
+      "prevControl": {
+        "x": 6.047869223218195,
+        "y": 0.8767417340237462
+      },
+      "nextControl": {
+        "x": 3.96859345454802,
+        "y": 0.9142382277820098
+      },
+      "holonomicAngle": 180.0,
+      "isReversal": false,
+      "velOverride": null,
+      "isLocked": false,
+      "isStopPoint": false,
+      "stopEvent": {
+        "names": [],
+        "executionBehavior": "parallel",
+        "waitBehavior": "none",
+        "waitTime": 0
+      }
+    },
+    {
+      "anchorPoint": {
+        "x": 2.2,
         "y": 0.92
       },
       "prevControl": {
-        "x": 4.8785419453275285,
-        "y": 0.9087720535704973
-      },
-      "nextControl": {
-        "x": 2.799266176657353,
-        "y": 0.9462685473287609
-      },
-      "holonomicAngle": 179.0,
-      "isReversal": false,
-      "velOverride": null,
-      "isLocked": false,
-      "isStopPoint": false,
-      "stopEvent": {
-        "names": [],
-        "executionBehavior": "parallel",
-        "waitBehavior": "none",
-        "waitTime": 0
-      }
-    },
-    {
-      "anchorPoint": {
-        "x": 1.9896382344848025,
-        "y": 1.0965523840769897
-      },
-      "prevControl": {
-        "x": 2.616396151371405,
-        "y": 1.1357264244340768
+        "x": 2.8267579168866077,
+        "y": 0.9591740403570865
       },
       "nextControl": null,
       "holonomicAngle": 180.0,
@@ -120,23 +120,38 @@
       }
     }
   ],
+  "maxVelocity": 3.5,
+  "maxAcceleration": 3.5,
+  "isReversed": null,
   "markers": [
     {
-      "position": 0.6986949573863636,
+      "position": 1.0044034090909089,
       "names": [
         "intake-down"
       ]
     },
     {
-      "position": 2.6,
+      "position": 1.7,
       "names": [
-        "handoff"
+        "intake-up"
       ]
     },
     {
-      "position": 2.20553977272727,
+      "position": 3.742897727272726,
       "names": [
-        "intake-up"
+        "eject"
+      ]
+    },
+    {
+      "position": 0.5,
+      "names": [
+        "default"
+      ]
+    },
+    {
+      "position": 0.01,
+      "names": [
+        "eject-2"
       ]
     }
   ]

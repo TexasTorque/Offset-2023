@@ -99,11 +99,11 @@
     },
     {
       "anchorPoint": {
-        "x": 2.3,
+        "x": 2.1,
         "y": 4.49273342470296
       },
       "prevControl": {
-        "x": 2.9267579168866025,
+        "x": 2.726757916886602,
         "y": 4.531907465060047
       },
       "nextControl": null,
@@ -137,18 +137,6 @@
       "position": 2.3,
       "names": [
         "intake-up"
-      ]
-    },
-    {
-      "position": 3.7,
-      "names": [
-        "intake-up"
-      ]
-    },
-    {
-      "position": 3.474289772727274,
-      "names": [
-        "event"
       ]
     }
   ]

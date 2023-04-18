@@ -1,8 +1,8 @@
 /**
  * Copyright 2023 Texas Torque.
  *
- * This file is part of Torque-2023, which is not licensed for distribution.
- * For more details, see ./license.txt or write <jus@justusl.com>.
+ * This file is part of Torque-2023, which is not licensed for distribution. For more details, see
+ * ./license.txt or write <jus@justusl.com>.
  */
 package org.texastorque.subsystems;
 
@@ -29,13 +29,15 @@ import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
 
 public final class Arm extends TorqueSubsystem implements Subsystems {
     public static class ArmPose {
-        private static final double ELEVATOR_TOLERANCE = .4, ROTARY_TOLERANCE = (1. / 12.) * Math.PI;
+        private static final double ELEVATOR_TOLERANCE = .4,
+                ROTARY_TOLERANCE = (1. / 12.) * Math.PI;
 
         public boolean autoReadyToScore = false;
 
@@ -54,16 +56,17 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     public static enum State {
+        // @formatter:off
         SCORING_HALF_WAY_POINT(new ArmPose(0.45, Rotation2d.fromDegrees(90))),
         SHELF(new ArmPose(2.5, Rotation2d.fromDegrees(205)),
                 new ArmPose(0, Rotation2d.fromDegrees(225))),
         SHELF_OPEN(SHELF),
         STOWED(SHELF),
         MID(
-                new ArmPose(0, Rotation2d.fromDegrees(0)),
-                new ArmPose(5, Rotation2d.fromDegrees(20))),
+                new ArmPose(0, Rotation2d.fromDegrees(0 )),
+                new ArmPose(5, Rotation2d.fromDegrees(20 + 10))),
         TOP(
-                new ArmPose(30, Rotation2d.fromDegrees(0)),
+                new ArmPose(30, Rotation2d.fromDegrees(0 )),
                 new ArmPose(43, Rotation2d.fromDegrees(12))),
 
         THROW(new ArmPose(50, Rotation2d.fromDegrees(0))),
@@ -82,6 +85,12 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         HANDOFF_GRAB(
                 new ArmPose(9, Rotation2d.fromDegrees(260)),
                 new ArmPose(2, Rotation2d.fromDegrees(223))),
+        HANDOFF_DOWN_AUTO(
+                new ArmPose(8, Rotation2d.fromDegrees(255)),
+                new ArmPose(2, Rotation2d.fromDegrees(232))),
+        HANDOFF_GRAB_AUTO(
+                new ArmPose(9, Rotation2d.fromDegrees(255)),
+                new ArmPose(2, Rotation2d.fromDegrees(223))),
         HANDOFF_GRAB_BACK(
                 new ArmPose(20, Rotation2d.fromDegrees(232)),
                 new ArmPose(20, Rotation2d.fromDegrees(232))),
@@ -89,7 +98,10 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
                 new ArmPose(6, Rotation2d.fromDegrees(230)),
                 new ArmPose(16, Rotation2d.fromDegrees(230))),
         LEAVING_SHELF(PRIME),
-         PUSH_CUBE(new ArmPose(5, Rotation2d.fromDegrees(260)));
+        PUSH_CUBE(
+                new ArmPose(11, Rotation2d.fromDegrees(260)
+        ));
+        // @formatter:on
 
         public final ArmPose cubePose;
         public final ArmPose conePose;
@@ -126,8 +138,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     public static class CubeHandoff extends ArmSequence {
         public CubeHandoff() {
             goTo(State.STOWED, .1);
-            goTo(State.HANDOFF_DOWN, .1);
-            goTo(State.HANDOFF_GRAB, .1);
+            goTo(State.HANDOFF_DOWN_AUTO, State.HANDOFF_DOWN, .1);
+            goTo(State.HANDOFF_GRAB_AUTO, State.HANDOFF_GRAB, .1);
             goTo(State.HANDOFF_GRAB_BACK, .1);
         }
     }
@@ -149,8 +161,10 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     public static class ArmSequence extends TorqueSequence implements Subsystems {
         public static final double NEVER_END = 1e6;
 
-        protected final void goTo(final State state, final double seconds) {
+        protected final void goTo(final State autoState, final State teleopState,
+                final double seconds) {
             addBlock(new TorqueWaitUntil(() -> {
+                final var state = DriverStation.isAutonomous() ? autoState : teleopState;
                 arm.activeState = state;
                 return arm.isAtState(state);
             }));
@@ -159,8 +173,13 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
                 return;
 
             addBlock(new TorqueWaitForSeconds(seconds, () -> {
+                final var state = DriverStation.isAutonomous() ? autoState : teleopState;
                 arm.activeState = state;
             }));
+        }
+
+        protected final void goTo(final State state, final double seconds) {
+            goTo(state, state, seconds);
         }
     }
 
@@ -171,6 +190,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
             ROTARY_MAX_VOLTS = 8,
             ELEVATOR_MIN = 0,
             ELEVATOR_MAX = 50;
+
 
     private static volatile Arm instance;
 
@@ -196,15 +216,15 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     @Config
     public final PIDController elevatorPoseController = new PIDController(1.13, 0, 0);
 
-    private final ElevatorFeedforward elevatorPoseFeedForward = new ElevatorFeedforward(0.072294, 0.28979, 0.12498,
-            0.0019267);
+    private final ElevatorFeedforward elevatorPoseFeedForward =
+            new ElevatorFeedforward(0.072294, 0.28979, 0.12498, 0.0019267);
 
     private final TorqueNEO rotary = new TorqueNEO(Ports.ARM_ROTARY_MOTOR);
 
     @Config
     public final PIDController rotaryPoseController = new PIDController(.8, 0, 0);
-
     public final ArmFeedforward rotaryFeedforward = new ArmFeedforward(0.33238,0.16593, 0.61369,0.19349);
+
 
     private final TorqueCANCoder rotaryEncoder = new TorqueCANCoder(Ports.ARM_ROTARY_ENCODER);
 
@@ -321,11 +341,13 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     public boolean isWantingQuarterOpen() {
-        return activeState == State.HANDOFF_DOWN && hand.isConeMode() || activeState == State.HANDOFF_FORWARD;
+        return activeState == State.HANDOFF_DOWN && hand.isConeMode()
+                || activeState == State.HANDOFF_FORWARD;
     }
 
     public boolean isWantingFullOpen() {
-        return activeState == State.HANDOFF_DOWN && hand.isCubeMode() || activeState == State.SHELF_OPEN;
+        return activeState == State.HANDOFF_DOWN && hand.isCubeMode()
+                || activeState == State.SHELF_OPEN || activeState == State.HANDOFF_DOWN_AUTO;
     }
 
     public void setSetpointAdjustment(final double setpointAdjustment) {
@@ -384,21 +406,21 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         }
 
         // if (scoring() && realRotaryPose.getDegrees() > 180) {
-        //     calculateElevator(State.PRIME);
-        //     calculateRotary(activeState);
-        // } 
-        //  if (isComingDown() && !isElevatorDownEnough()) {
-        //     calculateElevator(activeState);
-        //     calculateRotary(State.SCORING_HALF_WAY_POINT);
-        // } 
-        // else if (isGoingUp() && !isArmOutEnough()) {
-        //     calculateElevator(State.STOWED);
-        //     calculateRotary(activeState);
+        // calculateElevator(State.PRIME);
+        // calculateRotary(activeState);
         // }
-        //  else {
-            calculateElevator(activeState);
-            calculateRotary(activeState);
-            lastState = activeState;
+        // if (isComingDown() && !isElevatorDownEnough()) {
+        // calculateElevator(activeState);
+        // calculateRotary(State.SCORING_HALF_WAY_POINT);
+        // }
+        // else if (isGoingUp() && !isArmOutEnough()) {
+        // calculateElevator(State.STOWED);
+        // calculateRotary(activeState);
+        // }
+        // else {
+        calculateElevator(activeState);
+        calculateRotary(activeState);
+        lastState = activeState;
         // }
 
     }
@@ -431,6 +453,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         if (rotaryRadians > Math.toRadians(300)) { // wrap around up to prevent overshoot causing a massive spin.
             rotaryRadians = rotaryRadians - 2 * Math.PI;
         }
+
         realRotaryPose = Rotation2d.fromRadians(rotaryRadians);
     }
 
@@ -440,10 +463,12 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         elevatorVolts += elevatorPoseFeedForward.calculate(
                 calculateElevatorVelocity(elevatorSetpoint, realElevatorPose),
                 calculateElevatorAcceleration(elevatorSetpoint, realElevatorPose));
-        final double maxVoltsNormal = elevatorVolts > 0 ? ELEVATOR_MAX_VOLTS_UP : ELEVATOR_MAX_VOLTS_DOWN;
+        final double maxVoltsNormal =
+                elevatorVolts > 0 ? ELEVATOR_MAX_VOLTS_UP : ELEVATOR_MAX_VOLTS_DOWN;
         elevatorVolts = TorqueMath.constrain(elevatorVolts,
                 isPerformingHandoff() ? ELEVATOR_MAX_VOLTS_HANDOFF : maxVoltsNormal);
-        elevatorVolts = TorqueMath.linearConstraint(elevatorVolts, realElevatorPose, ELEVATOR_MIN, ELEVATOR_MAX);
+        elevatorVolts = TorqueMath.linearConstraint(elevatorVolts, realElevatorPose, ELEVATOR_MIN,
+                ELEVATOR_MAX);
         elevator.setVolts(elevatorVolts);
         Debug.log("elevatorCurrent", elevator.getCurrent());
         Debug.log("elevatorRequestedVolts", elevatorVolts);
@@ -452,7 +477,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     // omega with respect to delta x
     private double calculateElevatorVelocity(final double wanted, final double actual) {
         return Math.signum(wanted - actual)
-                * (80. / (1 + Math.pow(Math.E, -.05 * (Math.abs(wanted - actual) - 80. / 2))) - 9.53);
+                * (80. / (1 + Math.pow(Math.E, -.05 * (Math.abs(wanted - actual) - 80. / 2)))
+                        - 9.53);
     }
 
     // derivative of calculateElevatorVelocity
@@ -462,7 +488,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     private void calculateRotary(final State state) {
-        double armSetpoint = state.get().rotaryPose.getRadians() + setpointAdjustment * Units.degreesToRadians(30);
+        double armSetpoint = state.get().rotaryPose.getRadians()
+                + setpointAdjustment * Units.degreesToRadians(30);
 
         double rotaryPos = realRotaryPose.getRadians();
         
@@ -478,6 +505,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
             requestedRotaryVelocity = calculateRotaryVelocity(armSetpoint, rotaryPos);
             rotaryVolts = -rotaryFeedforward.calculate(armSetpoint, requestedRotaryVelocity, 0);
             SmartDashboard.putBoolean("Arm Using PID", false);
+
         }
 
         
@@ -499,5 +527,6 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     if(Math.abs(wanted-actual) > 3) return 7 * Math.signum(wanted - actual); // out of range, return max
       return Math.signum(wanted - actual)
                 * (7 / (1 + Math.pow(( (Math.abs(wanted-actual) + 2.6) / (2*Math.PI)  ) / (1 - ((Math.abs(wanted-actual) + 2.6) / (2* Math.PI))), -4.3)));
+
     }
 }
