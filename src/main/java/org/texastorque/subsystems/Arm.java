@@ -19,11 +19,9 @@ import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.motors.TorqueNEO;
 import org.texastorque.torquelib.sensors.TorqueCANCoder;
 import org.texastorque.torquelib.util.TorqueMath;
-
 import com.ctre.phoenix.sensors.CANCoderConfiguration;
 import com.ctre.phoenix.sensors.SensorInitializationStrategy;
 import com.ctre.phoenix.sensors.SensorTimeBase;
-
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
@@ -164,7 +162,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         protected final void goTo(final State autoState, final State teleopState,
                 final double seconds) {
             addBlock(new TorqueWaitUntil(() -> {
-                final var state = DriverStation.isAutonomous() ? autoState : teleopState;
+                final State state = DriverStation.isAutonomous() ? autoState : teleopState;
                 arm.activeState = state;
                 return arm.isAtState(state);
             }));
@@ -173,7 +171,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
                 return;
 
             addBlock(new TorqueWaitForSeconds(seconds, () -> {
-                final var state = DriverStation.isAutonomous() ? autoState : teleopState;
+                final State state = DriverStation.isAutonomous() ? autoState : teleopState;
                 arm.activeState = state;
             }));
         }
@@ -184,12 +182,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     private static final double ROTARY_ENCODER_OFFSET = Units.degreesToRadians(50),
-            ELEVATOR_MAX_VOLTS_UP = 12,
-            ELEVATOR_MAX_VOLTS_HANDOFF = 12,
-            ELEVATOR_MAX_VOLTS_DOWN = 6,
-            ROTARY_MAX_VOLTS = 8,
-            ELEVATOR_MIN = 0,
-            ELEVATOR_MAX = 50;
+            ELEVATOR_MAX_VOLTS_UP = 12, ELEVATOR_MAX_VOLTS_HANDOFF = 12,
+            ELEVATOR_MAX_VOLTS_DOWN = 6, ROTARY_MAX_VOLTS = 8, ELEVATOR_MIN = 0, ELEVATOR_MAX = 50;
 
 
     private static volatile Arm instance;
@@ -223,7 +217,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     @Config
     public final PIDController rotaryPoseController = new PIDController(.8, 0, 0);
-    public final ArmFeedforward rotaryFeedforward = new ArmFeedforward(0.33238,0.16593, 0.61369,0.19349);
+    public final ArmFeedforward rotaryFeedforward =
+            new ArmFeedforward(0.33238, 0.16593, 0.61369, 0.19349);
 
 
     private final TorqueCANCoder rotaryEncoder = new TorqueCANCoder(Ports.ARM_ROTARY_ENCODER);
@@ -405,23 +400,11 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
             leaveShelfSeq = new LeaveShelf();
         }
 
-        // if (scoring() && realRotaryPose.getDegrees() > 180) {
-        // calculateElevator(State.PRIME);
-        // calculateRotary(activeState);
-        // }
-        // if (isComingDown() && !isElevatorDownEnough()) {
-        // calculateElevator(activeState);
-        // calculateRotary(State.SCORING_HALF_WAY_POINT);
-        // }
-        // else if (isGoingUp() && !isArmOutEnough()) {
-        // calculateElevator(State.STOWED);
-        // calculateRotary(activeState);
-        // }
-        // else {
+
         calculateElevator(activeState);
         calculateRotary(activeState);
         lastState = activeState;
-        // }
+
 
     }
 
@@ -449,8 +432,10 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     private void updateFeedback() {
         realElevatorPose = elevator.getPosition();
-        double rotaryRadians = TorqueMath.constrain0to2PI(-rotaryEncoder.getPosition() - ROTARY_ENCODER_OFFSET);
-        if (rotaryRadians > Math.toRadians(300)) { // wrap around up to prevent overshoot causing a massive spin.
+        double rotaryRadians =
+                TorqueMath.constrain0to2PI(-rotaryEncoder.getPosition() - ROTARY_ENCODER_OFFSET);
+        if (rotaryRadians > Math.toRadians(300)) { // wrap around up to prevent overshoot causing a
+                                                   // massive spin.
             rotaryRadians = rotaryRadians - 2 * Math.PI;
         }
 
@@ -492,12 +477,12 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
                 + setpointAdjustment * Units.degreesToRadians(30);
 
         double rotaryPos = realRotaryPose.getRadians();
-        
+
         double requestedRotaryVelocity = 0;
         double rotaryVolts;
 
         // If the displacement is < .5, use PID. Otherwise, use motion profile.
-        if(Math.abs(armSetpoint - rotaryPos) < .5) {
+        if (Math.abs(armSetpoint - rotaryPos) < .5) {
             rotaryVolts = -rotaryPoseController.calculate(rotaryPos, armSetpoint);
             rotaryVolts += -rotaryFeedforward.calculate(armSetpoint, 0, 0);
             SmartDashboard.putBoolean("Arm Using PID", true);
@@ -508,13 +493,13 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
         }
 
-        
-            
-        Debug.log("rotaryDiff", rotaryPos-armSetpoint);  
-        
+
+
+        Debug.log("rotaryDiff", rotaryPos - armSetpoint);
+
         rotaryVolts = TorqueMath.constrain(rotaryVolts, ROTARY_MAX_VOLTS);
         rotary.setVolts(rotaryVolts);
-                
+
         Debug.log("rotaryVolts", rotaryVolts);
         Debug.log("elevatorCurrent", rotary.getCurrent());
         Debug.log("rotaryRequested", armSetpoint);
@@ -524,9 +509,13 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     // omega with respect to delta theta (radians)
     private double calculateRotaryVelocity(final double wanted, final double actual) {
-    if(Math.abs(wanted-actual) > 3) return 7 * Math.signum(wanted - actual); // out of range, return max
-      return Math.signum(wanted - actual)
-                * (7 / (1 + Math.pow(( (Math.abs(wanted-actual) + 2.6) / (2*Math.PI)  ) / (1 - ((Math.abs(wanted-actual) + 2.6) / (2* Math.PI))), -4.3)));
+        if (Math.abs(wanted - actual) > 3)
+            return 7 * Math.signum(wanted - actual); // out of range, return max
+        return Math.signum(wanted - actual)
+                * (7 / (1 + Math.pow(
+                        ((Math.abs(wanted - actual) + 2.6) / (2 * Math.PI))
+                                / (1 - ((Math.abs(wanted - actual) + 2.6) / (2 * Math.PI))),
+                        -4.3)));
 
     }
 }
