@@ -98,8 +98,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
                 new ArmPose(16, Rotation2d.fromDegrees(230))),
         LEAVING_SHELF(PRIME),
         PUSH_CUBE(
-                new ArmPose(15, Rotation2d.fromDegrees(260))),
-        GAMER(new ArmPose(69, Rotation2d.fromDegrees(69)));
+                new ArmPose(15, Rotation2d.fromDegrees(260)));
+        
         // @formatter:on
 
         public final ArmPose cubePose;
