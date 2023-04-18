@@ -38,39 +38,37 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
     }
 
     public static enum State {
-        INTAKE(new IndexerPose(3, 3, ROT_INTAKE), new IndexerPose(4.5, 12, ROT_INTAKE)), AUTOINTAKE(
-                new IndexerPose(3, 3, ROT_INTAKE),
-                new IndexerPose(3, 3, ROT_INTAKE)), OUTAKE(new IndexerPose(-12, -12, ROT_INTAKE),
-                        new IndexerPose(-8, -9, ROT_INTAKE)), POOP(new IndexerPose(-12, -12, -9),
-                                new IndexerPose(-8, -9, ROT_UP)), PRIME(
-                                        new IndexerPose(0, 0, ROT_PRIME)), DOWN_OFF(
-                                                new IndexerPose(0, 0, ROT_INTAKE)), DOWN_SLOW(
-                                                        new IndexerPose(0, 3,
-                                                                ROT_INTAKE)), PRIME_ROLL(
-                                                                        new IndexerPose(6, 6,
-                                                                                ROT_PRIME),
-                                                                        new IndexerPose(9, 12,
-                                                                                ROT_PRIME)), UP(
-                                                                                        new IndexerPose(
-                                                                                                0,
-                                                                                                0,
-                                                                                                ROT_UP)), UP_ROLL(
-                                                                                                        new IndexerPose(
-                                                                                                                -9,
-                                                                                                                0,
-                                                                                                                ROT_UP)), SLOW_INTAKE(
-                                                                                                                        new IndexerPose(
-                                                                                                                                2,
-                                                                                                                                2,
-                                                                                                                                ROT_INTAKE)), SLOW_OUTAKE(
-                                                                                                                                        new IndexerPose(
-                                                                                                                                                -2,
-                                                                                                                                                -2,
-                                                                                                                                                ROT_INTAKE)), OUT(
-                                                                                                                                                        new IndexerPose(
-                                                                                                                                                                0,
-                                                                                                                                                                0,
-                                                                                                                                                                ROT_ALMOST_DOWN));
+        // @formatter:off
+        INTAKE(
+            new IndexerPose(3, 3, ROT_INTAKE), new IndexerPose(4.5, 12, ROT_INTAKE)), 
+        AUTOINTAKE(
+            new IndexerPose(3, 3, ROT_INTAKE),
+            new IndexerPose(3, 3, ROT_INTAKE)), 
+        OUTAKE(
+            new IndexerPose(-12, -12, ROT_INTAKE),
+            new IndexerPose(-8, -9, ROT_INTAKE)), 
+        POOP(new IndexerPose(-12, -12, -9),
+            new IndexerPose(-8, -9, ROT_UP)), 
+        PRIME(
+            new IndexerPose(0, 0, ROT_PRIME)), 
+        DOWN_OFF(
+            new IndexerPose(0, 0, ROT_INTAKE)), 
+        DOWN_SLOW(
+            new IndexerPose(0, 3, ROT_INTAKE)), 
+        PRIME_ROLL(
+            new IndexerPose(6, 6,ROT_PRIME),
+            new IndexerPose(9, 12, ROT_PRIME)), 
+        UP(
+            new IndexerPose(0,0,ROT_UP)),
+        UP_ROLL(
+            new IndexerPose(-9,0,ROT_UP)), 
+        SLOW_INTAKE(
+            new IndexerPose(2,2,ROT_INTAKE)),
+        SLOW_OUTAKE(new IndexerPose(-2, -2, ROT_INTAKE)),
+        OUT(
+            new IndexerPose(0, 0, ROT_ALMOST_DOWN));
+        // @formatter:on
+
 
         public final IndexerPose cubePose;
         public final IndexerPose conePose;
