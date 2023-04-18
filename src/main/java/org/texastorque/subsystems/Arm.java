@@ -55,7 +55,6 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     public static enum State {
         // @formatter:off
-        SCORING_HALF_WAY_POINT(new ArmPose(0.45, Rotation2d.fromDegrees(90))),
         SHELF(new ArmPose(2.5, Rotation2d.fromDegrees(205)),
                 new ArmPose(0, Rotation2d.fromDegrees(225))),
         SHELF_OPEN(SHELF),
@@ -481,8 +480,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         double requestedRotaryVelocity = 0;
         double rotaryVolts;
 
-        // If the displacement is < .5, use PID. Otherwise, use motion profile.
-        if (Math.abs(armSetpoint - rotaryPos) < .5) {
+        // If the displacement is < 1.2 (70 deg), use PID. Otherwise, use motion profile.
+        if (Math.abs(armSetpoint - rotaryPos) < 1.2) {
             rotaryVolts = -rotaryPoseController.calculate(rotaryPos, armSetpoint);
             rotaryVolts += -rotaryFeedforward.calculate(armSetpoint, 0, 0);
             SmartDashboard.putBoolean("Arm Using PID", true);
