@@ -6,13 +6,10 @@
  */
 package org.texastorque.auto;
 
-import org.texastorque.auto.sequences.dcmp.OnePieceMobility;
-import org.texastorque.auto.sequences.dcmp.OnePieceMobilityEngage;
-import org.texastorque.auto.sequences.dcmp.SystemsCheck;
-import org.texastorque.auto.sequences.dcmp.ThreePieceMobility;
-import org.texastorque.auto.sequences.dcmp.ThreePieceMobilityHigh;
-import org.texastorque.auto.sequences.dcmp.TwoPieceMobility;
-import org.texastorque.auto.sequences.dcmp.TwoPieceMobilityEngage;
+import org.texastorque.auto.sequences.cmp.Any1;
+import org.texastorque.auto.sequences.cmp.Bump3;
+import org.texastorque.auto.sequences.cmp.Flat3;
+import org.texastorque.auto.sequences.cmp.Middle1E;
 import org.texastorque.torquelib.auto.TorqueAutoManager;
 
 public final class AutoManager extends TorqueAutoManager {
@@ -33,12 +30,9 @@ public final class AutoManager extends TorqueAutoManager {
 
     @Override
     public final void init() {
-        addSequence(new OnePieceMobility());
-        addSequence(new OnePieceMobilityEngage());
-        addSequence(new TwoPieceMobility());
-        addSequence(new ThreePieceMobility());
-        addSequence(new TwoPieceMobilityEngage());
-        addSequence(new SystemsCheck());
-        addSequence(new ThreePieceMobilityHigh());
+        addSequence(new Flat3());
+        addSequence(new Any1());
+        addSequence(new Bump3());
+        addSequence(new Middle1E());
     }
 }
