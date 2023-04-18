@@ -19,9 +19,11 @@ import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.motors.TorqueNEO;
 import org.texastorque.torquelib.sensors.TorqueCANCoder;
 import org.texastorque.torquelib.util.TorqueMath;
+
 import com.ctre.phoenix.sensors.CANCoderConfiguration;
 import com.ctre.phoenix.sensors.SensorInitializationStrategy;
 import com.ctre.phoenix.sensors.SensorTimeBase;
+
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
@@ -87,9 +89,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
                 new ArmPose(6, Rotation2d.fromDegrees(230)),
                 new ArmPose(16, Rotation2d.fromDegrees(230))),
         LEAVING_SHELF(PRIME),
-         PUSH_CUBE(
-        new ArmPose(5, Rotation2d.fromDegrees(260)
-    ));;
+         PUSH_CUBE(new ArmPose(5, Rotation2d.fromDegrees(260)));
 
         public final ArmPose cubePose;
         public final ArmPose conePose;
@@ -168,7 +168,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
             ELEVATOR_MAX_VOLTS_UP = 12,
             ELEVATOR_MAX_VOLTS_HANDOFF = 12,
             ELEVATOR_MAX_VOLTS_DOWN = 6,
-            ROTARY_MAX_VOLTS = 6,
+            ROTARY_MAX_VOLTS = 8,
             ELEVATOR_MIN = 0,
             ELEVATOR_MAX = 50;
 
@@ -202,9 +202,9 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     private final TorqueNEO rotary = new TorqueNEO(Ports.ARM_ROTARY_MOTOR);
 
     @Config
-    public final PIDController rotaryPoseController = new PIDController(0.08, 0, 0.02);
+    public final PIDController rotaryPoseController = new PIDController(.8, 0, 0);
 
-    public final ArmFeedforward rotaryFeedforward = new ArmFeedforward(0.38396,0.065509, 0.82645, 0.086198);
+    public final ArmFeedforward rotaryFeedforward = new ArmFeedforward(0.33238,0.16593, 0.61369,0.19349);
 
     private final TorqueCANCoder rotaryEncoder = new TorqueCANCoder(Ports.ARM_ROTARY_ENCODER);
 
@@ -227,7 +227,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
         rotary.setCurrentLimit(60);
         rotary.setVoltageCompensation(12.6);
-        rotary.setBreakMode(true);
+        rotary.setBreakMode(false);
         rotary.burnFlash();
 
         final CANCoderConfiguration cancoderConfig = new CANCoderConfiguration();
@@ -427,7 +427,10 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     private void updateFeedback() {
         realElevatorPose = elevator.getPosition();
-        final double rotaryRadians = TorqueMath.constrain0to2PI(-rotaryEncoder.getPosition() - ROTARY_ENCODER_OFFSET);
+        double rotaryRadians = TorqueMath.constrain0to2PI(-rotaryEncoder.getPosition() - ROTARY_ENCODER_OFFSET);
+        if (rotaryRadians > Math.toRadians(300)) { // wrap around up to prevent overshoot causing a massive spin.
+            rotaryRadians = rotaryRadians - 2 * Math.PI;
+        }
         realRotaryPose = Rotation2d.fromRadians(rotaryRadians);
     }
 
@@ -462,33 +465,39 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         double armSetpoint = state.get().rotaryPose.getRadians() + setpointAdjustment * Units.degreesToRadians(30);
 
         double rotaryPos = realRotaryPose.getRadians();
-        if (rotaryPos > Math.toRadians(315)) { // wrap around up to prevent overshoot causing a massive spin.
-            rotaryPos = rotaryPos - 2 * Math.PI;
+        
+        double requestedRotaryVelocity = 0;
+        double rotaryVolts;
+
+        // If the displacement is < .5, use PID. Otherwise, use motion profile.
+        if(Math.abs(armSetpoint - rotaryPos) < .5) {
+            rotaryVolts = -rotaryPoseController.calculate(rotaryPos, armSetpoint);
+            rotaryVolts += -rotaryFeedforward.calculate(armSetpoint, 0, 0);
+            SmartDashboard.putBoolean("Arm Using PID", true);
+        } else {
+            requestedRotaryVelocity = calculateRotaryVelocity(armSetpoint, rotaryPos);
+            rotaryVolts = -rotaryFeedforward.calculate(armSetpoint, requestedRotaryVelocity, 0);
+            SmartDashboard.putBoolean("Arm Using PID", false);
         }
 
-        double requestedRotaryVelocity = calculateRotaryVelocity(armSetpoint, rotaryPos);
-        double requestedRotaryAcceleration = 0;
-        double rotaryVolts = -rotaryFeedforward.calculate(armSetpoint, requestedRotaryVelocity,
-                requestedRotaryAcceleration);
-        // final boolean stopArm = armSetpoint <= (Math.PI * 0.5) && armSwitch.get();
-        // rotaryVolts += -rotaryPoseController.calculate(rotaryPos, armSetpoint);
+        
+            
+        Debug.log("rotaryDiff", rotaryPos-armSetpoint);  
+        
         rotaryVolts = TorqueMath.constrain(rotaryVolts, ROTARY_MAX_VOLTS);
-        // rotary.setVolts(rotaryEncoder.isCANResponsive() && !isState(Arm.State.LOW) ?
-        // rotaryVolts : 0);
         rotary.setVolts(rotaryVolts);
+                
         Debug.log("rotaryVolts", rotaryVolts);
         Debug.log("elevatorCurrent", rotary.getCurrent());
         Debug.log("rotaryRequested", armSetpoint);
         Debug.log("reqRotaryVelocity", requestedRotaryVelocity);
-        Debug.log("reqRotaryAccel", requestedRotaryAcceleration);
-
         SmartDashboard.putBoolean("rotaryCANResponsiveness", rotaryEncoder.isCANResponsive());
     }
 
     // omega with respect to delta theta (radians)
     private double calculateRotaryVelocity(final double wanted, final double actual) {
-        Debug.log("rotaryDiff", wanted-actual);
-        return Math.signum(wanted - actual)
-                * (20 / (1 + Math.pow(Math.E, -1 * Math.abs(wanted - actual))) - 10);
+    if(Math.abs(wanted-actual) > 3) return 7 * Math.signum(wanted - actual); // out of range, return max
+      return Math.signum(wanted - actual)
+                * (7 / (1 + Math.pow(( (Math.abs(wanted-actual) + 2.6) / (2*Math.PI)  ) / (1 - ((Math.abs(wanted-actual) + 2.6) / (2* Math.PI))), -4.3)));
     }
 }
