@@ -15,6 +15,7 @@ import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.motors.TorqueNEO;
 import org.texastorque.torquelib.util.TorqueMath;
+
 import edu.wpi.first.math.controller.PIDController;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
@@ -51,6 +52,8 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
             new IndexerPose(-8, -9, ROT_UP)), 
         PRIME(
             new IndexerPose(0, 0, ROT_PRIME)), 
+        CUBE_HANDOFF_PRIME(
+                new IndexerPose(0, 0, ROT_PRIME - 3)), 
         DOWN_OFF(
             new IndexerPose(0, 0, ROT_INTAKE)), 
         DOWN_SLOW(

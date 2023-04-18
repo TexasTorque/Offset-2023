@@ -19,9 +19,11 @@ import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.motors.TorqueNEO;
 import org.texastorque.torquelib.sensors.TorqueCANCoder;
 import org.texastorque.torquelib.util.TorqueMath;
+
 import com.ctre.phoenix.sensors.CANCoderConfiguration;
 import com.ctre.phoenix.sensors.SensorInitializationStrategy;
 import com.ctre.phoenix.sensors.SensorTimeBase;
+
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
@@ -35,7 +37,7 @@ import io.github.oblarg.oblog.annotations.Log;
 public final class Arm extends TorqueSubsystem implements Subsystems {
     public static class ArmPose {
         private static final double ELEVATOR_TOLERANCE = .4,
-                ROTARY_TOLERANCE = (1. / 12.) * Math.PI;
+                ROTARY_TOLERANCE = Units.degreesToRadians(15);
 
         public boolean autoReadyToScore = false;
 
@@ -83,10 +85,10 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
                 new ArmPose(9, Rotation2d.fromDegrees(260)),
                 new ArmPose(2, Rotation2d.fromDegrees(223))),
         HANDOFF_DOWN_AUTO(
-                new ArmPose(8, Rotation2d.fromDegrees(255)),
+                new ArmPose(8, Rotation2d.fromDegrees(260)),
                 new ArmPose(2, Rotation2d.fromDegrees(232))),
         HANDOFF_GRAB_AUTO(
-                new ArmPose(9, Rotation2d.fromDegrees(255)),
+                new ArmPose(9, Rotation2d.fromDegrees(260)),
                 new ArmPose(2, Rotation2d.fromDegrees(223))),
         HANDOFF_GRAB_BACK(
                 new ArmPose(20, Rotation2d.fromDegrees(232)),
@@ -96,8 +98,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
                 new ArmPose(16, Rotation2d.fromDegrees(230))),
         LEAVING_SHELF(PRIME),
         PUSH_CUBE(
-                new ArmPose(11, Rotation2d.fromDegrees(260)
-        ));
+                new ArmPose(15, Rotation2d.fromDegrees(260))),
+        GAMER(new ArmPose(69, Rotation2d.fromDegrees(69)));
         // @formatter:on
 
         public final ArmPose cubePose;
@@ -163,6 +165,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
             addBlock(new TorqueWaitUntil(() -> {
                 final State state = DriverStation.isAutonomous() ? autoState : teleopState;
                 arm.activeState = state;
+                SmartDashboard.putBoolean("goTo isAtState", arm.isAtState(state));
                 return arm.isAtState(state);
             }));
 
@@ -214,10 +217,13 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     private final TorqueNEO rotary = new TorqueNEO(Ports.ARM_ROTARY_MOTOR);
 
-    @Config
-    public final PIDController rotaryPoseController = new PIDController(.8, 0, 0);
+    public final PIDController rotaryPoseController = new PIDController(2.2, 0, 0);
     public final ArmFeedforward rotaryFeedforward =
             new ArmFeedforward(0.33238, 0.16593, 0.61369, 0.19349);
+
+    // public final PIDController rotaryPoseController = new PIDController(1.89, 0, 0);
+
+    // public final ArmFeedforward rotaryFeedforward = new ArmFeedforward(0.18362, 0.22356, 4, 4.4775);
 
 
     private final TorqueCANCoder rotaryEncoder = new TorqueCANCoder(Ports.ARM_ROTARY_ENCODER);
@@ -481,14 +487,12 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         double rotaryVolts;
 
         // If the displacement is < 1.2 (70 deg), use PID. Otherwise, use motion profile.
-        if (Math.abs(armSetpoint - rotaryPos) < 1.2) {
+        if (Math.abs(armSetpoint - rotaryPos) < .5) {
             rotaryVolts = -rotaryPoseController.calculate(rotaryPos, armSetpoint);
             rotaryVolts += -rotaryFeedforward.calculate(armSetpoint, 0, 0);
-            SmartDashboard.putBoolean("Arm Using PID", true);
         } else {
             requestedRotaryVelocity = calculateRotaryVelocity(armSetpoint, rotaryPos);
             rotaryVolts = -rotaryFeedforward.calculate(armSetpoint, requestedRotaryVelocity, 0);
-            SmartDashboard.putBoolean("Arm Using PID", false);
 
         }
 
@@ -506,6 +510,27 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         SmartDashboard.putBoolean("rotaryCANResponsiveness", rotaryEncoder.isCANResponsive());
     }
 
+    private void oldCalculateRotary(final State state) {
+        double armSetpoint = state.get().rotaryPose.getRadians() + setpointAdjustment * Units.degreesToRadians(30);
+
+        double rotaryPos = realRotaryPose.getRadians();
+        if (rotaryPos > Math.toRadians(315)) { // wrap around up to prevent overshoot causing a massive spin.
+            rotaryPos = rotaryPos - 2 * Math.PI;
+        }
+        double rotaryVolts = -rotaryFeedforward.calculate(armSetpoint, calculateRotaryVelocityOld(armSetpoint, rotaryPos),
+        calculateRotaryAccelerationOld(armSetpoint, rotaryPos));
+        // final boolean stopArm = armSetpoint <= (Math.PI * 0.5) && armSwitch.get();
+        rotaryVolts += -rotaryPoseController.calculate(rotaryPos, armSetpoint);
+        rotaryVolts = TorqueMath.constrain(rotaryVolts, ROTARY_MAX_VOLTS);
+        // rotary.setVolts(rotaryEncoder.isCANResponsive() && !isState(Arm.State.LOW) ?
+        // rotaryVolts : 0);
+        rotary.setVolts(rotaryVolts);
+        Debug.log("rotaryVolts", rotaryVolts);
+        Debug.log("elevatorCurrent", rotary.getCurrent());
+        SmartDashboard.putBoolean("rotaryCANResponsiveness", rotaryEncoder.isCANResponsive());
+    }
+
+
     // omega with respect to delta theta (radians)
     private double calculateRotaryVelocity(final double wanted, final double actual) {
         if (Math.abs(wanted - actual) > 3)
@@ -516,5 +541,17 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
                                 / (1 - ((Math.abs(wanted - actual) + 2.6) / (2 * Math.PI))),
                         -4.3)));
 
+    }
+
+      // omega with respect to delta theta (radians)
+      private double calculateRotaryVelocityOld(final double wanted, final double actual) {
+        return Math.signum(wanted - actual)
+                * (15 / (1 + Math.pow(Math.E, -.3 * (Math.abs(wanted - actual) - 12))) - .399);
+    }
+
+    // derivative of calculateRotaryVelocity
+    private double calculateRotaryAccelerationOld(final double wanted, final double actual) {
+        return Math.signum(wanted - actual) * (12 * Math.pow(Math.E, -1.5 * (Math.abs(wanted - actual - 12)))
+                / Math.pow(Math.pow(Math.E, -1.5 * (wanted - actual - 1.3)) + 1, 2));
     }
 }

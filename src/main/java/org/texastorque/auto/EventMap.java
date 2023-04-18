@@ -2,6 +2,7 @@ package org.texastorque.auto;
 
 import java.util.HashMap;
 import java.util.Map;
+
 import org.texastorque.Subsystems;
 import org.texastorque.subsystems.Arm;
 import org.texastorque.subsystems.Hand;
@@ -21,6 +22,10 @@ public final class EventMap implements Subsystems {
         }));
 
         map.put("intake-up", new TorqueExecute(() -> {
+            intake.setState(Intake.State.UP);
+        }));
+
+        map.put("intake-up-2", new TorqueExecute(() -> {
             intake.setState(Intake.State.UP);
         }));
 
@@ -49,6 +54,10 @@ public final class EventMap implements Subsystems {
         map.put("eject-2", new TorqueExecute(() -> {
             arm.setState(Arm.State.PUSH_CUBE);
             intake.setState(Intake.State.OUTAKE);
+        }));
+
+        map.put("arm-down", new TorqueExecute(() -> {
+            arm.setState(Arm.State.PRIME);
         }));
 
         // map.put("handoff", new TorqueSequenceRunner(new CubeHandoff()));

@@ -28,7 +28,7 @@ public final class Flat3 extends TorqueSequence implements Subsystems {
 
         addBlock(new FollowEventPath("flat-first"));
 
-        addBlock(new TorqueSequenceRunner(new Score(Arm.State.TOP)));
+        addBlock(new TorqueSequenceRunner(new Score(Arm.State.TOP, .8)));
 
         addBlock(intake.setStateCommand(Intake.State.UP));
 
