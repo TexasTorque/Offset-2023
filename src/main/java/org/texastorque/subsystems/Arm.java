@@ -519,9 +519,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         // final boolean stopArm = armSetpoint <= (Math.PI * 0.5) && armSwitch.get();
         rotaryVolts += -rotaryPoseController.calculate(rotaryPos, armSetpoint);
         rotaryVolts = TorqueMath.constrain(rotaryVolts, ROTARY_MAX_VOLTS);
-        // rotary.setVolts(rotaryEncoder.isCANResponsive() && !isState(Arm.State.LOW) ?
-        // rotaryVolts : 0);
         rotary.setVolts(rotaryVolts);
+        
         Debug.log("rotaryVolts", rotaryVolts);
         Debug.log("elevatorCurrent", rotary.getCurrent());
         SmartDashboard.putBoolean("rotaryCANResponsiveness", rotaryEncoder.isCANResponsive());
