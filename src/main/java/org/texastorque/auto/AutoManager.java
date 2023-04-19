@@ -7,6 +7,7 @@
 package org.texastorque.auto;
 
 import org.texastorque.auto.sequences.cmp.Any1;
+import org.texastorque.auto.sequences.cmp.Any1M;
 import org.texastorque.auto.sequences.cmp.Bump2;
 import org.texastorque.auto.sequences.cmp.Flat3;
 import org.texastorque.auto.sequences.cmp.Middle1E;
@@ -32,9 +33,10 @@ public final class AutoManager extends TorqueAutoManager {
     @Override
     public final void init() {
         addSequence(new Flat3());
-        addSequence(new Any1());
+        addSequence(new Any1M());
         addSequence(new Bump2());
         addSequence(new Middle1E());
         addSequence(new Middle2E());
+        addSequence(new Any1());
     }
 }

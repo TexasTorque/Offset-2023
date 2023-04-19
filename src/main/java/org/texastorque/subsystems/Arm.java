@@ -7,6 +7,7 @@
 package org.texastorque.subsystems;
 
 import org.texastorque.Debug;
+import org.texastorque.Input;
 import org.texastorque.Ports;
 import org.texastorque.Subsystems;
 import org.texastorque.torquelib.auto.TorqueCommand;
@@ -63,7 +64,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         STOWED(SHELF),
         MID(
                 new ArmPose(0, Rotation2d.fromDegrees(0 )),
-                new ArmPose(5, Rotation2d.fromDegrees(20 + 10))),
+                new ArmPose(5, Rotation2d.fromDegrees(20))),
         TOP(
                 new ArmPose(30, Rotation2d.fromDegrees(0 )),
                 new ArmPose(43, Rotation2d.fromDegrees(12))),
@@ -130,7 +131,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
             goTo(State.HANDOFF_DOWN, .2);
             goTo(State.HANDOFF_GRAB, .15);
             goTo(State.PRIME, -1);
-
+            addBlock(new TorqueExecute(() -> Input.getInstance().setOperatorRumbleFor(.5)));
         }
     }
 
@@ -140,6 +141,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
             goTo(State.HANDOFF_DOWN_AUTO, State.HANDOFF_DOWN, .1);
             goTo(State.HANDOFF_GRAB_AUTO, State.HANDOFF_GRAB, .1);
             goTo(State.HANDOFF_GRAB_BACK, .1);
+            addBlock(new TorqueExecute(() -> Input.getInstance().setOperatorRumbleFor(.5)));
         }
     }
 
@@ -217,14 +219,9 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     private final TorqueNEO rotary = new TorqueNEO(Ports.ARM_ROTARY_MOTOR);
 
-    public final PIDController rotaryPoseController = new PIDController(2.2, 0, 0);
-    public final ArmFeedforward rotaryFeedforward =
-            new ArmFeedforward(0.33238, 0.16593, 0.61369, 0.19349);
+    public final PIDController rotaryPoseController = new PIDController(2.2 * 1.1, 0, 0);
 
-    // public final PIDController rotaryPoseController = new PIDController(1.89, 0, 0);
-
-    // public final ArmFeedforward rotaryFeedforward = new ArmFeedforward(0.18362, 0.22356, 4, 4.4775);
-
+    public final ArmFeedforward rotaryFeedforward = new ArmFeedforward(0.33238, 0.16593, 0.61369, 0.19349);
 
     private final TorqueCANCoder rotaryEncoder = new TorqueCANCoder(Ports.ARM_ROTARY_ENCODER);
 
