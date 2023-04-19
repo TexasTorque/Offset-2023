@@ -25,6 +25,10 @@ public final class EventMap implements Subsystems {
             intake.setState(Intake.State.UP);
         }));
 
+        map.put("intake-up-2", new TorqueExecute(() -> {
+            intake.setState(Intake.State.UP);
+        }));
+
         map.put("intake-prime", new TorqueExecute(() -> {
             intake.setState(Intake.State.PRIME);
         }));
@@ -35,6 +39,25 @@ public final class EventMap implements Subsystems {
 
         map.put("intake-down-off", new TorqueExecute(() -> {
             intake.setState(Intake.State.DOWN_OFF);
+        }));
+
+        map.put("default", new TorqueExecute(() -> {
+            arm.setState(Arm.State.PRIME);
+            intake.setState(Intake.State.UP);
+        }));
+
+        map.put("eject", new TorqueExecute(() -> {
+            arm.setState(Arm.State.PUSH_CUBE);
+            intake.setState(Intake.State.OUTAKE);
+        }));
+
+        map.put("eject-2", new TorqueExecute(() -> {
+            arm.setState(Arm.State.PUSH_CUBE);
+            intake.setState(Intake.State.OUTAKE);
+        }));
+
+        map.put("arm-down", new TorqueExecute(() -> {
+            arm.setState(Arm.State.PRIME);
         }));
 
         // map.put("handoff", new TorqueSequenceRunner(new CubeHandoff()));
@@ -49,6 +72,8 @@ public final class EventMap implements Subsystems {
         map.put("arm-ready-mid", new TorqueExecute(() -> arm.setState(Arm.State.MID)));
 
         map.put("dump-low", intake.setStateCommand(Intake.State.OUTAKE));
+
+        map.put("push-cube", new TorqueExecute(() -> arm.setState(Arm.State.PUSH_CUBE)));
 
         return map;
     }

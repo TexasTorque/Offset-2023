@@ -1,8 +1,8 @@
 /**
  * Copyright 2023 Texas Torque.
  *
- * This file is part of Torque-2023, which is not licensed for distribution.
- * For more details, see ./license.txt or write <jus@justusl.com>.
+ * This file is part of Torque-2023, which is not licensed for distribution. For more details, see
+ * ./license.txt or write <jus@justusl.com>.
  */
 package org.texastorque.subsystems;
 
@@ -26,7 +26,8 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
 
         public final double topRollerVolts, bottomRollerVolts, rotaryPose;
 
-        public IndexerPose(final double topRollerVolts, final double bottomRollerVolts, final double rotaryPose) {
+        public IndexerPose(final double topRollerVolts, final double bottomRollerVolts,
+                final double rotaryPose) {
             this.topRollerVolts = topRollerVolts;
             this.bottomRollerVolts = bottomRollerVolts;
             this.rotaryPose = rotaryPose;
@@ -38,19 +39,39 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
     }
 
     public static enum State {
-        INTAKE(new IndexerPose(3, 3, ROT_INTAKE), new IndexerPose(4.5, 12, ROT_INTAKE)),
-        AUTOINTAKE(new IndexerPose(4, 4, ROT_INTAKE), new IndexerPose(3, 3, ROT_INTAKE)),
-        OUTAKE(new IndexerPose(-12, -12, ROT_INTAKE), new IndexerPose(-8, -9, ROT_INTAKE)),
-        POOP(new IndexerPose(-12, -12, -9), new IndexerPose(-8, -9, ROT_UP)),
-        PRIME(new IndexerPose(0, 0, ROT_PRIME)),
-        DOWN_OFF(new IndexerPose(0, 0, ROT_INTAKE)),
-        DOWN_SLOW(new IndexerPose(0, 3, ROT_INTAKE)),
-        PRIME_ROLL(new IndexerPose(6, 6, ROT_PRIME), new IndexerPose(9, 12, ROT_PRIME)),
-        UP(new IndexerPose(0, 0, ROT_UP)),
-        UP_ROLL(new IndexerPose(-9, 0, ROT_UP)),
-        SLOW_INTAKE(new IndexerPose(2, 2, ROT_INTAKE)),
+        // @formatter:off
+        INTAKE(
+            new IndexerPose(3, 3, ROT_INTAKE), new IndexerPose(4.5, 12, ROT_INTAKE)), 
+        AUTOINTAKE(
+            new IndexerPose(3, 3, ROT_INTAKE),
+            new IndexerPose(3, 3, ROT_INTAKE)), 
+        OUTAKE(
+            new IndexerPose(-12, -12, ROT_INTAKE),
+            new IndexerPose(-8, -9, ROT_INTAKE)), 
+        POOP(new IndexerPose(-12, -12, -9),
+            new IndexerPose(-8, -9, ROT_UP)), 
+        PRIME(
+            new IndexerPose(0, 0, ROT_PRIME)), 
+        CUBE_HANDOFF_PRIME(
+                new IndexerPose(0, 0, ROT_PRIME - 3)), 
+        DOWN_OFF(
+            new IndexerPose(0, 0, ROT_INTAKE)), 
+        DOWN_SLOW(
+            new IndexerPose(0, 3, ROT_INTAKE)), 
+        PRIME_ROLL(
+            new IndexerPose(6, 6,ROT_PRIME),
+            new IndexerPose(9, 12, ROT_PRIME)), 
+        UP(
+            new IndexerPose(0,0,ROT_UP)),
+        UP_ROLL(
+            new IndexerPose(-9,0,ROT_UP)), 
+        SLOW_INTAKE(
+            new IndexerPose(2,2,ROT_INTAKE)),
         SLOW_OUTAKE(new IndexerPose(-2, -2, ROT_INTAKE)),
-        OUT(new IndexerPose(0, 0, ROT_ALMOST_DOWN));
+        OUT(
+            new IndexerPose(0, 0, ROT_ALMOST_DOWN));
+        // @formatter:on
+
 
         public final IndexerPose cubePose;
         public final IndexerPose conePose;
@@ -135,8 +156,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
     }
 
     @Override
-    public final void initialize(final TorqueMode mode) {
-    }
+    public final void initialize(final TorqueMode mode) {}
 
     @Override
     public final void update(final TorqueMode mode) {
@@ -144,8 +164,14 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
 
         realRotaryPose = rotary.getPosition();
 
-        if (desiredState == State.UP && arm.isPerformingHandoff())
-            activeState = State.OUT;
+
+
+        if (desiredState == State.UP && arm.isPerformingHandoff()) {
+            if (hand.isCubeMode())
+                activeState = State.PRIME;
+            else
+                activeState = State.OUT;
+        }
 
         Debug.log("rotaryPose", rotary.getPosition());
         Debug.log("topRollersPose", topRollers.getPosition());
@@ -163,7 +189,8 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
 
         Debug.log("requestedRotaryPose", activeState.get().rotaryPose);
         double requestedRotaryVolts = TorqueMath.constrain(
-                rotaryPoseController.calculate(realRotaryPose, activeState.get().rotaryPose), ROTARY_MAX_VOLTS);
+                rotaryPoseController.calculate(realRotaryPose, activeState.get().rotaryPose),
+                ROTARY_MAX_VOLTS);
         if (activeState == State.INTAKE || activeState == State.OUTAKE) {
             requestedRotaryVolts += 1;
         }
