@@ -351,6 +351,9 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     }
 
     private void updateFeedback() {
+
+        Debug.camerasAreGood = cameraLeft.isCameraConnected() && cameraRight.isCameraConnected();
+
         Debug.log("gyro pitch", TorqueNavXGyro.getInstance().getPitch());
 
         if (updateWithTags || DriverStation.isTeleop()) {
