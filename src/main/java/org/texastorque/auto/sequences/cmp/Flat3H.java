@@ -16,31 +16,24 @@ import org.texastorque.subsystems.Intake;
 import org.texastorque.torquelib.auto.TorqueSequence;
 import org.texastorque.torquelib.auto.commands.TorqueSequenceRunner;
 
-public final class Flat3 extends TorqueSequence implements Subsystems {
-    public Flat3() {
+public final class Flat3H extends TorqueSequence implements Subsystems {
+    public Flat3H() {
 
         addBlock(hand.setStateCommand(Hand.State.CLOSE),
                 hand.setGamePieceModeCommand(GamePiece.CONE));
 
-        // Score cone high:
         addBlock(new TorqueSequenceRunner(new Score(Arm.State.TOP)));
-
-        // Dumb cube low:
-        // addBlock(new TorqueWaitForSeconds(1, () ->  intake.setState(Intake.OUTTAKE)));
-        // addBlocK(new TorqueExecute(() -> intake.setState(Intake.State.UP)));
 
         addBlock(hand.setGamePieceModeCommand(GamePiece.CUBE));
 
-        // // Score cube mid:
-        // addBlock(new TorqueSequenceRunner(new Score(Arm.State.MID)));
+        addBlock(new FollowEventPath("flat-first"));
 
-        addBlock(new FollowEventPath("flat-first-3"));
+        addBlock(new TorqueSequenceRunner(new Score(Arm.State.TOP, .8)));
 
         addBlock(intake.setStateCommand(Intake.State.UP));
-        addBlock(arm.setStateCommand(Arm.State.PRIME));
 
-        addBlock(new FollowEventPath("flat-second-3"));
+        addBlock(new FollowEventPath("flat-second"));
 
-        // addBlock(intake.setStateCommand(Intake.State.UP));
+        addBlock(intake.setStateCommand(Intake.State.UP));
     }
 }

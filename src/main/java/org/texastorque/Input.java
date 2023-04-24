@@ -60,7 +60,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
         gridOverrideLeft = new TorqueBoolSupplier(operator::isDPADLeftDown);
         gridOverrideRight = new TorqueBoolSupplier(operator::isDPADRightDown);
-        gridOverrideCenter = new TorqueBoolSupplier(operator::isDPADDownDown);
+        gridOverrideCenter = new TorqueToggleSupplier(operator::isDPADDownDown);
 
         resetGyroClick = new TorqueClickSupplier(driver::isRightCenterButtonPressed);
         resetPoseClick = new TorqueClickSupplier(driver::isLeftCenterButtonPressed);
@@ -121,12 +121,16 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
         gridOverrideLeft.onTrue(() -> drivebase.setGridOverride(GridState.LEFT));
         gridOverrideCenter.onTrue(() -> drivebase.setGridOverride(GridState.CENTER));
+
+        // autoAlignIndicator.onTrue(() -> lights.setAutoAligning(true));
         gridOverrideRight.onTrue(() -> drivebase.setGridOverride(GridState.RIGHT));
 
         xFactorToggle.onTrue(() -> drivebase.setState(Drivebase.State.XF));
         isZeroingWheels.onTrue(() -> drivebase.setState(Drivebase.State.ZERO));
 
-        openClaw.onTrue(() -> hand.setState(Hand.State.OPEN));
+        openClaw.onTrue(() -> {
+            hand.setState(hand.isConeMode() ? Hand.State.OPEN : Hand.State.CHUNGUS);
+        });
 
         gamePieceModeToggle.onTrueOrFalse(() -> hand.setGamePieceMode(GamePiece.CONE),
                 () -> hand.setGamePieceMode(GamePiece.CUBE));
@@ -156,9 +160,10 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         });
 
         wantsSlowIntake.onTrue(() -> intake.setState(Intake.State.SLOW_INTAKE));
+        // wantsSlowIntake.onTrue(() -> intake.setState(Intake.State.CURRENT_SPIKE));
         wantsSlowOuttake.onTrue(() -> intake.setState(Intake.State.SLOW_OUTAKE));
 
-        arm.setSetpointAdjustment(operator.getRightYAxis());
+        // arm.setSetpointAdjustment(operator.getRightYAxis());
 
         armToPrime.onTrue(() -> arm.setState(Arm.State.PRIME));
 

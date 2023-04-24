@@ -12,7 +12,6 @@ import org.texastorque.auto.routines.Score;
 import org.texastorque.subsystems.Arm;
 import org.texastorque.subsystems.Hand;
 import org.texastorque.subsystems.Hand.GamePiece;
-import org.texastorque.subsystems.Intake;
 import org.texastorque.torquelib.auto.TorqueSequence;
 import org.texastorque.torquelib.auto.commands.TorqueSequenceRunner;
 
@@ -25,14 +24,8 @@ public class Bump2 extends TorqueSequence implements Subsystems {
 
         addBlock(hand.setGamePieceModeCommand(GamePiece.CUBE));
 
-        addBlock(new FollowEventPath("bump-first", 3, 2.5));
+        addBlock(new FollowEventPath("bump-first-2", 3, 2.5));
 
-        addBlock(new TorqueSequenceRunner(new Score(Arm.State.TOP, .8)));
-
-        addBlock(intake.setStateCommand(Intake.State.UP));
-
-        addBlock(new FollowEventPath("bump-second", 2.5, 2.5));
-
-        addBlock(intake.setStateCommand(Intake.State.UP));
+ 
     }
 }

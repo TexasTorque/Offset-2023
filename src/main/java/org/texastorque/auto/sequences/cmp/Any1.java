@@ -17,8 +17,6 @@ import org.texastorque.torquelib.auto.commands.TorqueSequenceRunner;
 public final class Any1 extends TorqueSequence implements Subsystems {
     public Any1() {
         addBlock(hand.setStateCommand(Hand.State.CLOSE), hand.setGamePieceModeCommand(GamePiece.CONE));
-
         addBlock(new TorqueSequenceRunner(new Score(Arm.State.TOP)));
-
     }
 }

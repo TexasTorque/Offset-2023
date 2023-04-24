@@ -199,6 +199,10 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
             swerveStates[i] = new SwerveModuleState();
     }
 
+    public final boolean isCamerasConnected() {
+        return cameraLeft.isCameraConnected() && cameraRight.isCameraConnected();
+    }
+
     public SpeedSetting getSpeedSetting() {
         return speedSetting;
     }
@@ -351,9 +355,6 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     }
 
     private void updateFeedback() {
-
-        Debug.camerasAreGood = cameraLeft.isCameraConnected() && cameraRight.isCameraConnected();
-
         Debug.log("gyro pitch", TorqueNavXGyro.getInstance().getPitch());
 
         if (updateWithTags || DriverStation.isTeleop()) {

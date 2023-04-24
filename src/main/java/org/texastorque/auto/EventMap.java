@@ -10,6 +10,7 @@ import org.texastorque.subsystems.Intake;
 import org.texastorque.torquelib.auto.TorqueCommand;
 import org.texastorque.torquelib.auto.commands.TorqueContinuous;
 import org.texastorque.torquelib.auto.commands.TorqueExecute;
+import org.texastorque.torquelib.auto.commands.TorqueWaitForSeconds;
 
 public final class EventMap implements Subsystems {
 
@@ -56,9 +57,15 @@ public final class EventMap implements Subsystems {
             intake.setState(Intake.State.OUTAKE);
         }));
 
+        map.put("outtake", new TorqueExecute(() -> {
+            intake.setState(Intake.State.OUTAKE);
+        }));
+
         map.put("arm-down", new TorqueExecute(() -> {
             arm.setState(Arm.State.PRIME);
         }));
+
+        map.put("intake-spike", new TorqueWaitForSeconds(2.5, () -> intake.setState(Intake.State.CURRENT_SPIKE)));
 
         // map.put("handoff", new TorqueSequenceRunner(new CubeHandoff()));
         map.put("handoff", new TorqueContinuous(() -> arm.setState(Arm.State.HANDOFF)));

@@ -34,7 +34,6 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
                 buff.setLED(i, color.get());
         }
     }
-
     public static class Blink extends LightAction {
         private final Supplier<Color> color1, color2;
         private final double hertz;
@@ -96,6 +95,8 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
         return instance == null ? instance = new Lights() : instance;
     }
 
+    private boolean autoAligning = false;
+
     private final AddressableLED superstructureLEDs;
 
     private final AddressableLEDBuffer buff;
@@ -106,7 +107,7 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
             solidPurple = new Solid(() -> Color.kPurple), solidYellow = new Solid(() -> Color.kYellow),
             blinkPurple = new Blink(() -> Color.kPurple, 6), blinkYellow = new Blink(() -> Color.kYellow, 6),
             rainbow = new Rainbow();
-            
+
     private Lights() {
         superstructureLEDs = new AddressableLED(Ports.LIGHTS_SUPERSTRUCTURE);
         superstructureLEDs.setLength(LENGTH);
@@ -117,6 +118,10 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
             buff.setLED(i, Color.kGreen);
 
         superstructureLEDs.setData(buff);
+    }
+            
+    public void setAutoAligning(final boolean autoAligning) {
+        this.autoAligning = autoAligning;
     }
 
     @Override
@@ -148,6 +153,9 @@ public final class Lights extends TorqueSubsystem implements Subsystems {
 
         final boolean blinkColor = spindexer.isAutoSpindexing() || intake.isIntaking() || arm.isDoingHandoff()
                 || drivebase.getSpeedSetting().isSlow();
+
+
+        if (autoAligning) return rainbow;
 
         if (hand.isCubeMode()) {
             return blinkColor ? blinkPurple : solidPurple;

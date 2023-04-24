@@ -64,10 +64,10 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         STOWED(SHELF),
         MID(
                 new ArmPose(0, Rotation2d.fromDegrees(0 )),
-                new ArmPose(5, Rotation2d.fromDegrees(20))),
+                new ArmPose(5, Rotation2d.fromDegrees(28))),
         TOP(
                 new ArmPose(30, Rotation2d.fromDegrees(0 )),
-                new ArmPose(43, Rotation2d.fromDegrees(12))),
+                new ArmPose(43, Rotation2d.fromDegrees(22))),
 
         THROW(new ArmPose(50, Rotation2d.fromDegrees(0))),
 
@@ -90,7 +90,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
                 new ArmPose(2, Rotation2d.fromDegrees(232))),
         HANDOFF_GRAB_AUTO(
                 new ArmPose(9, Rotation2d.fromDegrees(260)),
-                new ArmPose(2, Rotation2d.fromDegrees(223))),
+                new ArmPose(2, Rotation2d.fromDegrees(235))),
         HANDOFF_GRAB_BACK(
                 new ArmPose(20, Rotation2d.fromDegrees(232)),
                 new ArmPose(20, Rotation2d.fromDegrees(232))),
@@ -139,7 +139,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         public CubeHandoff() {
             goTo(State.STOWED, .1);
             goTo(State.HANDOFF_DOWN_AUTO, State.HANDOFF_DOWN, .1);
-            goTo(State.HANDOFF_GRAB_AUTO, State.HANDOFF_GRAB, .1);
+            goTo(State.HANDOFF_GRAB_AUTO, State.HANDOFF_GRAB, .3);
             goTo(State.HANDOFF_GRAB_BACK, .1);
             addBlock(new TorqueExecute(() -> Input.getInstance().setOperatorRumbleFor(.5)));
         }
@@ -154,7 +154,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     public static class LeaveShelf extends ArmSequence {
         public LeaveShelf() {
-            goTo(State.SHELF, .1);
+            goTo(State.SHELF, .6);
             goTo(State.PRIME, .1);
         }
     }
@@ -186,8 +186,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     private static final double ROTARY_ENCODER_OFFSET = Units.degreesToRadians(50),
-            ELEVATOR_MAX_VOLTS_UP = 12, ELEVATOR_MAX_VOLTS_HANDOFF = 12,
-            ELEVATOR_MAX_VOLTS_DOWN = 6, ROTARY_MAX_VOLTS = 8, ELEVATOR_MIN = 0, ELEVATOR_MAX = 50;
+            ELEVATOR_MAX_VOLTS_UP = 8, ELEVATOR_MAX_VOLTS_HANDOFF = 4,
+            ELEVATOR_MAX_VOLTS_DOWN = 3.5, ROTARY_MAX_VOLTS = 8, ELEVATOR_MIN = 0, ELEVATOR_MAX = 50;
 
 
     private static volatile Arm instance;
@@ -219,7 +219,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     private final TorqueNEO rotary = new TorqueNEO(Ports.ARM_ROTARY_MOTOR);
 
-    public final PIDController rotaryPoseController = new PIDController(2.2 * 1.1, 0, 0);
+    public final PIDController rotaryPoseController = new PIDController(2.2 * 1.3, 0, 0);
 
     public final ArmFeedforward rotaryFeedforward = new ArmFeedforward(0.33238, 0.16593, 0.61369, 0.19349);
 
@@ -333,18 +333,21 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     public boolean isWantingHalfOpen() {
-        return activeState == State.HANDOFF_ABOVE;
+        // return activeState == State.HANDOFF_ABOVE;
+        return false;
 
     }
 
     public boolean isWantingQuarterOpen() {
-        return activeState == State.HANDOFF_DOWN && hand.isConeMode()
-                || activeState == State.HANDOFF_FORWARD;
+        // return activeState == State.HANDOFF_DOWN && hand.isConeMode()
+                // || activeState == State.HANDOFF_FORWARD;
+        return activeState == State.HANDOFF_FORWARD;
     }
 
     public boolean isWantingFullOpen() {
         return activeState == State.HANDOFF_DOWN && hand.isCubeMode()
-                || activeState == State.SHELF_OPEN || activeState == State.HANDOFF_DOWN_AUTO;
+                || activeState == State.SHELF_OPEN || activeState == State.HANDOFF_DOWN_AUTO
+                || activeState == State.HANDOFF_FORWARD || activeState == State.HANDOFF_ABOVE;
     }
 
     public void setSetpointAdjustment(final double setpointAdjustment) {

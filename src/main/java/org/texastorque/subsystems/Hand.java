@@ -34,12 +34,13 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
     }
 
     public static enum State {
+        // 4.2 - 3.2
         // Smaller is bigger on the claw
-        OPEN(3.2),
-        SHELF(3.6),
-        HALF(3.4),
-        CHUNGUS(3.2),
-        CLOSE(4.2);
+        OPEN(2),
+        SHELF(2.2),
+        HALF(2.2),
+        CHUNGUS(1.8),
+        CLOSE(3);
 
         public final double clawSetpoint;
 
@@ -163,9 +164,6 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
             }
             if (arm.isWantingFullOpen()) {
                 activeState = State.OPEN;
-
-                if (isCubeMode())
-                    activeState = State.CHUNGUS;
             }
 
             if ((arm.isState(Arm.State.SHELF) || arm.isState(Arm.State.STOWED)) && activeState == State.OPEN

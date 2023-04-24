@@ -17,6 +17,7 @@ import org.texastorque.torquelib.motors.TorqueNEO;
 import org.texastorque.torquelib.util.TorqueMath;
 
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.wpilibj.Timer;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
 
@@ -68,6 +69,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
         SLOW_INTAKE(
             new IndexerPose(2,2,ROT_INTAKE)),
         SLOW_OUTAKE(new IndexerPose(-2, -2, ROT_INTAKE)),
+        CURRENT_SPIKE(new IndexerPose(2, 2, ROT_INTAKE)),
         OUT(
             new IndexerPose(0, 0, ROT_ALMOST_DOWN));
         // @formatter:on
@@ -121,6 +123,9 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
     @Config
     public final PIDController rotaryPoseController = new PIDController(2.4, 0, 0);
 
+    private boolean spiked = false;
+    private double lastTime = 0;
+
     private Intake() {
         topRollers.setCurrentLimit(30);
         topRollers.setVoltageCompensation(12.6);
@@ -164,8 +169,6 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
 
         realRotaryPose = rotary.getPosition();
 
-
-
         if (desiredState == State.UP && arm.isPerformingHandoff()) {
             if (hand.isCubeMode())
                 activeState = State.PRIME;
@@ -173,6 +176,19 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
                 activeState = State.OUT;
         }
 
+        if (desiredState == State.CURRENT_SPIKE) {
+            if (Timer.getFPGATimestamp() - lastTime > 1 && topRollers.getCurrent() >= 15)
+                spiked = true;
+        } else {
+            spiked = false;
+            lastTime = Timer.getFPGATimestamp();
+        }
+
+        if (spiked) {
+            activeState = State.UP;
+        }
+
+        Debug.log("topRollerCurrent", topRollers.getCurrent());
         Debug.log("rotaryPose", rotary.getPosition());
         Debug.log("topRollersPose", topRollers.getPosition());
         Debug.log("botRollersPose", bottomRollers.getPosition());

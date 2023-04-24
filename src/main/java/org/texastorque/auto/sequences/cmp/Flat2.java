@@ -1,8 +1,8 @@
 /**
  * Copyright 2023 Texas Torque.
  *
- * This file is part of Torque-2023, which is not licensed for distribution.
- * For more details, see ./license.txt or write <jus@justusl.com>.
+ * This file is part of Torque-2023, which is not licensed for distribution. For more details, see
+ * ./license.txt or write <jus@justusl.com>.
  */
 package org.texastorque.auto.sequences.cmp;
 
@@ -13,17 +13,21 @@ import org.texastorque.subsystems.Arm;
 import org.texastorque.subsystems.Hand;
 import org.texastorque.subsystems.Hand.GamePiece;
 import org.texastorque.torquelib.auto.TorqueSequence;
-import org.texastorque.torquelib.auto.commands.TorqueExecute;
 import org.texastorque.torquelib.auto.commands.TorqueSequenceRunner;
 
-public final class Any1M extends TorqueSequence implements Subsystems {
-    public Any1M() {
-        addBlock(new TorqueExecute(() -> drivebase.updateWithTags = false));
+public final class Flat2 extends TorqueSequence implements Subsystems {
+    public Flat2() {
 
-        addBlock(hand.setStateCommand(Hand.State.CLOSE), hand.setGamePieceModeCommand(GamePiece.CONE));
+        addBlock(hand.setStateCommand(Hand.State.CLOSE),
+                hand.setGamePieceModeCommand(GamePiece.CONE));
 
         addBlock(new TorqueSequenceRunner(new Score(Arm.State.TOP)));
 
-        addBlock(new FollowEventPath("mobility", 2.5, 3.5));
+        addBlock(hand.setGamePieceModeCommand(GamePiece.CUBE));
+
+        addBlock(new FollowEventPath("flat-first-3"));
+
+        // addBlock(intake.setStateCommand(Intake.State.UP));
+
     }
 }

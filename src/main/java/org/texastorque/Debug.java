@@ -22,8 +22,6 @@ public final class Debug implements Subsystems {
     private static final Map<String, Double> numbers = new HashMap<>();
     private static final Map<String, String> strings = new HashMap<>();
 
-    public static boolean camerasAreGood = true;
-
     public static void initDashboard() {
         Shuffleboard.update();
 
@@ -35,7 +33,8 @@ public final class Debug implements Subsystems {
 
         dashboard.addBoolean("MODE", hand::isConeMode).withProperties(Map.of("Color when true", Color.kYellow.toHexString(), "Color when false", Color.kPurple.toHexString()))
                 .withPosition(7, 2).withSize(4, 4);
-        dashboard.addBoolean("CAMERAS", hand::isConeMode).withPosition(11, 0).withSize(2, 2);
+
+        dashboard.addBoolean("CAMERAS", drivebase::isCamerasConnected).withPosition(11, 0).withSize(2, 2);
     }
 
     public static void log(final String key, final double number) {
