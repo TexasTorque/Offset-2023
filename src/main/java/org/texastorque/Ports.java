@@ -16,7 +16,7 @@ public final class Ports {
     public static final SwervePorts BL_MOD = new SwervePorts(1, 2, 9);
     public static final SwervePorts BR_MOD = new SwervePorts(7, 8, 12);
     // CAN Superstructure
-    public static final int INTAKE_ROLLER_MOTOR_TOP = 38;
+    public static final int INTAKE_ROLLER_MOTOR_TOP = 7; // can 38, pwm 7 
     public static final int INTAKE_ROLLER_MOTOR_BOTTOM = 39;
     public static final int INTAKE_ROTARY_MOTOR_RIGHT = 32;
     public static final int INTAKE_ROTARY_MOTOR_LEFT = 31;

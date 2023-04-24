@@ -18,6 +18,7 @@ import org.texastorque.torquelib.util.TorqueMath;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.motorcontrol.PWMSparkMax;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
 
@@ -116,7 +117,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
     @Log.ToString
     public double realRotaryPose = 0;
 
-    private final TorqueNEO topRollers = new TorqueNEO(Ports.INTAKE_ROLLER_MOTOR_TOP);
+    private final PWMSparkMax topRollers = new PWMSparkMax(Ports.INTAKE_ROLLER_MOTOR_TOP);
     private final TorqueNEO bottomRollers = new TorqueNEO(Ports.INTAKE_ROLLER_MOTOR_BOTTOM);
     private final TorqueNEO rotary = new TorqueNEO(Ports.INTAKE_ROTARY_MOTOR_LEFT);
 
@@ -127,10 +128,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
     private double lastTime = 0;
 
     private Intake() {
-        topRollers.setCurrentLimit(30);
-        topRollers.setVoltageCompensation(12.6);
-        topRollers.setBreakMode(false);
-        topRollers.burnFlash();
+
 
         bottomRollers.setCurrentLimit(25);
         bottomRollers.setVoltageCompensation(12.6);
@@ -177,7 +175,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
         }
 
         if (desiredState == State.CURRENT_SPIKE) {
-            if (Timer.getFPGATimestamp() - lastTime > 1 && topRollers.getCurrent() >= 15)
+            if (Timer.getFPGATimestamp() - lastTime > 1 && bottomRollers.getCurrent() >= 15)
                 spiked = true;
         } else {
             spiked = false;
@@ -188,15 +186,15 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
             activeState = State.UP;
         }
 
-        Debug.log("topRollerCurrent", topRollers.getCurrent());
+        // Debug.log("topRollerCurrent", topRollers.getCurrent());
         Debug.log("rotaryPose", rotary.getPosition());
-        Debug.log("topRollersPose", topRollers.getPosition());
+        // Debug.log("topRollersPose", topRollers.getPosition());
         Debug.log("botRollersPose", bottomRollers.getPosition());
 
         double topRollerVolts = activeState.get().topRollerVolts;
 
-        topRollers.setVolts(topRollerVolts);
-        Debug.log("topRollersSpeed", topRollers.getVelocity());
+        topRollers.setVoltage(topRollerVolts);
+        // Debug.log("topRollersSpeed", topRollers.getVelocity());
 
         double bottomRollerVolts = -activeState.get().bottomRollerVolts;
         bottomRollers.setVolts(bottomRollerVolts);
