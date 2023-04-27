@@ -1,28 +1,25 @@
 /**
  * Copyright 2023 Texas Torque.
  *
- * This file is part of Torque-2023, which is not licensed for distribution.
- * For more details, see ./license.txt or write <jus@justusl.com>.
+ * This file is part of Torque-2023, which is not licensed for distribution. For more details, see
+ * ./license.txt or write <jus@justusl.com>.
  */
 package org.texastorque.controllers;
 
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
-
 import org.texastorque.Debug;
 import org.texastorque.Field;
 import org.texastorque.Field.AprilTagType;
 import org.texastorque.torquelib.control.TorquePID;
 import org.texastorque.torquelib.swerve.TorqueSwerveSpeeds;
-
 import com.pathplanner.lib.PathConstraints;
 import com.pathplanner.lib.PathPlanner;
 import com.pathplanner.lib.PathPlannerTrajectory;
 import com.pathplanner.lib.PathPlannerTrajectory.PathPlannerState;
 import com.pathplanner.lib.PathPoint;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
-
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -35,11 +32,9 @@ import edu.wpi.first.wpilibj.Timer;
 
 public final class PathAlignController extends AbstractController<Optional<TorqueSwerveSpeeds>> {
     public static enum TranslationState {
-        NONE(0, 0),
-        GRID_CENTER(ALIGN_X_OFFSET_GRID, 0),
-        GRID_RIGHT(ALIGN_X_OFFSET_GRID, -(5.3244 - 4.711)),
-        GRID_LEFT(ALIGN_X_OFFSET_GRID, (5.901 - 5.3244)),
-        LOAD_ZONE(2.25, -1.25);
+        NONE(0, 0), GRID_CENTER(ALIGN_X_OFFSET_GRID, 0), GRID_RIGHT(ALIGN_X_OFFSET_GRID,
+                -(5.3244 - 4.711)), GRID_LEFT(ALIGN_X_OFFSET_GRID,
+                        (5.901 - 5.3244)), LOAD_ZONE(2.25, -1.25);
 
         public Translation3d transl;
         private double x, y;
@@ -50,23 +45,18 @@ public final class PathAlignController extends AbstractController<Optional<Torqu
         }
 
         public Pose2d calculate(final Pose3d pose) {
-            final Translation3d transl = new Translation3d(x * (pose.getX() > Field.FIELD_LENGTH / 2 ? -1 : 1), y, 0);
+            final Translation3d transl =
+                    new Translation3d(x * (pose.getX() > Field.FIELD_LENGTH / 2 ? -1 : 1), y, 0);
             return (new Pose3d(pose.getTranslation().plus(transl), pose.getRotation())).toPose2d();
         }
     }
 
     public static enum AlignState {
-        NONE,
-        CENTER,
-        RIGHT,
-        LEFT;
+        NONE, CENTER, RIGHT, LEFT;
     }
 
     public static enum GridState {
-        NONE(-1, -1),
-        LEFT(1, 6),
-        CENTER(2, 7),
-        RIGHT(3, 8);
+        NONE(-1, -1), LEFT(1, 6), CENTER(2, 7), RIGHT(3, 8);
 
         private final int blueID, redID;
 
@@ -80,13 +70,15 @@ public final class PathAlignController extends AbstractController<Optional<Torqu
         }
     }
 
-    // public static final PathConstraints MAX_PATH_CONSTRAINTS = new PathConstraints(FollowEventPath.MAX_VELOCITY_PATH, FollowEventPath.MAX_ACCELERATION_PATH);
+    // public static final PathConstraints MAX_PATH_CONSTRAINTS = new
+    // PathConstraints(FollowEventPath.MAX_VELOCITY_PATH, FollowEventPath.MAX_ACCELERATION_PATH);
     public static final PathConstraints MAX_PATH_CONSTRAINTS = new PathConstraints(2, 4);
 
     private static final double DISTANCE_TOLERANCE_TIGHT = Units.inchesToMeters(1);
     private static final double DISTANCE_TOLERANCE_LOOSE = Units.inchesToMeters(3);
 
-    public static double ALIGN_X_OFFSET_GRID = (15.589758 - 14.72) + Units.inchesToMeters(1) + (2.194459414051292 - 1.97415);
+    public static double ALIGN_X_OFFSET_GRID =
+            (15.589758 - 14.72) + Units.inchesToMeters(1) + (2.194459414051292 - 1.97415);
 
     public static double ALIGN_X_OFFSET_LOAD_ZONE = 1;
 
@@ -107,13 +99,14 @@ public final class PathAlignController extends AbstractController<Optional<Torqu
     private PathPlannerTrajectory trajectory;
 
     private final Timer timer = new Timer();
-    final double LAST_LEG_X_OFFSET_MAX = Units.inchesToMeters(22);
+    final double LAST_LEG_X_OFFSET_MAX = Units.inchesToMeters(12);
 
-    final double LAST_LEG_X_OFFSET_MIN = Units.inchesToMeters(22);
+    final double LAST_LEG_X_OFFSET_MIN = Units.inchesToMeters(12);
 
     private Pose2d goalPose = new Pose2d();
 
-    public PathAlignController(final Supplier<Pose2d> poseSupplier, final Supplier<TorqueSwerveSpeeds> speedsSupplier) {
+    public PathAlignController(final Supplier<Pose2d> poseSupplier,
+            final Supplier<TorqueSwerveSpeeds> speedsSupplier) {
         xController.setTolerance(0.01);
         yController.setTolerance(0.01);
         thetaController.setTolerance(Units.degreesToRadians(.0001));
@@ -164,7 +157,8 @@ public final class PathAlignController extends AbstractController<Optional<Torqu
 
         final boolean done = timer.hasElapsed(trajectory.getTotalTimeSeconds());
 
-        final TorqueSwerveSpeeds speeds = TorqueSwerveSpeeds.fromChassisSpeeds(controller.calculate(current, desired));
+        final TorqueSwerveSpeeds speeds =
+                TorqueSwerveSpeeds.fromChassisSpeeds(controller.calculate(current, desired));
 
         return Optional.of(isSuperDone() ? new TorqueSwerveSpeeds() : speeds.times(-1, -1, 1));
     }
@@ -199,9 +193,11 @@ public final class PathAlignController extends AbstractController<Optional<Torqu
         if (alignment == AlignState.CENTER)
             return Optional.of(TranslationState.GRID_CENTER);
         else if (alignment == AlignState.LEFT)
-            return Optional.of(tagType.isGrid() ? TranslationState.GRID_LEFT : TranslationState.LOAD_ZONE);
+            return Optional
+                    .of(tagType.isGrid() ? TranslationState.GRID_LEFT : TranslationState.LOAD_ZONE);
         else if (alignment == AlignState.RIGHT)
-            return Optional.of(tagType.isGrid() ? TranslationState.GRID_RIGHT : TranslationState.LOAD_ZONE);
+            return Optional.of(
+                    tagType.isGrid() ? TranslationState.GRID_RIGHT : TranslationState.LOAD_ZONE);
         else
             return Optional.empty();
     }
@@ -213,13 +209,16 @@ public final class PathAlignController extends AbstractController<Optional<Torqu
 
         final Optional<TranslationState> translationState = getTranslationState(targetID);
 
-        // final Pose2d 
+        // final Pose2d
         goalPose = translationState.get().calculate(aprilPose);
         Debug.log("state", alignment.toString());
         Debug.log("goalX", goalPose.getX());
         Debug.log("goalY", goalPose.getY());
 
-        final double offset = Math.min(Math.max(current.getX(), LAST_LEG_X_OFFSET_MIN), LAST_LEG_X_OFFSET_MAX);
+        double offset =
+                Math.min(Math.max(current.getX(), LAST_LEG_X_OFFSET_MIN), LAST_LEG_X_OFFSET_MAX);
+
+
 
         final double initialSpeed = speedsSupplier.get().getVelocityMagnitude();
         final Rotation2d initialHeading = speedsSupplier.get().getHeading();
@@ -232,20 +231,23 @@ public final class PathAlignController extends AbstractController<Optional<Torqu
             final PathPoint midPoint = new PathPoint(
                     new Translation2d(goalPose.getX(), goalPose.getY() + Units.inchesToMeters(24)),
                     Rotation2d.fromRadians(Math.PI * 1.5), Rotation2d.fromRadians(Math.PI * .5));
-            final PathPoint endPoint = new PathPoint(goalPose.getTranslation(), Rotation2d.fromRadians(Math.PI * .5),
-                    Rotation2d.fromRadians(Math.PI * .5));
+            final PathPoint endPoint = new PathPoint(goalPose.getTranslation(),
+                    Rotation2d.fromRadians(Math.PI * .5), Rotation2d.fromRadians(Math.PI * .5));
 
-            trajectory = PathPlanner.generatePath(MAX_PATH_CONSTRAINTS, startPoint, midPoint, endPoint);
+            trajectory =
+                    PathPlanner.generatePath(MAX_PATH_CONSTRAINTS, startPoint, midPoint, endPoint);
 
         } else {
-            final PathPoint startPoint = new PathPoint(current.getTranslation(), Rotation2d.fromRadians(Math.PI),
-                    current.getRotation(), initialSpeed);
-            final PathPoint midPoint = new PathPoint(new Translation2d(goalPose.getX() + offset, goalPose.getY()),
+            final PathPoint startPoint = new PathPoint(current.getTranslation(),
+                    Rotation2d.fromRadians(Math.PI), current.getRotation(), initialSpeed);
+            final PathPoint midPoint =
+                    new PathPoint(new Translation2d(goalPose.getX() + offset, goalPose.getY()),
+                            Rotation2d.fromRadians(Math.PI), Rotation2d.fromRadians(Math.PI));
+            final PathPoint endPoint = new PathPoint(goalPose.getTranslation(),
                     Rotation2d.fromRadians(Math.PI), Rotation2d.fromRadians(Math.PI));
-            final PathPoint endPoint = new PathPoint(goalPose.getTranslation(), Rotation2d.fromRadians(Math.PI),
-                    Rotation2d.fromRadians(Math.PI));
 
-            trajectory = PathPlanner.generatePath(MAX_PATH_CONSTRAINTS, startPoint, midPoint, endPoint);
+            trajectory =
+                    PathPlanner.generatePath(MAX_PATH_CONSTRAINTS, startPoint, midPoint, endPoint);
         }
 
         timer.reset();
@@ -261,6 +263,7 @@ public final class PathAlignController extends AbstractController<Optional<Torqu
         if (trajectory == null)
             return false;
         final Pose2d endPoint = trajectory.getEndState().poseMeters;
-        return endPoint.getTranslation().getDistance(poseSupplier.get().getTranslation()) <= tolerance;
+        return endPoint.getTranslation()
+                .getDistance(poseSupplier.get().getTranslation()) <= tolerance;
     }
 }
