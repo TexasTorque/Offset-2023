@@ -2,7 +2,6 @@ package org.texastorque.auto;
 
 import java.util.HashMap;
 import java.util.Map;
-
 import org.texastorque.Subsystems;
 import org.texastorque.subsystems.Arm;
 import org.texastorque.subsystems.Hand;
@@ -61,11 +60,16 @@ public final class EventMap implements Subsystems {
             intake.setState(Intake.State.OUTAKE);
         }));
 
+        map.put("outtake-slow", new TorqueExecute(() -> {
+            intake.setState(Intake.State.SLOW_OUTAKE);
+        }));
+
         map.put("arm-down", new TorqueExecute(() -> {
             arm.setState(Arm.State.PRIME);
         }));
 
-        map.put("intake-spike", new TorqueWaitForSeconds(2.5, () -> intake.setState(Intake.State.CURRENT_SPIKE)));
+        map.put("intake-spike",
+                new TorqueWaitForSeconds(2.5, () -> intake.setState(Intake.State.CURRENT_SPIKE)));
 
         // map.put("handoff", new TorqueSequenceRunner(new CubeHandoff()));
         map.put("handoff", new TorqueContinuous(() -> arm.setState(Arm.State.HANDOFF)));

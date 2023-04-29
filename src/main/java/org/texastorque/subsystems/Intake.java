@@ -15,7 +15,6 @@ import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.motors.TorqueNEO;
 import org.texastorque.torquelib.util.TorqueMath;
-
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.motorcontrol.PWMSparkMax;
@@ -50,6 +49,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
         OUTAKE(
             new IndexerPose(-12, -12, ROT_INTAKE),
             new IndexerPose(-8, -9, ROT_INTAKE)), 
+       
         POOP(new IndexerPose(-12, -12, -9),
             new IndexerPose(-8, -9, ROT_UP)), 
         PRIME(
