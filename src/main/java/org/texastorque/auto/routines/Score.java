@@ -26,7 +26,7 @@ public final class Score extends TorqueSequence implements Subsystems {
         addBlock(new TorqueExecute(() -> hand.keepOpenInAuto = true));
         addBlock(new TorqueWaitForSeconds(waitTime));
         addBlock(hand.setStateCommand(Hand.State.CHUNGUS));
-        addBlock(new TorqueWaitForSeconds(waitTime));
+        addBlock(new TorqueWaitForSeconds(.2));
         addBlock(new TorqueExecute(() -> hand.keepOpenInAuto = false));
         addBlock(arm.setStateCommand(Arm.State.STOWED), hand.setStateCommand(Hand.State.CLOSE));
 

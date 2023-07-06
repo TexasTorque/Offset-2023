@@ -36,7 +36,7 @@ import io.github.oblarg.oblog.annotations.Log;
 public final class Arm extends TorqueSubsystem implements Subsystems {
     public static class ArmPose {
         private static final double ELEVATOR_TOLERANCE = .6,
-                ROTARY_TOLERANCE = Units.degreesToRadians(17);
+                ROTARY_TOLERANCE = Units.degreesToRadians(20);
 
         public boolean autoReadyToScore = false;
 
@@ -370,6 +370,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     @Override
     public final void update(final TorqueMode mode) {
         SmartDashboard.putBoolean("arm::isAtPose", activeState.get().atPose(realElevatorPose, realRotaryPose));
+        SmartDashboard.putNumber("elevatorDelta",  Math.abs(realElevatorPose - activeState.get().elevatorPose));
+        SmartDashboard.putNumber("rotaryDelta",  Math.abs(realRotaryPose.minus(activeState.get().rotaryPose).getRadians()));
         activeState = desiredState;
 
         updateFeedback();
