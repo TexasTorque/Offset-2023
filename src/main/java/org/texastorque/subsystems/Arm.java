@@ -69,7 +69,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
         THROW(new ArmPose(50, Rotation2d.fromDegrees(0))),
 
-        PRIME(new ArmPose(15, Rotation2d.fromDegrees(220))),
+        PRIME(new ArmPose(21.5, Rotation2d.fromDegrees(220))),
         HANDOFF(PRIME),
 
         HANDOFF_ABOVE(
@@ -184,8 +184,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     private static final double ROTARY_ENCODER_OFFSET = Units.degreesToRadians(50),
-            ELEVATOR_MAX_VOLTS_UP = 9.5, ELEVATOR_MAX_VOLTS_HANDOFF = 9.5,
-            ELEVATOR_MAX_VOLTS_DOWN = 9, ROTARY_MAX_VOLTS = 8, ELEVATOR_MIN = 0, ELEVATOR_MAX = 50;
+            ELEVATOR_MAX_VOLTS_UP = 4, ELEVATOR_MAX_VOLTS_HANDOFF = 4,
+            ELEVATOR_MAX_VOLTS_DOWN = 4, ROTARY_MAX_VOLTS = 8, ELEVATOR_MIN = 0, ELEVATOR_MAX = 50;
 
 
     private static volatile Arm instance;
