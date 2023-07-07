@@ -344,9 +344,12 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     public boolean isWantingFullOpen() {
-        return activeState == State.HANDOFF_DOWN && hand.isCubeMode()
-                || activeState == State.SHELF_OPEN || activeState == State.HANDOFF_DOWN_AUTO
+        return activeState == State.SHELF_OPEN || activeState == State.HANDOFF_DOWN_AUTO
                 || activeState == State.HANDOFF_FORWARD || activeState == State.HANDOFF_ABOVE;
+    }
+
+    public boolean isWantingChungus() {
+        return activeState == State.HANDOFF_DOWN;
     }
 
     public void setSetpointAdjustment(final double setpointAdjustment) {
@@ -369,9 +372,12 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
 
     @Override
     public final void update(final TorqueMode mode) {
-        SmartDashboard.putBoolean("arm::isAtPose", activeState.get().atPose(realElevatorPose, realRotaryPose));
-        SmartDashboard.putNumber("elevatorDelta",  Math.abs(realElevatorPose - activeState.get().elevatorPose));
-        SmartDashboard.putNumber("rotaryDelta",  Math.abs(realRotaryPose.minus(activeState.get().rotaryPose).getRadians()));
+        SmartDashboard.putBoolean("arm::isAtPose",
+                activeState.get().atPose(realElevatorPose, realRotaryPose));
+        SmartDashboard.putNumber("elevatorDelta",
+                Math.abs(realElevatorPose - activeState.get().elevatorPose));
+        SmartDashboard.putNumber("rotaryDelta",
+                Math.abs(realRotaryPose.minus(activeState.get().rotaryPose).getRadians()));
         activeState = desiredState;
 
         updateFeedback();

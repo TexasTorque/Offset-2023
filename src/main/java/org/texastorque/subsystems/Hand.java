@@ -24,6 +24,7 @@ import com.ctre.phoenix.sensors.SensorInitializationStrategy;
 import com.ctre.phoenix.sensors.SensorTimeBase;
 
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
 
@@ -36,10 +37,10 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
     public static enum State {
         // 4.2 - 3.2
         // Smaller is bigger on the claw
-        OPEN(2),
-        SHELF(2.2),
-        HALF(2.2),
-        CHUNGUS(1.8),
+        OPEN(2.1),
+        SHELF(2.1),
+        HALF(2.5),
+        CHUNGUS(1.9),
         CLOSE(3);
 
         public final double clawSetpoint;
@@ -148,6 +149,7 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
 
     @Override
     public final void update(final TorqueMode mode) {
+        SmartDashboard.putNumber("hand::clawPose", realClawPose);
         activeState = desiredState;
         updateFeedback();
 
@@ -164,6 +166,10 @@ public final class Hand extends TorqueSubsystem implements Subsystems {
             }
             if (arm.isWantingFullOpen()) {
                 activeState = State.OPEN;
+            }
+
+            if (arm.isWantingChungus()) {
+                activeState = State.CHUNGUS;
             }
 
             if ((arm.isState(Arm.State.SHELF) || arm.isState(Arm.State.STOWED)) && activeState == State.OPEN
