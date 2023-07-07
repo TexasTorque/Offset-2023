@@ -13,22 +13,23 @@ import org.texastorque.torquelib.auto.TorqueSequence;
 import org.texastorque.torquelib.auto.commands.TorqueExecute;
 import org.texastorque.torquelib.auto.commands.TorqueWaitForSeconds;
 import org.texastorque.torquelib.auto.commands.TorqueWaitUntil;
-import org.texastorque.torquelib.util.TorqueUtil;
+import edu.wpi.first.wpilibj.Timer;
 
 public final class Score extends TorqueSequence implements Subsystems {
-    private static final double TIMEOUT = 5;
+    private static final double TIMEOUT = 5e3;
     private double startTime;
 
     public Score(final Arm.State armState) {
         this(armState, .4);
-        startTime = TorqueUtil.time();
+        startTime = Timer.getFPGATimestamp();
     }
 
     public Score(final Arm.State armState, final double waitTime) {
         addBlock(hand.setStateCommand(Hand.State.CLOSE));
-        addBlock(arm.setStateCommand(Arm.State.MID)); // Should be armState. temp fix :()
-        addBlock(new TorqueWaitUntil(
-                () -> (arm.isAtState(Arm.State.MID) || TorqueUtil.time() - startTime >= TIMEOUT)));
+        addBlock(arm.setStateCommand(armState));
+        addBlock(new TorqueWaitUntil(() -> (arm.isAtState(Arm.State.MID)
+                || Timer.getFPGATimestamp() - startTime >= TIMEOUT)));
+        // () -> (arm.isAtState(Arm.State.MID))));
         addBlock(new TorqueExecute(() -> hand.keepOpenInAuto = true));
         addBlock(new TorqueWaitForSeconds(waitTime));
         addBlock(hand.setStateCommand(Hand.State.CHUNGUS));

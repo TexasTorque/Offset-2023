@@ -130,7 +130,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         isZeroingWheels.onTrue(() -> drivebase.setState(Drivebase.State.ZERO));
 
         openClaw.onTrue(() -> {
-            hand.setState(Hand.State.OPEN);
+            hand.setState(hand.isConeMode() ? Hand.State.OPEN : Hand.State.HALF);
         });
 
         gamePieceModeToggle.onTrueOrFalse(() -> hand.setGamePieceMode(GamePiece.CONE),
