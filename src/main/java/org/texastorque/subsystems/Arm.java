@@ -184,7 +184,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     private static final double ROTARY_ENCODER_OFFSET = Units.degreesToRadians(50),
-            ELEVATOR_MAX_VOLTS_UP = 10, ELEVATOR_MAX_VOLTS_HANDOFF = 10,
+            ELEVATOR_MAX_VOLTS_UP = 9.5, ELEVATOR_MAX_VOLTS_HANDOFF = 9.5,
             ELEVATOR_MAX_VOLTS_DOWN = 9, ROTARY_MAX_VOLTS = 8, ELEVATOR_MIN = 0, ELEVATOR_MAX = 50;
 
 
