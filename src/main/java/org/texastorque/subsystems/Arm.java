@@ -65,7 +65,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
                 new ArmPose(5, Rotation2d.fromDegrees(28))),
         TOP(
                 new ArmPose(30, Rotation2d.fromDegrees(0 )),
-                new ArmPose(40, Rotation2d.fromDegrees(22))),
+                new ArmPose(40, Rotation2d.fromDegrees(26))),
 
         THROW(new ArmPose(50, Rotation2d.fromDegrees(0))),
 
@@ -184,8 +184,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     private static final double ROTARY_ENCODER_OFFSET = Units.degreesToRadians(50),
-            ELEVATOR_MAX_VOLTS_UP = 4, ELEVATOR_MAX_VOLTS_HANDOFF = 4,
-            ELEVATOR_MAX_VOLTS_DOWN = 4, ROTARY_MAX_VOLTS = 8, ELEVATOR_MIN = 0, ELEVATOR_MAX = 50;
+            ELEVATOR_MAX_VOLTS_UP = 4, ELEVATOR_MAX_VOLTS_HANDOFF = 4, ELEVATOR_MAX_VOLTS_DOWN = 4,
+            ROTARY_MAX_VOLTS = 6, ELEVATOR_MIN = 0, ELEVATOR_MAX = 50;
 
 
     private static volatile Arm instance;
@@ -344,12 +344,13 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     }
 
     public boolean isWantingFullOpen() {
-        return activeState == State.SHELF_OPEN || activeState == State.HANDOFF_DOWN_AUTO
-                || activeState == State.HANDOFF_FORWARD || activeState == State.HANDOFF_ABOVE;
+        return (activeState == State.SHELF_OPEN && hand.isConeMode()) || activeState == State.HANDOFF_DOWN_AUTO || activeState == State.HANDOFF_FORWARD
+                || activeState == State.HANDOFF_ABOVE;
     }
 
     public boolean isWantingChungus() {
-        return activeState == State.HANDOFF_DOWN;
+        return activeState == State.HANDOFF_DOWN
+                || (activeState == State.SHELF_OPEN && hand.isCubeMode());
     }
 
     public void setSetpointAdjustment(final double setpointAdjustment) {

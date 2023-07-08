@@ -11,7 +11,7 @@ import java.util.Map;
 
 import org.texastorque.auto.AutoManager;
 import org.texastorque.torquelib.util.TorqueUtil;
-
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.util.Color;
@@ -27,7 +27,7 @@ public final class Debug implements Subsystems {
 
         final ShuffleboardTab dashboard = Shuffleboard.getTab("COMPETITION");
 
-        dashboard.add("FIELD", drivebase.fieldMap).withWidget("Field").withPosition(0, 0).withSize(7, 4);
+        // dashboard.add("FIELD", drivebase.fieldMap).withWidget("Field").withPosition(0, 0).withSize(7, 4);
 
         dashboard.add("AUTO SELECTOR", AutoManager.getInstance().getAutoSelector()).withPosition(7, 0).withSize(4, 2);
 
@@ -35,6 +35,8 @@ public final class Debug implements Subsystems {
                 .withPosition(7, 2).withSize(4, 4);
 
         dashboard.addBoolean("CAMERAS", drivebase::isCamerasConnected).withPosition(11, 0).withSize(2, 2);
+
+        dashboard.addDouble("TIME", () -> DriverStation.getMatchTime()).withPosition(0, 0).withSize(7, 4);
     }
 
     public static void log(final String key, final double number) {
