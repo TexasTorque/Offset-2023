@@ -1,10 +1,10 @@
 import math
 import cv2
 import numpy as np
-from networktables import NetworkTables as nt
+# from networktables import NetworkTables as nt
 
-nt.initialize(server="10.14.77.2")
-table = nt.getTable("spindexer")
+# nt.initialize(server="10.14.77.2")
+# table = nt.getTable("spindexer")
 
 cap = cv2.VideoCapture('conevid.mp4')
 
@@ -63,16 +63,16 @@ while True:
         elif shortest_side == d3:
             tipX, tipY = x2, y2
 
-        print("shortestSide: " + str(shortest_side))
 
         cv2.circle(frame, (tipX, tipY), radius=10,
                    color=(0, 0, 255), thickness=-1)
         cv2.putText(frame, "Tip ({}, {})".format(tipX, tipY), (tipX,
                     tipY), cv2.FONT_ITALIC, 2, color=(255, 0, 0), thickness=4)
 
-        table.putNumberArray("Tip-Coordinates", [tipX, tipY])
+        # table.putNumberArray("tip-coords", [tipX, tipY])
     else:
-        table.putNumberArray("Tip-Coordinates", [1477, 1477])
+        # table.putNumberArray("tip-coords", [1477, 1477])
+        print("No tip found")
 
     cv2.imshow('frame', frame)
 
