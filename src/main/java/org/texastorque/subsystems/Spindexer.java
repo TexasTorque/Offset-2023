@@ -61,7 +61,6 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
         return instance == null ? instance = new Spindexer() : instance;
     }
 
-
     private double volts;
 
     @Log.ToString
@@ -73,7 +72,13 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
 
     private AutoSpindex autoSpindex;
 
-    private final PIDController pidController = new PIDController(1, 0, 0);
+
+
+    private NetworkTableInstance nTInstance = NetworkTableInstance.getDefault();
+    private NetworkTable spindexerTable;
+    private NetworkTableEntry tipCoordsEntry;
+    private Double[] tipCoords = new Double[2];
+
 
     private final double coneTipX = NetworkTableInstance.getDefault().getTable("spindexer")
             .getEntry("tip-x").getDouble(-1477);
@@ -140,10 +145,10 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
             volts = activeState.volts;
         }
 
+
         desiredState = State.OFF;
         turntable.setVolts(volts);
 
     }
-
 
 }
