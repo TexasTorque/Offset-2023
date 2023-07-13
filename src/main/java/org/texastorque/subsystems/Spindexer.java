@@ -18,8 +18,7 @@ import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.motors.TorqueNEO;
 import org.texastorque.torquelib.util.TorqueMath;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import io.github.oblarg.oblog.annotations.Log;
@@ -41,9 +40,9 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
 
         public AutoSpindex() {
 
-            addBlock(new TorqueExecute(() -> spindexer.activeState = State.SLOW_CCW));
+            addBlock(new TorqueExecute(() -> spindexer.activeState = State.ALIGN));
 
-            addBlock(new TorqueWaitUntil(() -> spindexer.isAligned()));
+            addBlock(new TorqueWaitUntil(() -> spindexer.isConeAligned()));
 
             addBlock(new TorqueExecute(() -> spindexer.activeState = State.OFF));
 
@@ -56,14 +55,13 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
 
     private static volatile Spindexer instance;
 
+    private static double CONE_TIP_X_GOAL = 1610, CONE_TIP_X_TOLERANCE = 60;
+
     public static final synchronized Spindexer getInstance() {
         return instance == null ? instance = new Spindexer() : instance;
     }
 
-
-
     private double volts;
-
 
     @Log.ToString
     private State desiredState = State.OFF;
@@ -82,15 +80,14 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
     private Double[] tipCoords = new Double[2];
 
 
+    private final double coneTipX = NetworkTableInstance.getDefault().getTable("spindexer")
+            .getEntry("tip-x").getDouble(-1477);
+
     private Spindexer() {
         turntable.setCurrentLimit(35);
         turntable.setVoltageCompensation(12.6);
         turntable.setBreakMode(true);
         turntable.burnFlash();
-
-        spindexerTable = nTInstance.getTable("spindexer");
-        tipCoordsEntry = spindexerTable.getEntry("tip-coords");
-        tipCoords = tipCoordsEntry.getDoubleArray(tipCoords);
     }
 
 
@@ -113,6 +110,10 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
         return desiredState == State.AUTO_SPINDEX;
     }
 
+    public boolean isConeAligned() {
+        return TorqueMath.toleranced(coneTipX, CONE_TIP_X_GOAL, CONE_TIP_X_TOLERANCE);
+    }
+
     @Override
     public final void update(final TorqueMode mode) {
         Debug.log("current", turntable.getCurrent());
@@ -128,17 +129,26 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
         }
 
         SmartDashboard.putString("spindexer::activeState", activeState.toString());
+        SmartDashboard.putNumber("spindexer::coneTipX", coneTipX);
 
-        volts = activeState.volts;
+        volts = 0;
+
+        if (activeState == State.ALIGN) {
+
+            volts = coneTipX == -1477 ? 6
+                    : TorqueMath.constrain(pidController.calculate(coneTipX, CONE_TIP_X_GOAL), 6);
+
+            if (isConeAligned())
+                volts = 0;
+
+        } else {
+            volts = activeState.volts;
+        }
+
 
         desiredState = State.OFF;
         turntable.setVolts(volts);
 
     }
 
-
-    public boolean isAligned() {
-        return TorqueMath.toleranced(tipCoords[0], 1550, 20)
-                && TorqueMath.toleranced(tipCoords[1], 760, 20);
-    }
 }
