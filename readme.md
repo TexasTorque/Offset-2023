@@ -17,7 +17,7 @@ Codebase for **Offset**, Texas Torque's competition robot for the 2023 FRC seaso
 - [Omar Afzal (asst. programming lead)](https://github.com/0mara/)
 - [Jack Pittenger (president)](https://github.com/realSaddy/)
 - [Jacob Daniels (programmer)](https://github.com/firebanner64/)
-= [Davey Adams (programmer)](https://github.com/humandavey)
+- [Davey Adams (programmer)](https://github.com/humandavey)
 
 ## Third-Party Libraries
 
