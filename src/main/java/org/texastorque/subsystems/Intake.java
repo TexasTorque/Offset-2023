@@ -169,7 +169,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
 
         realRotaryPose = rotary.getPosition();
 
-        if (desiredState == State.UP && arm.isPerformingHandoff()) {
+        if (desiredState == State.UP && arm.isPerformingHandoff() || spindexer.isAutoSpindexing()) {
             if (hand.isCubeMode())
                 activeState = State.PRIME;
             else
@@ -187,6 +187,7 @@ public final class Intake extends TorqueSubsystem implements Subsystems {
         if (spiked) {
             activeState = State.UP;
         }
+
 
         Debug.log("topRollerCurrent", topRollers.getCurrent());
         Debug.log("rotaryPose", rotary.getPosition());

@@ -100,7 +100,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
                 new ArmPose(16, Rotation2d.fromDegrees(230))),
         LEAVING_SHELF(PRIME),
         PUSH_CUBE(
-                new ArmPose(15, Rotation2d.fromDegrees(260)));
+                new ArmPose(15, Rotation2d.fromDegrees(260))),
+        HIGH_STOW(new ArmPose(0, Rotation2d.fromDegrees(50)));
         
         // @formatter:on
 
@@ -413,6 +414,11 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
             leaveShelfSeq.run();
         } else {
             leaveShelfSeq = new LeaveShelf();
+        }
+
+        if (spindexer.isAutoSpindexing()) {
+            System.out.println("Spindexing");
+            activeState = State.HIGH_STOW;
         }
 
         calculateElevator(activeState);

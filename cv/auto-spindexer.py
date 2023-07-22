@@ -1,10 +1,10 @@
 import math
 import cv2
 import numpy as np
-# from networktables import NetworkTables as nt
+from networktables import NetworkTables as nt
 
-# nt.initialize(server="10.14.77.2")
-# table = nt.getTable("spindexer")
+nt.initialize(server="10.14.77.2")
+table = nt.getTable("spindexer")
 
 cap = cv2.VideoCapture(0)
 
@@ -71,12 +71,12 @@ while True:
             cv2.putText(frame, "Tip ({}, {})".format(tipX, tipY), (tipX,
                         tipY), cv2.FONT_ITALIC, 2, color=(255, 0, 0), thickness=4)
 
-            # table.putNumber("tip-x", tipX)
+            table.putNumber("tip-x", tipX)
         else:
-            # table.putNumber("tip-x", -1477)
+            table.putNumber("tip-x", -1477)
             print("No tip found")
     else:
-        # table.putNumber("tip-x", -1477)
+        table.putNumber("tip-x", -1477)
         print("No Contour")
 
 

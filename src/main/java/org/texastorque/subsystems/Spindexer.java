@@ -55,7 +55,9 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
 
     private static volatile Spindexer instance;
 
-    private static double CONE_TIP_X_GOAL = 1610, CONE_TIP_X_TOLERANCE = 60;
+      //330 - 381
+
+    private static double CONE_TIP_X_GOAL = 355., CONE_TIP_X_TOLERANCE = 40;
 
     public static final synchronized Spindexer getInstance() {
         return instance == null ? instance = new Spindexer() : instance;
@@ -75,14 +77,17 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
 
     private final PIDController pidController = new PIDController(1, 0, 0);
 
-    private final double coneTipX = NetworkTableInstance.getDefault().getTable("spindexer")
+    private double coneTipX = NetworkTableInstance.getDefault().getTable("spindexer")
             .getEntry("tip-x").getDouble(-1477);
+
+
 
     private Spindexer() {
         turntable.setCurrentLimit(35);
         turntable.setVoltageCompensation(12.6);
         turntable.setBreakMode(true);
         turntable.burnFlash();
+
     }
 
 
@@ -102,7 +107,7 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
     public final void initialize(final TorqueMode mode) {}
 
     public boolean isAutoSpindexing() {
-        return desiredState == State.AUTO_SPINDEX;
+        return activeState == State.AUTO_SPINDEX || activeState == State.ALIGN;
     }
 
     public boolean isConeAligned() {
@@ -111,8 +116,12 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
 
     @Override
     public final void update(final TorqueMode mode) {
-        Debug.log("current", turntable.getCurrent());
+        coneTipX = NetworkTableInstance.getDefault().getTable("spindexer")
+        .getEntry("tip-x").getDouble(-1477);
 
+        Debug.log("current", turntable.getCurrent());
+        SmartDashboard.putNumber("spindexer::coneTipX", coneTipX);
+      
         if (autoSpindex == null)
             autoSpindex = new AutoSpindex();
 
@@ -129,8 +138,7 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
         volts = 0;
 
         if (activeState == State.ALIGN) {
-
-            volts = coneTipX == -1477 ? 6
+            volts = coneTipX == -1477 ? 3
                     : TorqueMath.constrain(pidController.calculate(coneTipX, CONE_TIP_X_GOAL), 6);
 
             if (isConeAligned())
