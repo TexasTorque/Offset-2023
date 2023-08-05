@@ -493,7 +493,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
         double requestedRotaryVelocity = 0;
         double rotaryVolts;
 
-        // If the displacement is < 1.2 (70 deg), use PID. Otherwise, use motion
+        // If the displacement is < .5 (28 deg), use PID. Otherwise, use motion
         // profile.
         if (Math.abs(armSetpoint - rotaryPos) < .5) {
             rotaryVolts = -rotaryPoseController.calculate(rotaryPos, armSetpoint);
