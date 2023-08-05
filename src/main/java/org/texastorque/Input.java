@@ -165,7 +165,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
         // wantsSlowIntake.onTrue(() -> intake.setState(Intake.State.CURRENT_SPIKE));
         wantsSlowOuttake.onTrue(() -> intake.setState(Intake.State.SLOW_OUTAKE));
 
-        // arm.setSetpointAdjustment(operator.getRightYAxis());
+        arm.setSetpointAdjustment(-operator.getRightYAxis());
 
         armToPrime.onTrue(() -> arm.setState(Arm.State.PRIME));
 
