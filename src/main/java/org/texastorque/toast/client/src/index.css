@@ -1,0 +1,208 @@
+body {
+  background-color: black !important;
+  overflow-y: none;
+}
+
+@font-face {
+  font-family: "Market_Deco";
+  src: local("Market_Deco"), url("./fonts/Market_Deco.ttf") format("truetype");
+  font-weight: bold;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  color: white !important;
+}
+
+.heading {
+  color: white;
+  text-align: center;
+  box-sizing: border-box;
+  padding-top: 15px;
+  padding-bottom: 10px;
+  margin-bottom: 0.5em;
+  border-bottom: 5px solid white;
+  height: 100px;
+}
+
+.heading-title {
+  display: flex;
+  justify-content: center;
+}
+
+.heading-toast {
+  height: 2.5em;
+  width: 2.5em;
+  position: relative;
+  top: 0.25em;
+}
+
+.lsp-button-text-selected {
+  background: #a6a6a699 !important;
+  --bs-btn-border-radius: 0em !important;
+  border-color: black !important;
+  border-width: 0.1em !important;
+  color: black !important;
+  font-weight: bold !important;
+  height: 5em;
+  width: 90%;
+  margin: 1em;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+  margin-right: 10em;
+  font-size: 1.1em !important;
+  box-sizing: border-box;
+  border: 5px solid #484343 !important;
+}
+
+.lsp-button-text {
+  background: #a6a6a6 !important;
+  --bs-btn-border-radius: 0em !important;
+  border-color: black !important;
+  border-width: 0.1em !important;
+  color: black !important;
+  font-weight: bold !important;
+  height: 5em;
+  width: 90%;
+  margin: 1em;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+  margin-right: 10em;
+  font-size: 1.1em !important;
+  box-sizing: border-box;
+  border: 5px solid #484343 !important;
+}
+
+.dashboard {
+  display: flex;
+  border-right: 5px solid white;
+  width: 100%;
+  height: 100%;
+}
+
+.left-side-panel {
+  display: grid;
+  box-sizing: border-box;
+  border: 5px solid white;
+  border-top: none;
+  border-bottom: none;
+  overflow-y: auto;
+  height: 100vh;
+  overflow-x: hidden;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  border-top: 5px solid white;
+}
+
+.left-side-panel::-webkit-scrollbar {
+  display: none;
+}
+
+.right-side-panel {
+  border-top: 5px solid white;
+  overflow-x: hidden;
+  flex: 90%;
+  max-width: 100%;
+  height: 100;
+  display: flex;
+  position: relative;
+}
+
+.lsp-button-img {
+  height: 2em;
+  width: 2em;
+  margin: 0.5em;
+}
+
+.cam-stream {
+  height: 70%;
+  width: 70%;
+  justify-self: center;
+  border: 5px solid gray;
+  margin-top: 1em;
+}
+
+.rsp-dropdown-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 1em;
+  position: relative;
+  bottom: 5em;
+}
+
+.rsp-dropdown {
+  margin-top: 0.2em;
+  margin-left: 0.5em;
+}
+
+.rsp-cam-options {
+  justify-content: center;
+  color: white;
+  font-size: 1.5em;
+  text-align: center;
+}
+
+.dropdown-menu.show {
+  text-align: center;
+}
+
+.rsp-intrinsics-data {
+  justify-content: center;
+  margin-top: 1em;
+  color: white;
+  font-size: 1.5em;
+  text-align: center;
+}
+
+.rsp-table {
+  display: flex;
+  justify-content: center;
+}
+
+.rsp-od-icons {
+  height: 2em;
+}
+
+.rsp-od {
+  display: flex;
+  justify-content: center;
+  position: relative;
+  bottom: 4em;
+}
+
+.stream {
+  margin-top: 1em;
+}
+
+.rsp-grid {
+  display: grid;
+}
+
+.rsp-stream {
+  background: #a6a6a699 !important;
+  padding: 2em;
+  padding-top: 1em;
+  padding-bottom: 1em;
+  height: 90%;
+  margin: 2em;
+  margin-bottom: 1em;
+}
+
+.rsp-intrins {
+  background: #a6a6a699 !important;
+  padding: 2em;
+  margin: 2em;
+  margin-top: 1em;
+}
+
+table, tr, td {
+    border: 3px white;
+    /* border-collapse: collapse; */
+    /* border-spacing: 0; */
+}
+
+td:hover {
+    /* border: 1px solid red; */
+}

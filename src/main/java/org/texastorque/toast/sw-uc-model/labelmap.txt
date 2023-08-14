@@ -1,0 +1,2 @@
+upright-cone
+sideways-cone

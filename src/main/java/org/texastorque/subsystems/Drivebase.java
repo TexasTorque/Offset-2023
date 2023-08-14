@@ -16,6 +16,8 @@ import org.texastorque.controllers.AutoLevelController;
 import org.texastorque.controllers.PathAlignController;
 import org.texastorque.controllers.PathAlignController.AlignState;
 import org.texastorque.controllers.PathAlignController.GridState;
+import org.texastorque.toast.lib.Toast;
+import org.texastorque.toast.lib.pipelines.AprilTagPipeline;
 import org.texastorque.torquelib.auto.TorqueCommand;
 import org.texastorque.torquelib.auto.commands.TorqueContinuous;
 import org.texastorque.torquelib.base.TorqueMode;
@@ -76,7 +78,6 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     }
 
     private static volatile Drivebase instance;
-
     public static final double WIDTH = Units.inchesToMeters(21.745), // m (swerve to swerve)
             LENGTH = Units.inchesToMeters(21.745), // m (swerve to swerve)
 
@@ -108,11 +109,11 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
             new Translation3d(Units.inchesToMeters(5.800), Units.inchesToMeters(-8.517), Units.inchesToMeters(43.3)),
             new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(0), Units.degreesToRadians(35.895 / 2)));
 
-    // (forward from center, left from center, up from center)
-
     private static final Transform3d RIGHT_CAMERA_TO_CENTER = new Transform3d(
             new Translation3d(Units.inchesToMeters(5.760), Units.inchesToMeters(-12.707), Units.inchesToMeters(43.3)),
             new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(0), Units.degreesToRadians(-35.895 / 2)));
+
+    // (forward from center, left from center, up from center)
 
     public static SwerveModulePosition invertSwerveModuleDistance(final SwerveModulePosition pose) {
         return new SwerveModulePosition(-pose.distanceMeters, pose.angle);
@@ -121,6 +122,8 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     public static synchronized final Drivebase getInstance() {
         return instance == null ? instance = new Drivebase() : instance;
     }
+
+    private final Toast toast;
 
     @Log.ToString
     public SpeedSetting speedSetting = SpeedSetting.FAST;
@@ -167,6 +170,8 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     public final TorqueVision cameraLeft, cameraRight;
 
     public boolean updateWithTags = true;
+    private final double i2m = 0.0254, h = 5.5 * i2m, p = Math.PI / 4, r = Math.PI / 2;
+
     /**
      * Constructor called on initialization.
      */
@@ -197,6 +202,10 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         swerveStates = new SwerveModuleState[4];
         for (int i = 0; i < swerveStates.length; i++)
             swerveStates[i] = new SwerveModuleState();
+
+        toast = new Toast(Field.getCurrentFieldLayout(), poseEstimator);
+
+        initToast();
     }
 
     public final boolean isCamerasConnected() {
@@ -250,6 +259,8 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         updateWithTags = true;
         cameraLeft.setFieldLayout(Field.getCurrentFieldLayout());
         cameraRight.setFieldLayout(Field.getCurrentFieldLayout());
+
+        initToast();
     }
 
     public SwerveModulePosition[] getModulePositions() {
@@ -317,6 +328,8 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     public void resetPose(final Pose2d pose) {
         gyro.setOffsetCW(pose.getRotation());
         poseEstimator.resetPosition(gyro.getHeadingCCW(), getModulePositions(), pose);
+
+        toast.getEstimator().resetPosition(gyro.getHeadingCCW(), getModulePositions(), pose);
     }
 
     public void resetPose(final Rotation2d rotation) {
@@ -338,7 +351,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     @Log.ToString(name = "Robot Pose")
     public Pose2d getPose() {
         updateFeedback();
-        return poseEstimator.getEstimatedPosition();
+        return toast.getEstimator().getEstimatedPosition();
     }
 
     @Log.Dial(name = "Gyro Radians")
@@ -354,8 +367,25 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         return inputSpeeds.hasZeroVelocity();
     }
 
+    private void initToast() {
+        toast.setPipeline("local0", new AprilTagPipeline(new Transform3d(
+            new Translation3d(-1 * i2m, 12.75 * i2m, h),
+            new Rotation3d(0, p, 0))));
+        toast.setPipeline("local2", new AprilTagPipeline(new Transform3d(
+            new Translation3d(-11.25 * i2m, -1.25 * i2m, h),
+            new Rotation3d(0, p, r * 3))));
+        toast.setPipeline("local4", new AprilTagPipeline(new Transform3d(
+            new Translation3d(-.75 * i2m, -12.75 * i2m, h),
+            new Rotation3d(0, p, r * 2))));
+        toast.setPipeline("local6", new AprilTagPipeline(new Transform3d(
+            new Translation3d(11.25 * i2m, .75 * i2m, h),
+            new Rotation3d(0, p, r))));
+    }
+
     private void updateFeedback() {
         Debug.log("gyro pitch", TorqueNavXGyro.getInstance().getPitch());
+
+        toast.update(gyro.getHeadingCCW(), getModulePositions());
 
         if (updateWithTags || DriverStation.isTeleop()) {
             cameraLeft.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
@@ -367,6 +397,10 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         fieldMap.setRobotPose(
                 DriverStation.getAlliance() == DriverStation.Alliance.Blue ? poseEstimator.getEstimatedPosition()
                         : Field.reflectPosition(poseEstimator.getEstimatedPosition()));
+
+        fieldMap.setRobotPose(DriverStation.getAlliance() == DriverStation.Alliance.Blue
+                ? toast.getEstimator().getEstimatedPosition()
+                        : Field.reflectPosition(toast.getEstimator().getEstimatedPosition()));
     }
 
     private void zeroModules() {

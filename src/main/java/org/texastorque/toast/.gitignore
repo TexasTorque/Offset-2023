@@ -1,0 +1,4 @@
+cal-imgs
+__pycache__
+.DS_Store
+pipelines/__pycache__

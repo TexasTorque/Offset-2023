@@ -1,0 +1,24 @@
+{
+  "files": {
+    "main.css": "/static/css/main.b2428440.css",
+    "main.js": "/static/js/main.cde20612.js",
+    "static/media/tag8.png": "/static/media/tag8.d25e5a7454b02502f7ee.png",
+    "static/media/tag7.png": "/static/media/tag7.2a0a70c06882fd69f867.png",
+    "static/media/tag6.png": "/static/media/tag6.3fdf31b0acc4b4690f08.png",
+    "static/media/tag4.png": "/static/media/tag4.61f474b345774e20f20d.png",
+    "static/media/tag0.png": "/static/media/tag0.e41b8c7798697c0506e3.png",
+    "static/media/tag5.png": "/static/media/tag5.6324546e3c1c13546f38.png",
+    "static/media/Market_Deco.ttf": "/static/media/Market_Deco.81315f1a8b740b5efce6.ttf",
+    "static/media/tag3.png": "/static/media/tag3.76f1d7f74db24b6b98a1.png",
+    "static/media/tag2.png": "/static/media/tag2.e670362dbfded5fdaebb.png",
+    "static/media/tag1.png": "/static/media/tag1.e7e177ab9c2d7ada401f.png",
+    "static/media/cone-outlined.png": "/static/media/cone-outlined.7f2bc7365e9c88191f70.png",
+    "index.html": "/index.html",
+    "main.b2428440.css.map": "/static/css/main.b2428440.css.map",
+    "main.cde20612.js.map": "/static/js/main.cde20612.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.b2428440.css",
+    "static/js/main.cde20612.js"
+  ]
+}
