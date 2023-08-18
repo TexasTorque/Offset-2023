@@ -1,7 +1,16 @@
-import cv2, importlib, threading, network, intrinsics, time, sys, argparse, os
+import argparse
+import base64
+import importlib
+import os
+import sys
+import threading
+import time
+
+import cv2
+import intrinsics
+import network
 from flask import Flask
 from flask_cors import CORS
-import base64
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"/getCameraStream": {"origins": "http://localhost:3000"}})
@@ -48,6 +57,7 @@ def dispatch():
     time.sleep(3)
 
     for cam_name, stream_type in network.get_camera_entries().items():
+        print(cam_name)
         camera_dispatch[cam_name] = stream_type
         t = init_stream(cam_name, stream_type)
         if t is None: continue

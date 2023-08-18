@@ -18,8 +18,8 @@ import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.motors.TorqueNEO;
 import org.texastorque.torquelib.util.TorqueMath;
+
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import io.github.oblarg.oblog.annotations.Log;
 
@@ -75,8 +75,7 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
 
     private final PIDController pidController = new PIDController(1, 0, 0);
 
-    private final double coneTipX = NetworkTableInstance.getDefault().getTable("spindexer")
-            .getEntry("tip-x").getDouble(-1477);
+    private double coneTipX;
 
     private Spindexer() {
         turntable.setCurrentLimit(35);
@@ -112,6 +111,8 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
     @Override
     public final void update(final TorqueMode mode) {
         Debug.log("current", turntable.getCurrent());
+
+        coneTipX = drivebase.getConeTipX();
 
         if (autoSpindex == null)
             autoSpindex = new AutoSpindex();

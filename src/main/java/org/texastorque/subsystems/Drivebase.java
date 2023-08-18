@@ -17,7 +17,7 @@ import org.texastorque.controllers.PathAlignController;
 import org.texastorque.controllers.PathAlignController.AlignState;
 import org.texastorque.controllers.PathAlignController.GridState;
 import org.texastorque.toast.lib.Toast;
-import org.texastorque.toast.lib.pipelines.AprilTagPipeline;
+import org.texastorque.toast.lib.pipelines.CenterContour;
 import org.texastorque.torquelib.auto.TorqueCommand;
 import org.texastorque.torquelib.auto.commands.TorqueContinuous;
 import org.texastorque.torquelib.base.TorqueMode;
@@ -367,19 +367,12 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
         return inputSpeeds.hasZeroVelocity();
     }
 
+    public double getConeTipX() {
+        return ((CenterContour) toast.getPipeline("local0")).getTipX();
+    }
+
     private void initToast() {
-        toast.setPipeline("local0", new AprilTagPipeline(new Transform3d(
-            new Translation3d(-1 * i2m, 12.75 * i2m, h),
-            new Rotation3d(0, p, 0))));
-        toast.setPipeline("local2", new AprilTagPipeline(new Transform3d(
-            new Translation3d(-11.25 * i2m, -1.25 * i2m, h),
-            new Rotation3d(0, p, r * 3))));
-        toast.setPipeline("local4", new AprilTagPipeline(new Transform3d(
-            new Translation3d(-.75 * i2m, -12.75 * i2m, h),
-            new Rotation3d(0, p, r * 2))));
-        toast.setPipeline("local6", new AprilTagPipeline(new Transform3d(
-            new Translation3d(11.25 * i2m, .75 * i2m, h),
-            new Rotation3d(0, p, r))));
+        toast.setPipeline("local0", new CenterContour());
     }
 
     private void updateFeedback() {
