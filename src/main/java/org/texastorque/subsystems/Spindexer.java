@@ -18,7 +18,6 @@ import org.texastorque.torquelib.base.TorqueMode;
 import org.texastorque.torquelib.base.TorqueSubsystem;
 import org.texastorque.torquelib.motors.TorqueNEO;
 import org.texastorque.torquelib.util.TorqueMath;
-
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import io.github.oblarg.oblog.annotations.Log;
@@ -55,7 +54,7 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
 
     private static volatile Spindexer instance;
 
-    private static double CONE_TIP_X_GOAL = 1610, CONE_TIP_X_TOLERANCE = 60;
+    private static double CONE_TIP_X_GOAL = 350, CONE_TIP_X_TOLERANCE = 20;
 
     public static final synchronized Spindexer getInstance() {
         return instance == null ? instance = new Spindexer() : instance;
@@ -105,7 +104,8 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
     }
 
     public boolean isConeAligned() {
-        return TorqueMath.toleranced(coneTipX, CONE_TIP_X_GOAL, CONE_TIP_X_TOLERANCE);
+        // return TorqueMath.toleranced(coneTipX, CONE_TIP_X_GOAL, CONE_TIP_X_TOLERANCE);
+        return 355 <= coneTipX && coneTipX <= 375;
     }
 
     @Override
@@ -126,6 +126,7 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
 
         SmartDashboard.putString("spindexer::activeState", activeState.toString());
         SmartDashboard.putNumber("spindexer::coneTipX", coneTipX);
+        SmartDashboard.putBoolean("spindexer::coneTipToleranced", isConeAligned());
 
         volts = 0;
 
@@ -133,6 +134,10 @@ public final class Spindexer extends TorqueSubsystem implements Subsystems {
 
             volts = coneTipX == -1477 ? 6
                     : TorqueMath.constrain(pidController.calculate(coneTipX, CONE_TIP_X_GOAL), 6);
+
+            if (volts > 2) {
+                volts = 2;
+            }
 
             if (isConeAligned())
                 volts = 0;

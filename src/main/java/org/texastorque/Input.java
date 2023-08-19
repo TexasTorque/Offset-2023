@@ -167,7 +167,7 @@ public final class Input extends TorqueInput<TorqueController> implements Subsys
 
         // arm.setSetpointAdjustment(operator.getRightYAxis());
 
-        armToPrime.onTrue(() -> arm.setState(Arm.State.PRIME));
+        armToPrime.onTrue(() -> arm.setState(Arm.State.READY_SCORE));
 
         updateSpindexer();
     }

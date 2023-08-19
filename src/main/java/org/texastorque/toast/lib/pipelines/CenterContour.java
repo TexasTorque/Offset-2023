@@ -7,24 +7,21 @@ public class CenterContour extends Pipeline {
     private double tipX;
 
     public CenterContour() {
-        super("april-tags");
+        super("auto-spindexer");
     }
 
     public double getTipX() {
-       return tipX;
+        return tipX;
     }
 
     @Override
     protected void init() {}
 
     @Override
-    protected void deinit() {
-    }
+    protected void deinit() {}
 
     @Override
     protected void update(JsonNode root) {
-        root.get("contours").forEach(target -> {
-            tipX = target.get("tip-x").asDouble();
-        });
+        tipX = root.get("tip-x").asDouble();
     }
 }
