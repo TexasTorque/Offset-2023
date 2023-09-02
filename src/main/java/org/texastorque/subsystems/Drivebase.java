@@ -164,15 +164,15 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
 
     private final AutoLevelController autoLevelController = new AutoLevelController(this::getPose);
 
-    public final TorqueVision cameraLeft, cameraRight;
+    // public final TorqueVision cameraLeft, cameraRight;
 
     public boolean updateWithTags = true;
     /**
      * Constructor called on initialization.
      */
     private Drivebase() {
-        cameraLeft = new TorqueVision("omar", Field.getCurrentFieldLayout(), LEFT_CAMERA_TO_CENTER);
-        cameraRight = new TorqueVision("rohan", Field.getCurrentFieldLayout(), RIGHT_CAMERA_TO_CENTER);
+        // cameraLeft = new TorqueVision("omar", Field.getCurrentFieldLayout(), LEFT_CAMERA_TO_CENTER);
+        // cameraRight = new TorqueVision("rohan", Field.getCurrentFieldLayout(), RIGHT_CAMERA_TO_CENTER);
 
         teleopOmegaController.enableContinuousInput(-Math.PI, Math.PI);
         lastRotationRadians = gyro.getRotation2d().getRadians();
@@ -200,7 +200,7 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     }
 
     public final boolean isCamerasConnected() {
-        return cameraLeft.isCameraConnected() && cameraRight.isCameraConnected();
+        return false;
     }
 
     public SpeedSetting getSpeedSetting() {
@@ -248,8 +248,8 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
             state = State.FIELD_RELATIVE;
         });
         updateWithTags = true;
-        cameraLeft.setFieldLayout(Field.getCurrentFieldLayout());
-        cameraRight.setFieldLayout(Field.getCurrentFieldLayout());
+        // cameraLeft.setFieldLayout(Field.getCurrentFieldLayout());
+        // cameraRight.setFieldLayout(Field.getCurrentFieldLayout());
     }
 
     public SwerveModulePosition[] getModulePositions() {
@@ -357,10 +357,10 @@ public final class Drivebase extends TorqueSubsystem implements Subsystems {
     private void updateFeedback() {
         Debug.log("gyro pitch", TorqueNavXGyro.getInstance().getPitch());
 
-        if (updateWithTags || DriverStation.isTeleop()) {
-            cameraLeft.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
-            cameraRight.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
-        }
+        // if (updateWithTags || DriverStation.isTeleop()) {
+        //     cameraLeft.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
+        //     cameraRight.updateVisionMeasurement(poseEstimator::addVisionMeasurement);
+        // }
 
         poseEstimator.update(gyro.getHeadingCCW(), getModulePositions());
 

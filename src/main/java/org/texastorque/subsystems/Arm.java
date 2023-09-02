@@ -100,7 +100,8 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
                 new ArmPose(16, Rotation2d.fromDegrees(230))),
         LEAVING_SHELF(PRIME),
         PUSH_CUBE(
-                new ArmPose(15, Rotation2d.fromDegrees(260)));
+                new ArmPose(15, Rotation2d.fromDegrees(260))),
+        READY_SCORE(new ArmPose(15, Rotation2d.fromDegrees(160)));
         
         // @formatter:on
 
@@ -149,6 +150,7 @@ public final class Arm extends TorqueSubsystem implements Subsystems {
     public static class GoToShelf extends ArmSequence {
         public GoToShelf() {
             goTo(State.SHELF, -1);
+            addBlock(new TorqueExecute(() -> Input.getInstance().setOperatorRumbleFor(.5)));
             goTo(State.SHELF_OPEN, ArmSequence.NEVER_END);
         }
     }
